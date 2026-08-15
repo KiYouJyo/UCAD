@@ -1,0 +1,68 @@
+<UserControl
+    x:Class="UCAD.Views.UcadSettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Background="{StaticResource UcadAppBackgroundBrush}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="{StaticResource UcadSettingsNavWidth}" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border
+            Grid.Column="0"
+            Background="{StaticResource UcadNavigationBrush}"
+            BorderBrush="{StaticResource UcadDividerBrush}"
+            BorderThickness="0,0,1,0">
+            <Grid Margin="16,26,16,12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="16" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="6" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="6" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="6" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="6" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="6" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="1" />
+                    <RowDefinition Height="6" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock
+                    x:Name="SettingsNavTitle"
+                    FontSize="18"
+                    FontWeight="Bold"
+                    Foreground="{StaticResource UcadTextPrimaryBrush}" />
+
+                <Button x:Name="GeneralNavButton" Grid.Row="2" Tag="General" Style="{StaticResource UcadSettingsNavButtonStyle}" Click="SettingsNavButton_Click" />
+                <Button x:Name="AppearanceNavButton" Grid.Row="4" Tag="Appearance" Style="{StaticResource UcadSettingsNavButtonStyle}" Click="SettingsNavButton_Click" />
+                <Button x:Name="DraftingNavButton" Grid.Row="6" Tag="Drafting" Style="{StaticResource UcadSettingsNavButtonStyle}" Click="SettingsNavButton_Click" />
+                <Button x:Name="InputNavButton" Grid.Row="8" Tag="Input" Style="{StaticResource UcadSettingsNavButtonStyle}" Click="SettingsNavButton_Click" />
+                <Button x:Name="FilesNavButton" Grid.Row="10" Tag="Files" Style="{StaticResource UcadSettingsNavButtonStyle}" Click="SettingsNavButton_Click" />
+                <Button x:Name="LanguageNavButton" Grid.Row="12" Tag="Language" Style="{StaticResource UcadSettingsNavButtonStyle}" Click="SettingsNavButton_Click" />
+
+                <Rectangle Grid.Row="14" Width="196" HorizontalAlignment="Left" Fill="{StaticResource UcadDividerBrush}" />
+                <Button x:Name="AboutNavButton" Grid.Row="16" Tag="About" Style="{StaticResource UcadSettingsNavButtonStyle}" Click="SettingsNavButton_Click" />
+            </Grid>
+        </Border>
+
+        <ScrollViewer
+            x:Name="SettingsScrollViewer"
+            Grid.Column="1"
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto">
+            <StackPanel
+                x:Name="SettingsContent"
+                Width="{StaticResource UcadSettingsCardWidth}"
+                Margin="54,42,54,42"
+                HorizontalAlignment="Left" />
+        </ScrollViewer>
+    </Grid>
+</UserControl>
