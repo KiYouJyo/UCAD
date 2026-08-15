@@ -1,5 +1,7 @@
 using Microsoft.UI.Xaml;
 using System.Text;
+using UCAD.Services;
+using Windows.Globalization;
 
 namespace UCAD;
 
@@ -25,6 +27,7 @@ public partial class App : Application
         try
         {
             WriteStartupEvent("OnLaunched begin");
+            ApplyDisplayLanguagePreference();
             _window = new MainWindow();
             WriteStartupEvent("MainWindow constructed");
             _window.Activate();
@@ -35,6 +38,26 @@ public partial class App : Application
             WriteStartupFailure("OnLaunched", ex);
             throw;
         }
+    }
+
+    private static void ApplyDisplayLanguagePreference()
+    {
+        var settings = SettingsService.Current.Settings;
+        var language = settings.FollowSystemLanguage ? string.Empty : settings.DisplayLanguage;
+        if (language is "System" or null)
+        {
+            language = string.Empty;
+        }
+
+        if (language.Length > 0 && language is not ("zh-CN" or "ja-JP" or "en-US"))
+        {
+            language = string.Empty;
+        }
+
+        ApplicationLanguages.PrimaryLanguageOverride = language;
+        WriteStartupEvent(string.IsNullOrEmpty(language)
+            ? "Display language: system preference"
+            : $"Display language override: {language}");
     }
 
     private static void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e) =>
