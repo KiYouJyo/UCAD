@@ -186,6 +186,7 @@ jobs:
             }
           } else {
             Write-Output "No existing Release for $tag; cleanup skipped."
+            $global:LASTEXITCODE = 0
           }
 
       - name: Publish GitHub Release
