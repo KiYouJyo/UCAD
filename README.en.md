@@ -9,23 +9,21 @@ Lightweight 2D CAD for urban planning and architectural design.
 
 ## Positioning
 
-UCAD aims to be a Windows-native lightweight 2D CAD with familiar AutoCAD-style interaction and a deliberately bounded architecture/planning feature set. The project is DXF-first and 2D-first rather than an attempt to clone all of AutoCAD.
+UCAD aims to be a Windows-native lightweight 2D CAD with familiar AutoCAD-style interaction and a deliberately bounded architecture/planning feature set. The project is DXF-first and 2D-first.
 
-**Current version: v0.2.0 — Command Foundation.** It combines the Win2D viewport and world coordinate system with a reusable CAD command foundation: aliases, Enter / Space confirmation, Esc cancellation, repeat previous command, absolute/relative coordinates, and distance input.
+**Current version: v0.3.0 — Drawing Foundation.** It now provides a complete first drawing loop: command input, LINE / PLINE / RECTANGLE / CIRCLE / ARC, mixed mouse and typed-coordinate input, live previews, and document-level Undo / Redo.
 
 ## Installation
 
 Download from [GitHub Releases](https://github.com/KiYouJyo/UCAD/releases/latest):
 
-- `UCAD-v0.2.0-x64-one-click.zip`: recommended.
-- `UCAD_0.2.0.0_x64.msixbundle`: direct sideload package.
+- `UCAD-v0.3.0-x64-one-click.zip`: recommended.
+- `UCAD_0.3.0.0_x64.msixbundle`: direct sideload package.
 - `SHA256SUMS.txt`: integrity manifest.
 
-The first one-click install may show one UAC prompt to trust the UCAD public certificate in `LocalMachine\TrustedPeople`; the MSIX itself is installed in the normal user context.
+## Commands
 
-## Command input
-
-Current commands include `LINE` / `L`, `CLEAR`, and `RESETVIEW` / `RV`. Point input accepts `x,y` and `@x,y`; after a base point exists, a number alone specifies distance along the current cursor direction. Enter / Space confirms, Esc cancels, and confirming empty input repeats the previous command.
+`LINE/L`, `PLINE/PL`, `RECTANGLE/REC`, `CIRCLE/C`, `ARC/A`, `UNDO/U`, `REDO`, `CLEAR`, and `RESETVIEW/RV` are available. Mouse picks can be mixed with `x,y`, `@x,y`, and distance input.
 
 ## Localization
 
@@ -44,8 +42,7 @@ dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release
 - [Roadmap](ROADMAP.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Release process](docs/RELEASE-PROCESS.md)
-- [Packaging](packaging/README.md)
-- [v0.2.0 Release Notes](docs/RELEASE-NOTES-v0.2.0.en.md)
+- [v0.3.0 Release Notes](docs/RELEASE-NOTES-v0.3.0.en.md)
 
 ## License
 

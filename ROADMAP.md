@@ -30,12 +30,12 @@ UCAD aims to become a lightweight Windows-native 2D CAD focused on architecture 
 
 ## v0.3 — Drawing
 
-- [ ] LINE
-- [ ] PLINE
-- [ ] RECTANGLE
-- [ ] CIRCLE
-- [ ] ARC
-- [ ] Undo / Redo
+- [x] LINE
+- [x] PLINE
+- [x] RECTANGLE
+- [x] CIRCLE
+- [x] ARC
+- [x] Undo / Redo
 
 ## v0.4 — Interaction
 
