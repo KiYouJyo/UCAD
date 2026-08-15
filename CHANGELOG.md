@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.3.7 — 2026-08-16
+
+### UI fidelity and HiDPI
+- Restored `PerMonitorV2` DPI awareness in the custom application manifest so Windows does not bitmap-scale the UCAD window on high-DPI displays.
+- Added Figma-derived `UcadDesignTokens.xaml` resources for the title bar, category bar, tool shelf, inspector, canvas, status bar, typography hierarchy, dividers, and accent states.
+- Reworked the title area into a browser-like document strip with a fixed UCAD brand area and approximately 190×34 drawing tabs while preserving native WinUI caption behavior.
+- Aligned category-bar, persistent tool-shelf, 52 px high-frequency Tool Rail, 304 px Inspector, command line, and status bar geometry with the approved Figma v0.2 desktop frame.
+- Replaced several generic glyph placeholders with Fluent icon semantics, including Cursor, Move, Copy, Trim, More, and Reset View; CAD-specific glyphs remain intentionally provisional pending the UCAD CAD Fluent icon set.
+- Kept planned categories legible and switchable instead of applying WinUI's washed-out Disabled visual state to the entire category bar.
+- Switched the status-bar version label from a hardcoded v0.3.5 string to runtime assembly metadata.
+
+### Shell behavior and localization
+- Preserved real independent `CadWorkspaceSession` instances behind browser-style tabs and retained the existing command registry / viewport command flow.
+- Added persistent shelf previews for planned categories without exposing unfinished CAD Core actions as clickable commands.
+- Updated zh-CN, ja-JP, and en-US resources for reserved tool shelves and removed stale v0.3.5 wording from shell notices.
+
+### Validation
+- Added a HiDPI and shell-fidelity CI contract requiring `PerMonitorV2`, runtime-derived version text, the browser-title contract, and the core Figma-derived design tokens.
+- Retained Core tests, WinUI app build, runtime localization validation, real startup smoke, and MSIX / one-click package validation.
+- Generalized the PR acceptance package to v0.3.7 metadata.
+
 ## 0.3.6 — 2026-08-15
 
 ### Startup reliability
