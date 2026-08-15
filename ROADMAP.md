@@ -37,6 +37,21 @@ UCAD aims to become a lightweight Windows-native 2D CAD focused on architecture 
 - [x] ARC
 - [x] Undo / Redo
 
+## v0.3.5 — Workspace Shell Foundation
+
+- [x] Fluent CAD workspace shell based on the approved Figma layout
+- [x] browser-style in-memory document tabs
+- [x] independent `CadDocument` / `CadViewport` / `CommandSession` per tab
+- [x] persistent category tool shelf and compact high-frequency tool rail
+- [x] command search backed by `CommandRegistry`
+- [x] document change/revision notifications from Core
+- [x] command category and drawing-kind metadata from Core
+- [x] inspector boundary wired to real document/history state
+- [x] future command surfaces visible but disabled until their Core capability exists
+- [x] zh-CN / ja-JP / en-US shell localization
+
+**Transition gate:** v0.3.5 freezes the primary information architecture. v0.4 should connect interaction capabilities to these existing shell surfaces rather than redesigning the workspace.
+
 ## v0.4 — Interaction
 
 - [ ] click selection
@@ -46,6 +61,8 @@ UCAD aims to become a lightweight Windows-native 2D CAD focused on architecture 
 - [ ] delete
 - [ ] endpoint / midpoint / center / intersection OSNAP
 - [ ] ortho mode
+- [ ] selection-backed inspector properties
+- [ ] enable the corresponding existing status/tool surfaces from Core capability state
 
 ## v0.5 — Modify
 

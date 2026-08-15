@@ -7,6 +7,74 @@
   <data name="AppDisplayName" xml:space="preserve"><value>UCAD</value></data>
   <data name="AppDescription" xml:space="preserve"><value>都市計画・建築設計向けの軽量 2D CAD</value></data>
   <data name="AppWindowTitle" xml:space="preserve"><value>UCAD — 都市計画支援 CAD</value></data>
+
+  <data name="FileMenuButton.Content" xml:space="preserve"><value>ファイル</value></data>
+  <data name="EditMenuButton.Content" xml:space="preserve"><value>編集</value></data>
+  <data name="ViewMenuButton.Content" xml:space="preserve"><value>表示</value></data>
+  <data name="NewDrawingMenuItem.Text" xml:space="preserve"><value>新しい図面</value></data>
+  <data name="CloseDrawingMenuItem.Text" xml:space="preserve"><value>現在の図面を閉じる</value></data>
+  <data name="UndoMenuItem.Text" xml:space="preserve"><value>元に戻す</value></data>
+  <data name="RedoMenuItem.Text" xml:space="preserve"><value>やり直し</value></data>
+  <data name="ClearMenuItem.Text" xml:space="preserve"><value>図面を全消去</value></data>
+  <data name="ResetViewMenuItem.Text" xml:space="preserve"><value>ビューをリセット</value></data>
+
+  <data name="DrawCategoryButton.Content" xml:space="preserve"><value>作図</value></data>
+  <data name="ModifyCategoryButton.Content" xml:space="preserve"><value>修正</value></data>
+  <data name="AnnotateCategoryButton.Content" xml:space="preserve"><value>注釈</value></data>
+  <data name="LayersCategoryButton.Content" xml:space="preserve"><value>レイヤー</value></data>
+  <data name="BlocksCategoryButton.Content" xml:space="preserve"><value>ブロック</value></data>
+  <data name="MeasureCategoryButton.Content" xml:space="preserve"><value>計測</value></data>
+  <data name="ViewCategoryButton.Content" xml:space="preserve"><value>表示</value></data>
+  <data name="CommandSearch.PlaceholderText" xml:space="preserve"><value>コマンドを検索</value></data>
+
+  <data name="LineToolLabel.Text" xml:space="preserve"><value>線分</value></data>
+  <data name="PolylineToolLabel.Text" xml:space="preserve"><value>ポリライン</value></data>
+  <data name="RectangleToolLabel.Text" xml:space="preserve"><value>長方形</value></data>
+  <data name="CircleToolLabel.Text" xml:space="preserve"><value>円</value></data>
+  <data name="ArcToolLabel.Text" xml:space="preserve"><value>円弧</value></data>
+  <data name="HatchToolLabel.Text" xml:space="preserve"><value>ハッチ</value></data>
+  <data name="BoundaryToolLabel.Text" xml:space="preserve"><value>境界</value></data>
+  <data name="RayToolLabel.Text" xml:space="preserve"><value>放射線</value></data>
+  <data name="ConstructionToolLabel.Text" xml:space="preserve"><value>構築線</value></data>
+  <data name="ResetViewToolLabel.Text" xml:space="preserve"><value>ビューリセット</value></data>
+  <data name="ToolShelfHintText.Text" xml:space="preserve"><value>選択中のカテゴリをもう一度クリックするとツール棚を閉じます</value></data>
+  <data name="ToolShelfHint" xml:space="preserve"><value>選択中のカテゴリをもう一度クリックするとツール棚を閉じます</value></data>
+
+  <data name="RectangleMoreItem.Text" xml:space="preserve"><value>長方形</value></data>
+  <data name="CircleMoreItem.Text" xml:space="preserve"><value>円</value></data>
+  <data name="ArcMoreItem.Text" xml:space="preserve"><value>円弧</value></data>
+  <data name="UndoMoreItem.Text" xml:space="preserve"><value>元に戻す</value></data>
+  <data name="RedoMoreItem.Text" xml:space="preserve"><value>やり直し</value></data>
+  <data name="ClearMoreItem.Text" xml:space="preserve"><value>図面を全消去</value></data>
+  <data name="ResetViewMoreItem.Text" xml:space="preserve"><value>ビューをリセット</value></data>
+
+  <data name="PropertiesTabButton.Content" xml:space="preserve"><value>プロパティ</value></data>
+  <data name="LayersTabButton.Content" xml:space="preserve"><value>レイヤー</value></data>
+  <data name="NoSelectionText.Text" xml:space="preserve"><value>選択なし</value></data>
+  <data name="SelectionUnavailableText.Text" xml:space="preserve"><value>選択機能は v0.4.0 で接続します。現在はアクティブ図面の状態を表示します。</value></data>
+  <data name="DocumentSectionText.Text" xml:space="preserve"><value>図面</value></data>
+  <data name="EntityCountLabel.Text" xml:space="preserve"><value>エンティティ数</value></data>
+  <data name="ActiveCommandLabel.Text" xml:space="preserve"><value>実行中コマンド</value></data>
+  <data name="UndoAvailableLabel.Text" xml:space="preserve"><value>元に戻せる</value></data>
+  <data name="RedoAvailableLabel.Text" xml:space="preserve"><value>やり直せる</value></data>
+  <data name="V04FoundationHint.Text" xml:space="preserve"><value>v0.3.5 ではタブ、コマンドメタデータ、図面変更状態を Core に接続し、v0.4.0 の選択・スナップ・直交に共通の状態境界を用意します。</value></data>
+  <data name="Inspector_None" xml:space="preserve"><value>—</value></data>
+  <data name="Inspector_Yes" xml:space="preserve"><value>はい</value></data>
+  <data name="Inspector_No" xml:space="preserve"><value>いいえ</value></data>
+
+  <data name="SnapStatusButton.Content" xml:space="preserve"><value>スナップ</value></data>
+  <data name="GridStatusButton.Content" xml:space="preserve"><value>グリッド</value></data>
+  <data name="OrthoStatusButton.Content" xml:space="preserve"><value>直交</value></data>
+  <data name="PolarStatusButton.Content" xml:space="preserve"><value>極軸</value></data>
+  <data name="OsnapStatusButton.Content" xml:space="preserve"><value>OSNAP</value></data>
+  <data name="OtrackStatusButton.Content" xml:space="preserve"><value>OTRACK</value></data>
+
+  <data name="Document_UntitledFormat" xml:space="preserve"><value>図面 {0}</value></data>
+  <data name="CloseDirtyDialog_Title" xml:space="preserve"><value>未保存の図面を閉じますか？</value></data>
+  <data name="CloseDirtyDialog_Content" xml:space="preserve"><value>「{0}」にはファイルに保存されていない作図内容があります。v0.3.5 ではファイル保存に未対応のため、閉じると内容は失われます。</value></data>
+  <data name="CloseDirtyDialog_Primary" xml:space="preserve"><value>閉じる</value></data>
+  <data name="CloseDirtyDialog_Cancel" xml:space="preserve"><value>キャンセル</value></data>
+
   <data name="LineButton.Label" xml:space="preserve"><value>線分</value></data>
   <data name="PolylineButton.Label" xml:space="preserve"><value>ポリライン</value></data>
   <data name="RectangleButton.Label" xml:space="preserve"><value>長方形</value></data>

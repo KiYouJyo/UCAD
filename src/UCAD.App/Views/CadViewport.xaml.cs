@@ -15,7 +15,7 @@ namespace UCAD.Views;
 public sealed partial class CadViewport : UserControl
 {
     private const double GeometryEpsilon = 1e-9;
-    private readonly CadDocument _document = new();
+    private readonly CadDocument _document;
     private readonly List<CadPoint> _inputPoints = [];
     private double _zoom = 1.0;
     private Vector2 _pan = new(120, 120);
@@ -27,12 +27,22 @@ public sealed partial class CadViewport : UserControl
     public event Action<CadPoint>? PointerWorldPositionChanged;
     public event Action<DrawingCommandKind, int, CadPoint>? DrawingPointAccepted;
     public event Action<DrawingCommandKind>? DrawingCommandCompleted;
-    public event Action<bool, bool>? HistoryStateChanged;
+    public event Action<double>? ZoomChanged;
+
+    public CadDocument Document => _document;
 
     public CadPoint CurrentPointerWorldPosition => ScreenToWorld(_pointerScreen);
 
+    public double Zoom => _zoom;
+
     public CadViewport()
+        : this(new CadDocument())
     {
+    }
+
+    public CadViewport(CadDocument document)
+    {
+        _document = document ?? throw new ArgumentNullException(nameof(document));
         InitializeComponent();
     }
 
@@ -80,7 +90,6 @@ public sealed partial class CadViewport : UserControl
         if (kind == DrawingCommandKind.Polyline && _inputPoints.Count >= 2)
         {
             _document.Add(new PolylineEntity(_inputPoints));
-            NotifyHistoryState();
         }
 
         CompleteDrawingCommandCore(kind);
@@ -97,7 +106,6 @@ public sealed partial class CadViewport : UserControl
     {
         CancelDrawingCommand();
         var changed = _document.Undo();
-        NotifyHistoryState();
         Canvas.Invalidate();
         return changed;
     }
@@ -106,7 +114,6 @@ public sealed partial class CadViewport : UserControl
     {
         CancelDrawingCommand();
         var changed = _document.Redo();
-        NotifyHistoryState();
         Canvas.Invalidate();
         return changed;
     }
@@ -115,7 +122,6 @@ public sealed partial class CadViewport : UserControl
     {
         CancelDrawingCommand();
         _document.Clear();
-        NotifyHistoryState();
         Canvas.Invalidate();
     }
 
@@ -123,6 +129,7 @@ public sealed partial class CadViewport : UserControl
     {
         _zoom = 1.0;
         _pan = new Vector2(120, 120);
+        ZoomChanged?.Invoke(_zoom);
         Canvas.Invalidate();
     }
 
@@ -137,7 +144,6 @@ public sealed partial class CadViewport : UserControl
             }
 
             _document.Add(new LineEntity(start, world));
-            NotifyHistoryState();
         }
 
         _inputPoints.Add(world);
@@ -172,7 +178,6 @@ public sealed partial class CadViewport : UserControl
         _inputPoints.Add(world);
         DrawingPointAccepted?.Invoke(DrawingCommandKind.Rectangle, 2, world);
         _document.Add(new PolylineEntity(corners, closed: true));
-        NotifyHistoryState();
         CompleteDrawingCommandCore(DrawingCommandKind.Rectangle);
         return true;
     }
@@ -197,7 +202,6 @@ public sealed partial class CadViewport : UserControl
         _inputPoints.Add(world);
         DrawingPointAccepted?.Invoke(DrawingCommandKind.Circle, 2, world);
         _document.Add(new CircleEntity(center, radius));
-        NotifyHistoryState();
         CompleteDrawingCommandCore(DrawingCommandKind.Circle);
         return true;
     }
@@ -225,7 +229,6 @@ public sealed partial class CadViewport : UserControl
         _inputPoints.Add(world);
         DrawingPointAccepted?.Invoke(DrawingCommandKind.Arc, 3, world);
         _document.Add(arc);
-        NotifyHistoryState();
         CompleteDrawingCommandCore(DrawingCommandKind.Arc);
         return true;
     }
@@ -237,8 +240,6 @@ public sealed partial class CadViewport : UserControl
         Canvas.Invalidate();
         DrawingCommandCompleted?.Invoke(kind);
     }
-
-    private void NotifyHistoryState() => HistoryStateChanged?.Invoke(_document.CanUndo, _document.CanRedo);
 
     private void Canvas_Draw(CanvasControl sender, CanvasDrawEventArgs args)
     {
@@ -434,6 +435,7 @@ public sealed partial class CadViewport : UserControl
         _zoom = Math.Clamp(_zoom * factor, 0.01, 1000.0);
         var screenAfter = WorldToScreen(worldBefore);
         _pan += screen - screenAfter;
+        ZoomChanged?.Invoke(_zoom);
         Canvas.Invalidate();
         e.Handled = true;
     }

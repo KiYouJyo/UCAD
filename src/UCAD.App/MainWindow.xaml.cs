@@ -1,8 +1,11 @@
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.Windows.ApplicationModel.Resources;
+using UCAD.Core;
 using UCAD.Core.Commands;
 using UCAD.Core.Geometry;
+using UCAD.Workspace;
 using Windows.System;
 
 namespace UCAD;
@@ -10,45 +13,34 @@ namespace UCAD;
 public sealed partial class MainWindow : Window
 {
     private readonly ResourceLoader _resources;
-    private readonly CommandSession _commandSession;
-    private CadPoint? _commandBasePoint;
+    private readonly CommandRegistry _commandRegistry;
+    private readonly Dictionary<TabViewItem, CadWorkspaceSession> _sessions = [];
+    private CadWorkspaceSession? _activeSession;
+    private int _nextDocumentOrdinal = 1;
+    private string? _activeShelfCategory = "DRAW";
 
     public MainWindow()
     {
         InitializeComponent();
         _resources = new ResourceLoader();
-        _commandSession = new CommandSession(CommandRegistry.CreateDefault());
+        _commandRegistry = CommandRegistry.CreateDefault();
+
+        ExtendsContentIntoTitleBar = true;
+        SetTitleBar(AppTitleBar);
         Title = GetString("AppWindowTitle");
-        ModeText.Text = GetString("Status_Ready");
+        AppTitleBar.Title = "UCAD";
 
-        Viewport.PointerWorldPositionChanged += point =>
-            CoordinateText.Text = $"X {point.X:0.00}  Y {point.Y:0.00}";
+        CommandSearch.ItemsSource = _commandRegistry.Commands
+            .SelectMany(command => command.Tokens)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(token => token, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
 
-        Viewport.DrawingPointAccepted += (kind, count, point) =>
-        {
-            _commandBasePoint = point;
-            SetDrawingPrompt(kind, count);
-        };
-
-        Viewport.DrawingCommandCompleted += kind =>
-        {
-            if (_commandSession.ActiveCommand is not null &&
-                TryGetDrawingKind(_commandSession.ActiveCommand.Name, out var activeKind) &&
-                activeKind == kind)
-            {
-                _commandSession.Complete();
-            }
-
-            _commandBasePoint = null;
-            ModeText.Text = GetString("Status_Ready");
-        };
-
-        Viewport.HistoryStateChanged += (canUndo, canRedo) =>
-        {
-            UndoButton.IsEnabled = canUndo;
-            RedoButton.IsEnabled = canRedo;
-        };
+        CreateNewWorkspace();
+        UpdateToolShelfHint();
     }
+
+    private CadWorkspaceSession? ActiveSession => _activeSession;
 
     private string GetString(string key)
     {
@@ -56,23 +48,241 @@ public sealed partial class MainWindow : Window
         return string.IsNullOrWhiteSpace(value) ? key : value;
     }
 
-    private void Line_Click(object sender, RoutedEventArgs e) => StartToolbarCommand("LINE");
+    private CadWorkspaceSession CreateNewWorkspace()
+    {
+        var ordinal = _nextDocumentOrdinal++;
+        var displayName = string.Format(GetString("Document_UntitledFormat"), ordinal);
+        var session = new CadWorkspaceSession(ordinal, displayName, _commandRegistry)
+        {
+            StatusText = GetString("Status_Ready")
+        };
 
-    private void Polyline_Click(object sender, RoutedEventArgs e) => StartToolbarCommand("PLINE");
+        var tab = new TabViewItem
+        {
+            Tag = session,
+            Header = displayName,
+            IsClosable = true
+        };
+        _sessions[tab] = session;
 
-    private void Rectangle_Click(object sender, RoutedEventArgs e) => StartToolbarCommand("RECTANGLE");
+        session.Document.Changed += (_, _) =>
+        {
+            UpdateTabHeader(tab, session);
+            if (ReferenceEquals(_activeSession, session))
+            {
+                UpdateSessionUi(session);
+            }
+        };
 
-    private void Circle_Click(object sender, RoutedEventArgs e) => StartToolbarCommand("CIRCLE");
+        session.Viewport.PointerWorldPositionChanged += point =>
+        {
+            session.PointerWorldPosition = point;
+            if (ReferenceEquals(_activeSession, session))
+            {
+                UpdateCoordinateText(session);
+            }
+        };
 
-    private void Arc_Click(object sender, RoutedEventArgs e) => StartToolbarCommand("ARC");
+        session.Viewport.DrawingPointAccepted += (kind, count, point) =>
+        {
+            session.CommandBasePoint = point;
+            SetDrawingPrompt(session, kind, count);
+        };
 
-    private void Undo_Click(object sender, RoutedEventArgs e) => StartToolbarCommand("UNDO");
+        session.Viewport.DrawingCommandCompleted += kind =>
+        {
+            if (session.CommandSession.ActiveCommand?.DrawingKind == kind)
+            {
+                session.CommandSession.Complete();
+            }
 
-    private void Redo_Click(object sender, RoutedEventArgs e) => StartToolbarCommand("REDO");
+            session.CommandBasePoint = null;
+            SetSessionStatus(session, GetString("Status_Ready"));
+            if (ReferenceEquals(_activeSession, session))
+            {
+                UpdateSessionUi(session);
+            }
+        };
 
-    private void Clear_Click(object sender, RoutedEventArgs e) => StartToolbarCommand("CLEAR");
+        session.Viewport.ZoomChanged += _ =>
+        {
+            if (ReferenceEquals(_activeSession, session))
+            {
+                UpdateZoomText(session);
+            }
+        };
 
-    private void ResetView_Click(object sender, RoutedEventArgs e) => StartToolbarCommand("RESETVIEW");
+        DocumentTabs.TabItems.Add(tab);
+        DocumentTabs.SelectedItem = tab;
+        ActivateSession(session);
+        return session;
+    }
+
+    private void ActivateSession(CadWorkspaceSession session)
+    {
+        _activeSession = session;
+        ViewportHost.Content = session.Viewport;
+        CommandInput.Text = string.Empty;
+        ModeText.Text = session.StatusText;
+        UpdateCoordinateText(session);
+        UpdateZoomText(session);
+        UpdateSessionUi(session);
+    }
+
+    private void UpdateSessionUi(CadWorkspaceSession session)
+    {
+        var isActive = ReferenceEquals(_activeSession, session);
+        if (!isActive)
+        {
+            return;
+        }
+
+        var canUndo = session.Document.CanUndo;
+        var canRedo = session.Document.CanRedo;
+        UndoMenuItem.IsEnabled = canUndo;
+        RedoMenuItem.IsEnabled = canRedo;
+        UndoMoreItem.IsEnabled = canUndo;
+        RedoMoreItem.IsEnabled = canRedo;
+
+        EntityCountValue.Text = session.Document.Entities.Count.ToString();
+        ActiveCommandValue.Text = session.CommandSession.ActiveCommand?.Name ?? GetString("Inspector_None");
+        UndoAvailableValue.Text = canUndo ? GetString("Inspector_Yes") : GetString("Inspector_No");
+        RedoAvailableValue.Text = canRedo ? GetString("Inspector_Yes") : GetString("Inspector_No");
+        ModeText.Text = session.StatusText;
+    }
+
+    private void UpdateCoordinateText(CadWorkspaceSession session) =>
+        CoordinateText.Text = $"X {session.PointerWorldPosition.X:0.00}  Y {session.PointerWorldPosition.Y:0.00}";
+
+    private void UpdateZoomText(CadWorkspaceSession session) =>
+        ZoomText.Text = $"{session.Viewport.Zoom * 100:0}%";
+
+    private static void UpdateTabHeader(TabViewItem tab, CadWorkspaceSession session) =>
+        tab.Header = session.IsDirty ? $"{session.DisplayName} •" : session.DisplayName;
+
+    private void SetSessionStatus(CadWorkspaceSession session, string text)
+    {
+        session.StatusText = text;
+        if (ReferenceEquals(_activeSession, session))
+        {
+            ModeText.Text = text;
+        }
+    }
+
+    private void NewDrawingMenuItem_Click(object sender, RoutedEventArgs e) => CreateNewWorkspace();
+
+    private async void CloseDrawingMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (DocumentTabs.SelectedItem is TabViewItem tab)
+        {
+            await TryCloseTabAsync(tab);
+        }
+    }
+
+    private void DocumentTabs_AddTabButtonClick(TabView sender, object args) => CreateNewWorkspace();
+
+    private void DocumentTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (DocumentTabs.SelectedItem is TabViewItem tab && _sessions.TryGetValue(tab, out var session))
+        {
+            ActivateSession(session);
+        }
+    }
+
+    private async void DocumentTabs_TabCloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args) =>
+        await TryCloseTabAsync(args.Tab);
+
+    private async Task<bool> TryCloseTabAsync(TabViewItem tab)
+    {
+        if (!_sessions.TryGetValue(tab, out var session))
+        {
+            return false;
+        }
+
+        if (session.IsDirty)
+        {
+            var dialog = new ContentDialog
+            {
+                XamlRoot = RootLayout.XamlRoot,
+                Title = GetString("CloseDirtyDialog_Title"),
+                Content = string.Format(GetString("CloseDirtyDialog_Content"), session.DisplayName),
+                PrimaryButtonText = GetString("CloseDirtyDialog_Primary"),
+                CloseButtonText = GetString("CloseDirtyDialog_Cancel"),
+                DefaultButton = ContentDialogButton.Close
+            };
+
+            if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+            {
+                return false;
+            }
+        }
+
+        _sessions.Remove(tab);
+        DocumentTabs.TabItems.Remove(tab);
+
+        if (DocumentTabs.TabItems.Count == 0)
+        {
+            CreateNewWorkspace();
+        }
+        else if (_activeSession is null || ReferenceEquals(_activeSession, session))
+        {
+            if (DocumentTabs.SelectedItem is TabViewItem selected && _sessions.TryGetValue(selected, out var nextSession))
+            {
+                ActivateSession(nextSession);
+            }
+        }
+
+        return true;
+    }
+
+    private void RunCommand_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement element && element.Tag is string command)
+        {
+            StartToolbarCommand(command);
+        }
+    }
+
+    private void CommandSearch_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+    {
+        var token = args.ChosenSuggestion?.ToString();
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            token = args.QueryText;
+        }
+
+        if (!string.IsNullOrWhiteSpace(token))
+        {
+            StartToolbarCommand(token);
+            sender.Text = string.Empty;
+        }
+    }
+
+    private void DrawCategoryButton_Click(object sender, RoutedEventArgs e) => ToggleToolShelf("DRAW");
+
+    private void ViewCategoryButton_Click(object sender, RoutedEventArgs e) => ToggleToolShelf("VIEW");
+
+    private void ToggleToolShelf(string category)
+    {
+        if (_activeShelfCategory == category && ToolShelfHost.Visibility == Visibility.Visible)
+        {
+            ToolShelfHost.Visibility = Visibility.Collapsed;
+            DrawCategoryButton.IsChecked = false;
+            ViewCategoryButton.IsChecked = false;
+            _activeShelfCategory = null;
+            return;
+        }
+
+        _activeShelfCategory = category;
+        ToolShelfHost.Visibility = Visibility.Visible;
+        DrawToolShelf.Visibility = category == "DRAW" ? Visibility.Visible : Visibility.Collapsed;
+        ViewToolShelf.Visibility = category == "VIEW" ? Visibility.Visible : Visibility.Collapsed;
+        DrawCategoryButton.IsChecked = category == "DRAW";
+        ViewCategoryButton.IsChecked = category == "VIEW";
+        UpdateToolShelfHint();
+    }
+
+    private void UpdateToolShelfHint() => ToolShelfHintText.Text = GetString("ToolShelfHintText.Text");
 
     private void CommandInput_KeyDown(object sender, KeyRoutedEventArgs e)
     {
@@ -99,57 +309,62 @@ public sealed partial class MainWindow : Window
 
     private void SubmitCommandLine()
     {
+        var session = ActiveSession;
+        if (session is null)
+        {
+            return;
+        }
+
         var input = CommandInput.Text.Trim();
         CommandInput.Text = string.Empty;
 
-        if (_commandSession.ActiveCommand is not null &&
-            TryGetDrawingKind(_commandSession.ActiveCommand.Name, out var drawingKind))
+        if (session.CommandSession.ActiveCommand?.DrawingKind is DrawingCommandKind drawingKind)
         {
             if (string.IsNullOrWhiteSpace(input))
             {
                 if (drawingKind is DrawingCommandKind.Line or DrawingCommandKind.Polyline)
                 {
-                    Viewport.CompleteDrawingCommand();
+                    session.Viewport.CompleteDrawingCommand();
                 }
                 else
                 {
-                    ModeText.Text = GetString("Status_PointRequired");
+                    SetSessionStatus(session, GetString("Status_PointRequired"));
                 }
 
                 return;
             }
 
-            if (!TryResolvePointInput(input, out var point))
+            if (!TryResolvePointInput(session, input, out var point))
             {
-                ModeText.Text = GetString("Status_InvalidPoint");
+                SetSessionStatus(session, GetString("Status_InvalidPoint"));
                 return;
             }
 
-            if (!Viewport.SubmitDrawingPoint(point))
+            if (!session.Viewport.SubmitDrawingPoint(point))
             {
-                ModeText.Text = GetString("Status_InvalidGeometry");
+                SetSessionStatus(session, GetString("Status_InvalidGeometry"));
             }
 
             return;
         }
 
-        StartCommand(input);
+        StartCommand(session, input);
     }
 
-    private bool TryResolvePointInput(string input, out CadPoint point)
+    private bool TryResolvePointInput(CadWorkspaceSession session, string input, out CadPoint point)
     {
-        if (CommandInputParser.TryParsePoint(input, _commandBasePoint, out point))
+        if (CommandInputParser.TryParsePoint(input, session.CommandBasePoint, out point))
         {
             return true;
         }
 
-        if (_commandBasePoint is not CadPoint basePoint || !CommandInputParser.TryParseNumber(input, out var distance))
+        if (session.CommandBasePoint is not CadPoint basePoint || !CommandInputParser.TryParseNumber(input, out var distance))
         {
             point = default;
             return false;
         }
 
-        var cursor = Viewport.CurrentPointerWorldPosition;
+        var cursor = session.Viewport.CurrentPointerWorldPosition;
         var dx = cursor.X - basePoint.X;
         var dy = cursor.Y - basePoint.Y;
         var length = Math.Sqrt((dx * dx) + (dy * dy));
@@ -165,41 +380,49 @@ public sealed partial class MainWindow : Window
 
     private void StartToolbarCommand(string command)
     {
-        if (_commandSession.IsActive)
+        var session = ActiveSession;
+        if (session is null)
         {
-            Viewport.CancelDrawingCommand();
-            _commandSession.Cancel();
-            _commandBasePoint = null;
+            return;
         }
 
-        StartCommand(command);
+        if (session.CommandSession.IsActive)
+        {
+            session.Viewport.CancelDrawingCommand();
+            session.CommandSession.Cancel();
+            session.CommandBasePoint = null;
+        }
+
+        StartCommand(session, command);
         CommandInput.Focus(FocusState.Programmatic);
     }
 
-    private void StartCommand(string? token)
+    private void StartCommand(CadWorkspaceSession session, string? token)
     {
-        var result = _commandSession.Start(token);
+        var result = session.CommandSession.Start(token);
         switch (result.Status)
         {
             case CommandStartStatus.NoPreviousCommand:
-                ModeText.Text = GetString("Status_NoPreviousCommand");
+                SetSessionStatus(session, GetString("Status_NoPreviousCommand"));
                 break;
             case CommandStartStatus.Unknown:
-                ModeText.Text = string.Format(GetString("Status_UnknownCommand"), result.Token);
+                SetSessionStatus(session, string.Format(GetString("Status_UnknownCommand"), result.Token));
                 break;
             case CommandStartStatus.Started:
-                DispatchStartedCommand(result.Command!);
+                DispatchStartedCommand(session, result.Command!);
                 break;
         }
+
+        UpdateSessionUi(session);
     }
 
-    private void DispatchStartedCommand(CadCommandDefinition command)
+    private void DispatchStartedCommand(CadWorkspaceSession session, CadCommandDefinition command)
     {
-        if (TryGetDrawingKind(command.Name, out var drawingKind))
+        if (command.DrawingKind is DrawingCommandKind drawingKind)
         {
-            _commandBasePoint = null;
-            Viewport.BeginDrawingCommand(drawingKind);
-            SetDrawingPrompt(drawingKind, 0);
+            session.CommandBasePoint = null;
+            session.Viewport.BeginDrawingCommand(drawingKind);
+            SetDrawingPrompt(session, drawingKind, 0);
             CommandInput.Focus(FocusState.Programmatic);
             return;
         }
@@ -207,27 +430,27 @@ public sealed partial class MainWindow : Window
         switch (command.Name)
         {
             case "UNDO":
-                ModeText.Text = Viewport.Undo() ? GetString("Status_Undo") : GetString("Status_NothingToUndo");
-                _commandSession.Complete();
+                SetSessionStatus(session, session.Viewport.Undo() ? GetString("Status_Undo") : GetString("Status_NothingToUndo"));
+                session.CommandSession.Complete();
                 break;
             case "REDO":
-                ModeText.Text = Viewport.Redo() ? GetString("Status_Redo") : GetString("Status_NothingToRedo");
-                _commandSession.Complete();
+                SetSessionStatus(session, session.Viewport.Redo() ? GetString("Status_Redo") : GetString("Status_NothingToRedo"));
+                session.CommandSession.Complete();
                 break;
             case "CLEAR":
-                Viewport.ClearDocument();
-                _commandSession.Complete();
-                ModeText.Text = GetString("Status_Cleared");
+                session.Viewport.ClearDocument();
+                session.CommandSession.Complete();
+                SetSessionStatus(session, GetString("Status_Cleared"));
                 break;
             case "RESETVIEW":
-                Viewport.ResetView();
-                _commandSession.Complete();
-                ModeText.Text = GetString("Status_ViewReset");
+                session.Viewport.ResetView();
+                session.CommandSession.Complete();
+                SetSessionStatus(session, GetString("Status_ViewReset"));
                 break;
         }
     }
 
-    private void SetDrawingPrompt(DrawingCommandKind kind, int acceptedPointCount)
+    private void SetDrawingPrompt(CadWorkspaceSession session, DrawingCommandKind kind, int acceptedPointCount)
     {
         var key = kind switch
         {
@@ -243,42 +466,34 @@ public sealed partial class MainWindow : Window
             },
             _ => "Status_Ready"
         };
-        ModeText.Text = GetString(key);
-    }
-
-    private static bool TryGetDrawingKind(string commandName, out DrawingCommandKind kind)
-    {
-        kind = commandName switch
-        {
-            "LINE" => DrawingCommandKind.Line,
-            "PLINE" => DrawingCommandKind.Polyline,
-            "RECTANGLE" => DrawingCommandKind.Rectangle,
-            "CIRCLE" => DrawingCommandKind.Circle,
-            "ARC" => DrawingCommandKind.Arc,
-            _ => default
-        };
-
-        return commandName is "LINE" or "PLINE" or "RECTANGLE" or "CIRCLE" or "ARC";
+        SetSessionStatus(session, GetString(key));
     }
 
     private void CancelActiveCommand()
     {
-        CommandInput.Text = string.Empty;
-        if (_commandSession.ActiveCommand is not null && TryGetDrawingKind(_commandSession.ActiveCommand.Name, out _))
+        var session = ActiveSession;
+        if (session is null)
         {
-            Viewport.CancelDrawingCommand();
+            return;
         }
 
-        if (_commandSession.Cancel())
+        CommandInput.Text = string.Empty;
+        if (session.CommandSession.ActiveCommand?.DrawingKind is not null)
         {
-            _commandBasePoint = null;
-            ModeText.Text = GetString("Status_CommandCancelled");
+            session.Viewport.CancelDrawingCommand();
+        }
+
+        if (session.CommandSession.Cancel())
+        {
+            session.CommandBasePoint = null;
+            SetSessionStatus(session, GetString("Status_CommandCancelled"));
         }
         else
         {
-            ModeText.Text = GetString("Status_Ready");
+            SetSessionStatus(session, GetString("Status_Ready"));
         }
 
+        UpdateSessionUi(session);
         CommandInput.Focus(FocusState.Programmatic);
     }
 }

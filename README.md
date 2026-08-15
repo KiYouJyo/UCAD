@@ -11,19 +11,21 @@
 
 UCAD 目标是建立一套 Windows 原生、接近 AutoCAD 操作习惯、面向建筑与规划高频二维制图任务的轻量 CAD。坚持 DXF-first、2D-first，不以复制完整 AutoCAD 为目标。
 
-**当前版本 v0.3.0 — Drawing Foundation。** 已形成第一套完整绘图闭环：AutoCAD 风格命令输入、LINE / PLINE / RECTANGLE / CIRCLE / ARC、鼠标与坐标混合输入、实时预览，以及文档级 Undo / Redo。
+**当前版本 v0.3.5 — Workspace Shell Foundation。** 在 v0.3 的 LINE / PLINE / RECTANGLE / CIRCLE / ARC 与 Undo / Redo 绘图闭环之上，加入了浏览器式多文档工作区、持久分类工具栏、左侧高频命令区、Inspector、命令搜索与统一 UI↔Core 状态桥，为 v0.4 的选择 / OSNAP / Ortho 奠定界面和状态基础。
 
 ## 安装
 
 从 [GitHub Releases](https://github.com/KiYouJyo/UCAD/releases/latest) 下载：
 
-- `UCAD-v0.3.0-x64-one-click.zip`：普通用户推荐。
-- `UCAD_0.3.0.0_x64.msixbundle`：高级用户直接侧载。
+- `UCAD-v0.3.5-x64-one-click.zip`：普通用户推荐。
+- `UCAD_0.3.5.0_x64.msixbundle`：高级用户直接侧载。
 - `SHA256SUMS.txt`：完整性校验。
 
 首次 one-click 安装仅在建立 `LocalMachine\TrustedPeople` 公钥信任时触发一次 UAC；MSIX 本体仍在当前用户上下文安装。
 
-## 当前命令
+## 当前工作区与命令
+
+每个顶部标签都是独立的内存 CAD 会话，分别保存自己的图形、Undo/Redo、命令状态和视图状态。v0.3.5 尚未实现文件保存/打开，因此关闭含有绘图内容的标签会先提示内容将丢失。
 
 | 命令 | 别名 | 功能 |
 | --- | --- | --- |
@@ -37,7 +39,9 @@ UCAD 目标是建立一套 Windows 原生、接近 AutoCAD 操作习惯、面向
 | `CLEAR` | — | 清空图形 |
 | `RESETVIEW` | `RV` | 重置视图 |
 
-点输入支持 `x,y`、`@x,y` 与已有基点后的距离；Enter / Space 确认，Esc 取消，空输入确认可重复上一命令。
+同一命令可从顶部工具棚、左侧高频栏、命令搜索或底部命令行进入，最终统一路由到 `CommandRegistry` / `CommandSession`。点输入支持 `x,y`、`@x,y` 与已有基点后的距离；Enter / Space 确认，Esc 取消，空输入确认可重复上一命令。
+
+未完成的选择、MOVE/COPY/OFFSET/TRIM、图层、OSNAP、ORTHO 等控件在新 UI 中保留正确位置但保持禁用，避免误导用户。
 
 ## 三语支持
 
@@ -47,7 +51,7 @@ UCAD 目标是建立一套 Windows 原生、接近 AutoCAD 操作习惯、面向
 
 ```text
 src/UCAD.Core/          几何、实体、文档历史与命令核心
-src/UCAD.App/           WinUI 3 / Win2D 交互、渲染与 MSIX
+src/UCAD.App/           WinUI 3 / Win2D 工作区、交互、渲染与 MSIX
 tests/                  自动化测试
 packaging/              一键安装与发布校验
 release/                发布 SSOT 元数据
@@ -69,7 +73,7 @@ dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release
 - [架构说明](docs/ARCHITECTURE.md)
 - [发布流程](docs/RELEASE-PROCESS.md)
 - [打包说明](packaging/README.md)
-- [v0.3.0 发布说明](docs/RELEASE-NOTES-v0.3.0.md)
+- [v0.3.5 发布说明](docs/RELEASE-NOTES-v0.3.5.md)
 
 ## 许可证
 

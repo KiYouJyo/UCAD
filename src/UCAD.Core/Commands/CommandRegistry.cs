@@ -40,15 +40,15 @@ public sealed class CommandRegistry
     public static CommandRegistry CreateDefault()
     {
         var registry = new CommandRegistry();
-        registry.Register(new CadCommandDefinition("LINE", "L"));
-        registry.Register(new CadCommandDefinition("PLINE", "PL"));
-        registry.Register(new CadCommandDefinition("RECTANGLE", "REC"));
-        registry.Register(new CadCommandDefinition("CIRCLE", "C"));
-        registry.Register(new CadCommandDefinition("ARC", "A"));
-        registry.Register(new CadCommandDefinition("UNDO", "U"));
-        registry.Register(new CadCommandDefinition("REDO"));
-        registry.Register(new CadCommandDefinition("CLEAR"));
-        registry.Register(new CadCommandDefinition("RESETVIEW", "RV"));
+        registry.Register(new CadCommandDefinition("LINE", CadCommandCategory.Draw, DrawingCommandKind.Line, "L"));
+        registry.Register(new CadCommandDefinition("PLINE", CadCommandCategory.Draw, DrawingCommandKind.Polyline, "PL"));
+        registry.Register(new CadCommandDefinition("RECTANGLE", CadCommandCategory.Draw, DrawingCommandKind.Rectangle, "REC"));
+        registry.Register(new CadCommandDefinition("CIRCLE", CadCommandCategory.Draw, DrawingCommandKind.Circle, "C"));
+        registry.Register(new CadCommandDefinition("ARC", CadCommandCategory.Draw, DrawingCommandKind.Arc, "A"));
+        registry.Register(new CadCommandDefinition("UNDO", CadCommandCategory.Edit, "U"));
+        registry.Register(new CadCommandDefinition("REDO", CadCommandCategory.Edit));
+        registry.Register(new CadCommandDefinition("CLEAR", CadCommandCategory.Edit));
+        registry.Register(new CadCommandDefinition("RESETVIEW", CadCommandCategory.View, "RV"));
         return registry;
     }
 }

@@ -7,6 +7,74 @@
   <data name="AppDisplayName" xml:space="preserve"><value>UCAD</value></data>
   <data name="AppDescription" xml:space="preserve"><value>Lightweight 2D CAD for urban planning and architectural design</value></data>
   <data name="AppWindowTitle" xml:space="preserve"><value>UCAD — Urban Computer-Aided Design</value></data>
+
+  <data name="FileMenuButton.Content" xml:space="preserve"><value>File</value></data>
+  <data name="EditMenuButton.Content" xml:space="preserve"><value>Edit</value></data>
+  <data name="ViewMenuButton.Content" xml:space="preserve"><value>View</value></data>
+  <data name="NewDrawingMenuItem.Text" xml:space="preserve"><value>New drawing</value></data>
+  <data name="CloseDrawingMenuItem.Text" xml:space="preserve"><value>Close current drawing</value></data>
+  <data name="UndoMenuItem.Text" xml:space="preserve"><value>Undo</value></data>
+  <data name="RedoMenuItem.Text" xml:space="preserve"><value>Redo</value></data>
+  <data name="ClearMenuItem.Text" xml:space="preserve"><value>Clear drawing</value></data>
+  <data name="ResetViewMenuItem.Text" xml:space="preserve"><value>Reset view</value></data>
+
+  <data name="DrawCategoryButton.Content" xml:space="preserve"><value>Draw</value></data>
+  <data name="ModifyCategoryButton.Content" xml:space="preserve"><value>Modify</value></data>
+  <data name="AnnotateCategoryButton.Content" xml:space="preserve"><value>Annotate</value></data>
+  <data name="LayersCategoryButton.Content" xml:space="preserve"><value>Layers</value></data>
+  <data name="BlocksCategoryButton.Content" xml:space="preserve"><value>Blocks</value></data>
+  <data name="MeasureCategoryButton.Content" xml:space="preserve"><value>Measure</value></data>
+  <data name="ViewCategoryButton.Content" xml:space="preserve"><value>View</value></data>
+  <data name="CommandSearch.PlaceholderText" xml:space="preserve"><value>Search commands</value></data>
+
+  <data name="LineToolLabel.Text" xml:space="preserve"><value>Line</value></data>
+  <data name="PolylineToolLabel.Text" xml:space="preserve"><value>Polyline</value></data>
+  <data name="RectangleToolLabel.Text" xml:space="preserve"><value>Rectangle</value></data>
+  <data name="CircleToolLabel.Text" xml:space="preserve"><value>Circle</value></data>
+  <data name="ArcToolLabel.Text" xml:space="preserve"><value>Arc</value></data>
+  <data name="HatchToolLabel.Text" xml:space="preserve"><value>Hatch</value></data>
+  <data name="BoundaryToolLabel.Text" xml:space="preserve"><value>Boundary</value></data>
+  <data name="RayToolLabel.Text" xml:space="preserve"><value>Ray</value></data>
+  <data name="ConstructionToolLabel.Text" xml:space="preserve"><value>XLine</value></data>
+  <data name="ResetViewToolLabel.Text" xml:space="preserve"><value>Reset view</value></data>
+  <data name="ToolShelfHintText.Text" xml:space="preserve"><value>Click the active category again to collapse the tool shelf</value></data>
+  <data name="ToolShelfHint" xml:space="preserve"><value>Click the active category again to collapse the tool shelf</value></data>
+
+  <data name="RectangleMoreItem.Text" xml:space="preserve"><value>Rectangle</value></data>
+  <data name="CircleMoreItem.Text" xml:space="preserve"><value>Circle</value></data>
+  <data name="ArcMoreItem.Text" xml:space="preserve"><value>Arc</value></data>
+  <data name="UndoMoreItem.Text" xml:space="preserve"><value>Undo</value></data>
+  <data name="RedoMoreItem.Text" xml:space="preserve"><value>Redo</value></data>
+  <data name="ClearMoreItem.Text" xml:space="preserve"><value>Clear drawing</value></data>
+  <data name="ResetViewMoreItem.Text" xml:space="preserve"><value>Reset view</value></data>
+
+  <data name="PropertiesTabButton.Content" xml:space="preserve"><value>Properties</value></data>
+  <data name="LayersTabButton.Content" xml:space="preserve"><value>Layers</value></data>
+  <data name="NoSelectionText.Text" xml:space="preserve"><value>No selection</value></data>
+  <data name="SelectionUnavailableText.Text" xml:space="preserve"><value>Selection arrives in v0.4.0; this panel currently exposes active-document state.</value></data>
+  <data name="DocumentSectionText.Text" xml:space="preserve"><value>DOCUMENT</value></data>
+  <data name="EntityCountLabel.Text" xml:space="preserve"><value>Entities</value></data>
+  <data name="ActiveCommandLabel.Text" xml:space="preserve"><value>Active command</value></data>
+  <data name="UndoAvailableLabel.Text" xml:space="preserve"><value>Undo available</value></data>
+  <data name="RedoAvailableLabel.Text" xml:space="preserve"><value>Redo available</value></data>
+  <data name="V04FoundationHint.Text" xml:space="preserve"><value>v0.3.5 connects tabs, command metadata, and document change state to Core, giving v0.4.0 one state boundary for selection, snapping, and ortho.</value></data>
+  <data name="Inspector_None" xml:space="preserve"><value>—</value></data>
+  <data name="Inspector_Yes" xml:space="preserve"><value>Yes</value></data>
+  <data name="Inspector_No" xml:space="preserve"><value>No</value></data>
+
+  <data name="SnapStatusButton.Content" xml:space="preserve"><value>SNAP</value></data>
+  <data name="GridStatusButton.Content" xml:space="preserve"><value>GRID</value></data>
+  <data name="OrthoStatusButton.Content" xml:space="preserve"><value>ORTHO</value></data>
+  <data name="PolarStatusButton.Content" xml:space="preserve"><value>POLAR</value></data>
+  <data name="OsnapStatusButton.Content" xml:space="preserve"><value>OSNAP</value></data>
+  <data name="OtrackStatusButton.Content" xml:space="preserve"><value>OTRACK</value></data>
+
+  <data name="Document_UntitledFormat" xml:space="preserve"><value>Drawing {0}</value></data>
+  <data name="CloseDirtyDialog_Title" xml:space="preserve"><value>Close unsaved drawing?</value></data>
+  <data name="CloseDirtyDialog_Content" xml:space="preserve"><value>“{0}” contains drawing content that has not been saved to a file. File saving is not available in v0.3.5; closing it will discard that content.</value></data>
+  <data name="CloseDirtyDialog_Primary" xml:space="preserve"><value>Close anyway</value></data>
+  <data name="CloseDirtyDialog_Cancel" xml:space="preserve"><value>Cancel</value></data>
+
   <data name="LineButton.Label" xml:space="preserve"><value>Line</value></data>
   <data name="PolylineButton.Label" xml:space="preserve"><value>Polyline</value></data>
   <data name="RectangleButton.Label" xml:space="preserve"><value>Rectangle</value></data>
