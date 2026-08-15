@@ -7,49 +7,49 @@
         <MicaBackdrop Kind="Base" />
     </Window.SystemBackdrop>
 
-    <Window.Resources>
-        <Style x:Key="ShellMenuButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="CornerRadius" Value="4" />
-            <Setter Property="MinHeight" Value="30" />
-            <Setter Property="MinWidth" Value="0" />
-            <Setter Property="Padding" Value="10,5" />
-        </Style>
-        <Style x:Key="CategoryButtonStyle" TargetType="ToggleButton">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="CornerRadius" Value="4" />
-            <Setter Property="MinHeight" Value="30" />
-            <Setter Property="MinWidth" Value="0" />
-            <Setter Property="Padding" Value="10,5" />
-        </Style>
-        <Style x:Key="ToolShelfButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="CornerRadius" Value="5" />
-            <Setter Property="Width" Value="78" />
-            <Setter Property="Height" Value="56" />
-            <Setter Property="Padding" Value="4,2" />
-        </Style>
-        <Style x:Key="ToolRailButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="CornerRadius" Value="5" />
-            <Setter Property="Width" Value="36" />
-            <Setter Property="Height" Value="36" />
-            <Setter Property="Padding" Value="0" />
-        </Style>
-        <Style x:Key="InspectorTabStyle" TargetType="ToggleButton">
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="CornerRadius" Value="4" />
-            <Setter Property="MinHeight" Value="30" />
-            <Setter Property="Padding" Value="10,5" />
-        </Style>
-    </Window.Resources>
-
     <Grid x:Name="RootLayout" KeyDown="RootLayout_KeyDown">
+        <Grid.Resources>
+            <Style x:Key="ShellMenuButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="CornerRadius" Value="4" />
+                <Setter Property="MinHeight" Value="30" />
+                <Setter Property="MinWidth" Value="0" />
+                <Setter Property="Padding" Value="10,5" />
+            </Style>
+            <Style x:Key="CategoryButtonStyle" TargetType="ToggleButton">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="CornerRadius" Value="4" />
+                <Setter Property="MinHeight" Value="30" />
+                <Setter Property="MinWidth" Value="0" />
+                <Setter Property="Padding" Value="10,5" />
+            </Style>
+            <Style x:Key="ToolShelfButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="CornerRadius" Value="5" />
+                <Setter Property="Width" Value="78" />
+                <Setter Property="Height" Value="56" />
+                <Setter Property="Padding" Value="4,2" />
+            </Style>
+            <Style x:Key="ToolRailButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="CornerRadius" Value="5" />
+                <Setter Property="Width" Value="36" />
+                <Setter Property="Height" Value="36" />
+                <Setter Property="Padding" Value="0" />
+            </Style>
+            <Style x:Key="InspectorTabStyle" TargetType="ToggleButton">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="CornerRadius" Value="4" />
+                <Setter Property="MinHeight" Value="30" />
+                <Setter Property="Padding" Value="10,5" />
+            </Style>
+        </Grid.Resources>
+
         <Grid.RowDefinitions>
             <RowDefinition Height="44" />
             <RowDefinition Height="44" />
@@ -169,7 +169,7 @@
             <Grid Padding="8,4">
                 <StackPanel x:Name="DrawToolShelf" Orientation="Horizontal" Spacing="2">
                     <Button x:Uid="LineShelfButton" Tag="LINE" Click="RunCommand_Click" Style="{StaticResource ToolShelfButtonStyle}">
-                        <StackPanel HorizontalAlignment="Center" Spacing="0">
+                        <StackPanel HorizontalAlignment="Center">
                             <TextBlock Text="╱" FontSize="16" HorizontalAlignment="Center" />
                             <TextBlock x:Uid="LineToolLabel" FontSize="10" HorizontalAlignment="Center" />
                             <TextBlock Text="L" FontSize="8" Opacity="0.65" HorizontalAlignment="Center" />
@@ -316,7 +316,11 @@
                 </Grid>
             </Border>
 
-            <ContentControl x:Name="ViewportHost" Grid.Column="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
+            <ContentControl
+                x:Name="ViewportHost"
+                Grid.Column="1"
+                HorizontalContentAlignment="Stretch"
+                VerticalContentAlignment="Stretch" />
 
             <Border
                 Grid.Column="2"
@@ -356,7 +360,12 @@
                             <TextBlock x:Name="RedoAvailableValue" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="11" />
                         </Grid>
 
-                        <Border Margin="0,16,0,0" Padding="10" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4">
+                        <Border
+                            Margin="0,16,0,0"
+                            Padding="10"
+                            BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="4">
                             <TextBlock x:Uid="V04FoundationHint" FontSize="10" Opacity="0.62" TextWrapping="Wrap" />
                         </Border>
                     </StackPanel>
@@ -403,7 +412,13 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBlock x:Name="CoordinateText" VerticalAlignment="Center" Text="X 0.00  Y 0.00" FontFamily="Cascadia Mono" FontSize="10" Opacity="0.65" />
+                <TextBlock
+                    x:Name="CoordinateText"
+                    VerticalAlignment="Center"
+                    Text="X 0.00  Y 0.00"
+                    FontFamily="Cascadia Mono"
+                    FontSize="10"
+                    Opacity="0.65" />
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                     <Button x:Uid="SnapStatusButton" IsEnabled="False" Style="{StaticResource ShellMenuButtonStyle}" FontSize="10" Padding="7,2" MinHeight="20" />
                     <Button x:Uid="GridStatusButton" IsEnabled="False" Style="{StaticResource ShellMenuButtonStyle}" FontSize="10" Padding="7,2" MinHeight="20" />
