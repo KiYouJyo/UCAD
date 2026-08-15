@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.6 — 2026-08-15
+
+### Startup reliability
+- Deferred initial `CadWorkspaceSession` / Win2D `CadViewport` creation until the root visual tree is loaded instead of constructing it inside `MainWindow()` before window activation.
+- Added startup diagnostics at `%LOCALAPPDATA%\UCAD\Logs\startup.log` for launch stages and unhandled exceptions.
+- Preserved the v0.3.5 multi-document workspace architecture and existing CAD commands.
+
+### Validation
+- Added a Windows `startup-smoke` CI job that actually launches `UCAD.App.exe`, waits eight seconds, and fails if the process exits unexpectedly.
+- Startup smoke prints the startup diagnostic log on failure.
+- Added a PR-only one-click acceptance package so installed-environment startup can be manually verified before release.
+
 ## 0.3.5 — 2026-08-15
 
 ### Workspace shell
