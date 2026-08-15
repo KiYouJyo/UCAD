@@ -4,6 +4,10 @@
 **都市計画支援CAD（アーバンCAD）**  
 *Lightweight 2D CAD for Urban Planning & Architecture*
 
+[![CI](https://github.com/KiYouJyo/UCAD/actions/workflows/ci.yml/badge.svg)](https://github.com/KiYouJyo/UCAD/actions/workflows/ci.yml)
+[![Release](https://github.com/KiYouJyo/UCAD/actions/workflows/release.yml/badge.svg)](https://github.com/KiYouJyo/UCAD/actions/workflows/release.yml)
+![License](https://img.shields.io/badge/license-GPL--2.0--only-blue.svg)
+
 > **v0.1 · Foundation Preview** — UCAD is at the technical-foundation stage. It is not yet a production CAD application and does not yet claim DXF/DWG compatibility.
 
 UCAD is an open-source Windows desktop project exploring a lightweight 2D CAD workflow for architecture and urban planning. The long-term direction is a modern WinUI 3 interface with familiar command-driven CAD interaction, a focused planning/architecture feature set, and a rendering/core architecture that can grow without turning the application into a multi-gigabyte general-purpose CAD suite.
