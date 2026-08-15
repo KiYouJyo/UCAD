@@ -33,3 +33,16 @@ jobs:
         run: dotnet restore src/UCAD.App/UCAD.App.csproj -p:Platform=x64
       - name: Build app
         run: dotnet build src/UCAD.App/UCAD.App.csproj --configuration Release --no-restore -p:Platform=x64
+
+  one-click-installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate installer package
+        shell: pwsh
+        run: |
+          $out = Join-Path $env:RUNNER_TEMP 'UCAD-OneClick-CI'
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          & ./packaging/New-GitHubOneClickInstallerPackage.ps1 -OutputDirectory $out -DisplayVersion '0.1.0' -ArchiveName 'UCAD-v0.1.0-win-x64.zip'
+          $root = Join-Path $out 'UCAD-v0.1.0-x64-one-click'
+          & ./packaging/Test-GitHubOneClickInstallerPackage.ps1 -ReleaseDirectory $root
