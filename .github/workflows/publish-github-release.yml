@@ -169,11 +169,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = '${{ steps.release.outputs.tag }}'
+          $PSNativeCommandUseErrorActionPreference = $false
           $releaseJson = gh api "repos/${{ github.repository }}/releases/tags/$tag" 2>$null
-          if ($LASTEXITCODE -eq 0 -and $releaseJson) {
+          $lookupExit = $LASTEXITCODE
+          if ($lookupExit -eq 0 -and $releaseJson) {
             $release = $releaseJson | ConvertFrom-Json
             $expected = @('${{ steps.release.outputs.bundle_name }}','${{ steps.release.outputs.one_click_name }}','SHA256SUMS.txt')
             $assets = gh api "repos/${{ github.repository }}/releases/$($release.id)/assets" | ConvertFrom-Json
+            if ($LASTEXITCODE -ne 0) { throw 'Failed to enumerate existing Release assets.' }
             foreach ($asset in $assets) {
               if ($asset.name -notin $expected) {
                 Write-Output "Deleting obsolete asset: $($asset.name)"
@@ -181,6 +184,8 @@ jobs:
                 if ($LASTEXITCODE -ne 0) { throw "Failed to delete obsolete asset: $($asset.name)" }
               }
             }
+          } else {
+            Write-Output "No existing Release for $tag; cleanup skipped."
           }
 
       - name: Publish GitHub Release
@@ -193,6 +198,7 @@ jobs:
           prerelease: false
           make_latest: true
           fail_on_unmatched_files: true
+          overwrite_files: true
           files: |
             ${{ env.ASSETS_PATH }}/${{ steps.release.outputs.bundle_name }}
             ${{ env.ASSETS_PATH }}/${{ steps.release.outputs.one_click_name }}
