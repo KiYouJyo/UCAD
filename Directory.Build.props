@@ -3,6 +3,11 @@
     <LangVersion>latest</LangVersion>
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
-    <VersionPrefix>0.1.0</VersionPrefix>
+    <UcadVersion>$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)VERSION').Trim())</UcadVersion>
+    <Version>$(UcadVersion)</Version>
+    <VersionPrefix>$(UcadVersion)</VersionPrefix>
+    <AssemblyVersion>$(UcadVersion).0</AssemblyVersion>
+    <FileVersion>$(UcadVersion).0</FileVersion>
+    <InformationalVersion>$(UcadVersion)</InformationalVersion>
   </PropertyGroup>
 </Project>
