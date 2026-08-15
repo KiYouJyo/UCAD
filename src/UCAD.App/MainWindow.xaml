@@ -7,597 +7,168 @@
         <MicaBackdrop Kind="Base" />
     </Window.SystemBackdrop>
 
-    <Grid
-        x:Name="RootLayout"
-        Background="{StaticResource UcadAppBackgroundBrush}"
-        RequestedTheme="Dark"
-        KeyDown="RootLayout_KeyDown">
-
+    <Grid x:Name="RootLayout" Background="{StaticResource UcadAppBackgroundBrush}" RequestedTheme="Dark" KeyDown="RootLayout_KeyDown">
         <Grid.RowDefinitions>
-            <RowDefinition Height="44" />
-            <RowDefinition Height="44" />
+            <RowDefinition Height="{StaticResource UcadTitleBarHeight}" />
+            <RowDefinition Height="{StaticResource UcadCategoryBarHeight}" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="34" />
-            <RowDefinition Height="30" />
+            <RowDefinition Height="{StaticResource UcadCommandLineHeight}" />
+            <RowDefinition Height="{StaticResource UcadStatusBarHeight}" />
         </Grid.RowDefinitions>
 
-        <!-- Browser-like multi-document title bar. The TitleBar control preserves native caption behavior
-             while LeftHeader + Content reproduce the Figma v0.2 tab-strip composition. -->
-        <TitleBar
-            x:Name="AppTitleBar"
-            Grid.Row="0"
-            Height="44"
-            Background="{StaticResource UcadTitleBarBrush}"
-            HorizontalContentAlignment="Stretch"
-            IsBackButtonVisible="False"
-            IsPaneToggleButtonVisible="False">
-            <TitleBar.LeftHeader>
-                <Grid Width="81" Height="44">
-                    <StackPanel
-                        Orientation="Horizontal"
-                        Spacing="8"
-                        VerticalAlignment="Center"
-                        Margin="6,0,0,0">
-                        <Border
-                            Width="24"
-                            Height="24"
-                            Background="{StaticResource UcadControlFillBrush}"
-                            CornerRadius="5">
-                            <TextBlock
-                                Text="UA"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                FontSize="8"
-                                FontWeight="SemiBold"
-                                Foreground="{StaticResource UcadTextPrimaryBrush}" />
-                        </Border>
-                        <TextBlock
-                            Text="UCAD"
-                            VerticalAlignment="Center"
-                            FontSize="12"
-                            FontWeight="SemiBold"
-                            Foreground="{StaticResource UcadTextPrimaryBrush}" />
-                    </StackPanel>
-                </Grid>
-            </TitleBar.LeftHeader>
-            <TitleBar.Content>
-                <TabView
-                    x:Name="DocumentTabs"
-                    Height="44"
-                    Margin="4,0,0,0"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch"
-                    Background="Transparent"
-                    IsAddTabButtonVisible="True"
-                    TabWidthMode="SizeToContent"
-                    CloseButtonOverlayMode="OnPointerOver"
-                    AddTabButtonClick="DocumentTabs_AddTabButtonClick"
-                    SelectionChanged="DocumentTabs_SelectionChanged"
-                    TabCloseRequested="DocumentTabs_TabCloseRequested" />
-            </TitleBar.Content>
-        </TitleBar>
+        <!-- Explicit browser-style strip: Brand -> Tabs -> Drag region -> native caption buttons. -->
+        <Grid Grid.Row="0" Height="44" Padding="8,0,138,0" Background="{StaticResource UcadTitleBarBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Width="77" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="6,0,0,0">
+                <Border Width="24" Height="24" Background="{StaticResource UcadControlFillBrush}" CornerRadius="5">
+                    <TextBlock Text="UA" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="8" FontWeight="SemiBold" Foreground="{StaticResource UcadTextPrimaryBrush}" />
+                </Border>
+                <TextBlock Text="UCAD" VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource UcadTextPrimaryBrush}" />
+            </StackPanel>
+            <TabView
+                x:Name="DocumentTabs"
+                Grid.Column="1"
+                Height="44"
+                Width="230"
+                HorizontalAlignment="Left"
+                Background="Transparent"
+                IsAddTabButtonVisible="True"
+                TabWidthMode="SizeToContent"
+                CloseButtonOverlayMode="OnPointerOver"
+                AddTabButtonClick="DocumentTabs_AddTabButtonClick"
+                SelectionChanged="DocumentTabs_SelectionChanged"
+                TabCloseRequested="DocumentTabs_TabCloseRequested" />
+            <Grid x:Name="TitleDragRegion" Grid.Column="2" Background="Transparent" />
+        </Grid>
 
-        <!-- Persistent CAD category bar -->
-        <Border
-            Grid.Row="1"
-            Background="{StaticResource UcadCategoryBarBrush}"
-            BorderBrush="{StaticResource UcadDividerBrush}"
-            BorderThickness="0,0,0,1">
+        <!-- Persistent category bar shared by Drawing / Start / Settings. -->
+        <Border Grid.Row="1" Background="{StaticResource UcadCategoryBarBrush}" BorderBrush="{StaticResource UcadDividerBrush}" BorderThickness="0,0,0,1">
             <Grid Padding="8,0" ColumnSpacing="4">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="180" />
+                    <ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" /><ColumnDefinition Width="172" /><ColumnDefinition Width="36" />
                 </Grid.ColumnDefinitions>
-
                 <Button x:Uid="FileMenuButton" Grid.Column="0" Style="{StaticResource UcadShellMenuButtonStyle}">
-                    <Button.Flyout>
-                        <MenuFlyout>
-                            <MenuFlyoutItem x:Uid="NewDrawingMenuItem" Click="NewDrawingMenuItem_Click" />
-                            <MenuFlyoutItem x:Uid="CloseDrawingMenuItem" Click="CloseDrawingMenuItem_Click" />
-                        </MenuFlyout>
-                    </Button.Flyout>
+                    <Button.Flyout><MenuFlyout><MenuFlyoutItem x:Uid="NewDrawingMenuItem" Click="NewDrawingMenuItem_Click" /><MenuFlyoutItem x:Uid="CloseDrawingMenuItem" Click="CloseDrawingMenuItem_Click" /></MenuFlyout></Button.Flyout>
                 </Button>
                 <Button x:Uid="EditMenuButton" Grid.Column="1" Style="{StaticResource UcadShellMenuButtonStyle}">
-                    <Button.Flyout>
-                        <MenuFlyout>
-                            <MenuFlyoutItem x:Name="UndoMenuItem" x:Uid="UndoMenuItem" Tag="UNDO" Click="RunCommand_Click" />
-                            <MenuFlyoutItem x:Name="RedoMenuItem" x:Uid="RedoMenuItem" Tag="REDO" Click="RunCommand_Click" />
-                            <MenuFlyoutSeparator />
-                            <MenuFlyoutItem x:Uid="ClearMenuItem" Tag="CLEAR" Click="RunCommand_Click" />
-                        </MenuFlyout>
-                    </Button.Flyout>
+                    <Button.Flyout><MenuFlyout><MenuFlyoutItem x:Name="UndoMenuItem" x:Uid="UndoMenuItem" Tag="UNDO" Click="RunCommand_Click" /><MenuFlyoutItem x:Name="RedoMenuItem" x:Uid="RedoMenuItem" Tag="REDO" Click="RunCommand_Click" /><MenuFlyoutSeparator /><MenuFlyoutItem x:Uid="ClearMenuItem" Tag="CLEAR" Click="RunCommand_Click" /></MenuFlyout></Button.Flyout>
                 </Button>
                 <Button x:Uid="ViewMenuButton" Grid.Column="2" Style="{StaticResource UcadShellMenuButtonStyle}">
-                    <Button.Flyout>
-                        <MenuFlyout>
-                            <MenuFlyoutItem x:Uid="ResetViewMenuItem" Tag="RESETVIEW" Click="RunCommand_Click" />
-                        </MenuFlyout>
-                    </Button.Flyout>
+                    <Button.Flyout><MenuFlyout><MenuFlyoutItem x:Uid="ResetViewMenuItem" Tag="RESETVIEW" Click="RunCommand_Click" /></MenuFlyout></Button.Flyout>
                 </Button>
-
-                <Rectangle
-                    Grid.Column="3"
-                    Width="1"
-                    Height="24"
-                    Fill="{StaticResource UcadDividerBrush}" />
-
-                <ToggleButton
-                    x:Name="DrawCategoryButton"
-                    x:Uid="DrawCategoryButton"
-                    Grid.Column="4"
-                    Tag="DRAW"
-                    IsChecked="True"
-                    Background="{StaticResource UcadCategorySelectedBrush}"
-                    Foreground="{StaticResource UcadTextPrimaryBrush}"
-                    FontWeight="SemiBold"
-                    Style="{StaticResource UcadCategoryButtonStyle}"
-                    Click="CategoryButton_Click" />
-                <ToggleButton
-                    x:Name="ModifyCategoryButton"
-                    x:Uid="ModifyCategoryButton"
-                    Grid.Column="5"
-                    Tag="MODIFY"
-                    Style="{StaticResource UcadCategoryButtonStyle}"
-                    Click="CategoryButton_Click" />
-                <ToggleButton
-                    x:Name="AnnotateCategoryButton"
-                    x:Uid="AnnotateCategoryButton"
-                    Grid.Column="6"
-                    Tag="ANNOTATE"
-                    Style="{StaticResource UcadCategoryButtonStyle}"
-                    Click="CategoryButton_Click" />
-                <ToggleButton
-                    x:Name="LayersCategoryButton"
-                    x:Uid="LayersCategoryButton"
-                    Grid.Column="7"
-                    Tag="LAYERS"
-                    Style="{StaticResource UcadCategoryButtonStyle}"
-                    Click="CategoryButton_Click" />
-                <ToggleButton
-                    x:Name="BlocksCategoryButton"
-                    x:Uid="BlocksCategoryButton"
-                    Grid.Column="8"
-                    Tag="BLOCKS"
-                    Style="{StaticResource UcadCategoryButtonStyle}"
-                    Click="CategoryButton_Click" />
-                <ToggleButton
-                    x:Name="MeasureCategoryButton"
-                    x:Uid="MeasureCategoryButton"
-                    Grid.Column="9"
-                    Tag="MEASURE"
-                    Style="{StaticResource UcadCategoryButtonStyle}"
-                    Click="CategoryButton_Click" />
-                <ToggleButton
-                    x:Name="ViewCategoryButton"
-                    x:Uid="ViewCategoryButton"
-                    Grid.Column="10"
-                    Tag="VIEW"
-                    Style="{StaticResource UcadCategoryButtonStyle}"
-                    Click="CategoryButton_Click" />
-
-                <AutoSuggestBox
-                    x:Name="CommandSearch"
-                    x:Uid="CommandSearch"
-                    Grid.Column="12"
-                    Width="180"
-                    Height="30"
-                    MinWidth="180"
-                    Background="{StaticResource UcadAppBackgroundBrush}"
-                    Foreground="{StaticResource UcadTextPrimaryBrush}"
-                    BorderBrush="{StaticResource UcadDividerBrush}"
-                    QueryIcon="Find"
-                    QuerySubmitted="CommandSearch_QuerySubmitted" />
+                <Rectangle Grid.Column="3" Width="1" Height="24" Fill="{StaticResource UcadDividerBrush}" />
+                <ToggleButton x:Name="DrawCategoryButton" x:Uid="DrawCategoryButton" Grid.Column="4" Tag="DRAW" Style="{StaticResource UcadCategoryButtonStyle}" Click="CategoryButton_Click" />
+                <ToggleButton x:Name="ModifyCategoryButton" x:Uid="ModifyCategoryButton" Grid.Column="5" Tag="MODIFY" Style="{StaticResource UcadCategoryButtonStyle}" Click="CategoryButton_Click" />
+                <ToggleButton x:Name="AnnotateCategoryButton" x:Uid="AnnotateCategoryButton" Grid.Column="6" Tag="ANNOTATE" Style="{StaticResource UcadCategoryButtonStyle}" Click="CategoryButton_Click" />
+                <ToggleButton x:Name="LayersCategoryButton" x:Uid="LayersCategoryButton" Grid.Column="7" Tag="LAYERS" Style="{StaticResource UcadCategoryButtonStyle}" Click="CategoryButton_Click" />
+                <ToggleButton x:Name="BlocksCategoryButton" x:Uid="BlocksCategoryButton" Grid.Column="8" Tag="BLOCKS" Style="{StaticResource UcadCategoryButtonStyle}" Click="CategoryButton_Click" />
+                <ToggleButton x:Name="MeasureCategoryButton" x:Uid="MeasureCategoryButton" Grid.Column="9" Tag="MEASURE" Style="{StaticResource UcadCategoryButtonStyle}" Click="CategoryButton_Click" />
+                <ToggleButton x:Name="ViewCategoryButton" x:Uid="ViewCategoryButton" Grid.Column="10" Tag="VIEW" Style="{StaticResource UcadCategoryButtonStyle}" Click="CategoryButton_Click" />
+                <AutoSuggestBox x:Name="CommandSearch" x:Uid="CommandSearch" Grid.Column="12" Width="172" Height="30" MinWidth="172" Background="{StaticResource UcadAppBackgroundBrush}" Foreground="{StaticResource UcadTextPrimaryBrush}" BorderBrush="{StaticResource UcadDividerBrush}" QueryIcon="Find" QuerySubmitted="CommandSearch_QuerySubmitted" />
+                <Button x:Name="SettingsButton" Grid.Column="13" Width="36" Height="30" Padding="0" Background="{StaticResource UcadAccentBrush}" BorderThickness="0" CornerRadius="4" Click="SettingsButton_Click" ToolTipService.ToolTip="Settings">
+                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE713;" FontSize="18" />
+                </Button>
             </Grid>
         </Border>
 
-        <!-- Category-specific tool shelf. It stays open until the active category is clicked again. -->
-        <Border
-            x:Name="ToolShelfHost"
-            Grid.Row="2"
-            Height="64"
-            Background="{StaticResource UcadToolShelfBrush}"
-            BorderBrush="{StaticResource UcadDividerBrush}"
-            BorderThickness="0,0,0,1">
+        <!-- Drawing-only persistent tool shelf. -->
+        <Border x:Name="ToolShelfHost" Grid.Row="2" Height="64" Background="{StaticResource UcadToolShelfBrush}" BorderBrush="{StaticResource UcadDividerBrush}" BorderThickness="0,0,0,1">
             <Grid Padding="8,5" ColumnSpacing="8">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="300" />
-                </Grid.ColumnDefinitions>
-
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="300" /></Grid.ColumnDefinitions>
                 <Grid Grid.Column="0">
                     <StackPanel x:Name="DrawToolShelf" Orientation="Horizontal" Spacing="4">
-                        <Button x:Uid="LineShelfButton" Tag="LINE" Click="RunCommand_Click" Style="{StaticResource UcadToolShelfButtonStyle}">
-                            <StackPanel HorizontalAlignment="Center" Spacing="1">
-                                <TextBlock Text="╱" FontSize="16" FontWeight="Medium" HorizontalAlignment="Center" />
-                                <TextBlock x:Uid="LineToolLabel" FontSize="10" FontWeight="Medium" HorizontalAlignment="Center" />
-                                <TextBlock Text="L" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" HorizontalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                        <Button x:Uid="PolylineShelfButton" Tag="PLINE" Click="RunCommand_Click" Style="{StaticResource UcadToolShelfButtonStyle}">
-                            <StackPanel HorizontalAlignment="Center" Spacing="1">
-                                <TextBlock Text="⌁" FontSize="16" FontWeight="Medium" HorizontalAlignment="Center" />
-                                <TextBlock x:Uid="PolylineToolLabel" FontSize="10" FontWeight="Medium" HorizontalAlignment="Center" />
-                                <TextBlock Text="PL" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" HorizontalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                        <Button x:Uid="RectangleShelfButton" Tag="RECTANGLE" Click="RunCommand_Click" Style="{StaticResource UcadToolShelfButtonStyle}">
-                            <StackPanel HorizontalAlignment="Center" Spacing="1">
-                                <TextBlock Text="▭" FontSize="16" FontWeight="Medium" HorizontalAlignment="Center" />
-                                <TextBlock x:Uid="RectangleToolLabel" FontSize="10" FontWeight="Medium" HorizontalAlignment="Center" />
-                                <TextBlock Text="REC" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" HorizontalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                        <Button x:Uid="CircleShelfButton" Tag="CIRCLE" Click="RunCommand_Click" Style="{StaticResource UcadToolShelfButtonStyle}">
-                            <StackPanel HorizontalAlignment="Center" Spacing="1">
-                                <TextBlock Text="○" FontSize="16" FontWeight="Medium" HorizontalAlignment="Center" />
-                                <TextBlock x:Uid="CircleToolLabel" FontSize="10" FontWeight="Medium" HorizontalAlignment="Center" />
-                                <TextBlock Text="C" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" HorizontalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                        <Button x:Uid="ArcShelfButton" Tag="ARC" Click="RunCommand_Click" Style="{StaticResource UcadToolShelfButtonStyle}">
-                            <StackPanel HorizontalAlignment="Center" Spacing="1">
-                                <TextBlock Text="◜" FontSize="16" FontWeight="Medium" HorizontalAlignment="Center" />
-                                <TextBlock x:Uid="ArcToolLabel" FontSize="10" FontWeight="Medium" HorizontalAlignment="Center" />
-                                <TextBlock Text="A" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" HorizontalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
+                        <Button x:Uid="LineShelfButton" Tag="LINE" Click="RunCommand_Click" Style="{StaticResource UcadToolShelfButtonStyle}"><StackPanel HorizontalAlignment="Center" Spacing="1"><PathIcon Width="16" Height="16" Data="M2,14 L14,2" /><TextBlock x:Uid="LineToolLabel" FontSize="10" FontWeight="Medium" HorizontalAlignment="Center" /><TextBlock Text="L" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" HorizontalAlignment="Center" /></StackPanel></Button>
+                        <Button x:Uid="PolylineShelfButton" Tag="PLINE" Click="RunCommand_Click" Style="{StaticResource UcadToolShelfButtonStyle}"><StackPanel HorizontalAlignment="Center" Spacing="1"><PathIcon Width="16" Height="16" Data="M2,13 L6,7 L10,11 L14,3" /><TextBlock x:Uid="PolylineToolLabel" FontSize="10" FontWeight="Medium" HorizontalAlignment="Center" /><TextBlock Text="PL" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" HorizontalAlignment="Center" /></StackPanel></Button>
+                        <Button x:Uid="RectangleShelfButton" Tag="RECTANGLE" Click="RunCommand_Click" Style="{StaticResource UcadToolShelfButtonStyle}"><StackPanel HorizontalAlignment="Center" Spacing="1"><PathIcon Width="16" Height="16" Data="M2,3 L14,3 L14,13 L2,13 Z" /><TextBlock x:Uid="RectangleToolLabel" FontSize="10" FontWeight="Medium" HorizontalAlignment="Center" /><TextBlock Text="REC" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" HorizontalAlignment="Center" /></StackPanel></Button>
+                        <Button x:Uid="CircleShelfButton" Tag="CIRCLE" Click="RunCommand_Click" Style="{StaticResource UcadToolShelfButtonStyle}"><StackPanel HorizontalAlignment="Center" Spacing="1"><PathIcon Width="16" Height="16" Data="M8,2 A6,6 0 1 1 7.99,2" /><TextBlock x:Uid="CircleToolLabel" FontSize="10" FontWeight="Medium" HorizontalAlignment="Center" /><TextBlock Text="C" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" HorizontalAlignment="Center" /></StackPanel></Button>
+                        <Button x:Uid="ArcShelfButton" Tag="ARC" Click="RunCommand_Click" Style="{StaticResource UcadToolShelfButtonStyle}"><StackPanel HorizontalAlignment="Center" Spacing="1"><PathIcon Width="16" Height="16" Data="M2,13 A11,11 0 0 1 13,2" /><TextBlock x:Uid="ArcToolLabel" FontSize="10" FontWeight="Medium" HorizontalAlignment="Center" /><TextBlock Text="A" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" HorizontalAlignment="Center" /></StackPanel></Button>
                         <Rectangle Width="1" Height="44" Margin="0,5" Fill="{StaticResource UcadDividerBrush}" />
-                        <Button x:Uid="HatchShelfButton" IsHitTestVisible="False" Opacity="0.42" Style="{StaticResource UcadToolShelfButtonStyle}">
-                            <StackPanel HorizontalAlignment="Center" Spacing="1">
-                                <TextBlock Text="▧" FontSize="17" HorizontalAlignment="Center" />
-                                <TextBlock x:Uid="HatchToolLabel" FontSize="10" FontWeight="Medium" HorizontalAlignment="Center" />
-                                <TextBlock Text="H" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" HorizontalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                        <Button x:Uid="BoundaryShelfButton" IsHitTestVisible="False" Opacity="0.42" Style="{StaticResource UcadToolShelfButtonStyle}">
-                            <StackPanel HorizontalAlignment="Center" Spacing="1">
-                                <TextBlock Text="⬚" FontSize="17" HorizontalAlignment="Center" />
-                                <TextBlock x:Uid="BoundaryToolLabel" FontSize="10" FontWeight="Medium" HorizontalAlignment="Center" />
-                                <TextBlock Text="BO" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" HorizontalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                        <Button x:Uid="RayShelfButton" IsHitTestVisible="False" Opacity="0.42" Style="{StaticResource UcadToolShelfButtonStyle}">
-                            <StackPanel HorizontalAlignment="Center" Spacing="1">
-                                <TextBlock Text="↗" FontSize="17" HorizontalAlignment="Center" />
-                                <TextBlock x:Uid="RayToolLabel" FontSize="10" FontWeight="Medium" HorizontalAlignment="Center" />
-                                <TextBlock Text="RAY" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" HorizontalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                        <Button x:Uid="ConstructionShelfButton" IsHitTestVisible="False" Opacity="0.42" Style="{StaticResource UcadToolShelfButtonStyle}">
-                            <StackPanel HorizontalAlignment="Center" Spacing="1">
-                                <TextBlock Text="＋" FontSize="17" HorizontalAlignment="Center" />
-                                <TextBlock x:Uid="ConstructionToolLabel" FontSize="10" FontWeight="Medium" HorizontalAlignment="Center" />
-                                <TextBlock Text="XL" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" HorizontalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
+                        <Button x:Uid="HatchShelfButton" IsHitTestVisible="False" Opacity="0.42" Style="{StaticResource UcadToolShelfButtonStyle}"><StackPanel HorizontalAlignment="Center" Spacing="1"><PathIcon Width="16" Height="16" Data="M2,13 L13,2 M6,14 L14,6 M2,9 L9,2" /><TextBlock x:Uid="HatchToolLabel" FontSize="10" FontWeight="Medium" /><TextBlock Text="H" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" /></StackPanel></Button>
+                        <Button x:Uid="BoundaryShelfButton" IsHitTestVisible="False" Opacity="0.42" Style="{StaticResource UcadToolShelfButtonStyle}"><StackPanel HorizontalAlignment="Center" Spacing="1"><PathIcon Width="16" Height="16" Data="M2,2 L14,2 L14,14 L2,14 Z M5,5 L11,5 L11,11 L5,11 Z" /><TextBlock x:Uid="BoundaryToolLabel" FontSize="10" FontWeight="Medium" /><TextBlock Text="BO" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" /></StackPanel></Button>
+                        <Button x:Uid="RayShelfButton" IsHitTestVisible="False" Opacity="0.42" Style="{StaticResource UcadToolShelfButtonStyle}"><StackPanel HorizontalAlignment="Center" Spacing="1"><PathIcon Width="16" Height="16" Data="M2,14 L13,3 M8,3 L13,3 L13,8" /><TextBlock x:Uid="RayToolLabel" FontSize="10" FontWeight="Medium" /><TextBlock Text="RAY" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" /></StackPanel></Button>
+                        <Button x:Uid="ConstructionShelfButton" IsHitTestVisible="False" Opacity="0.42" Style="{StaticResource UcadToolShelfButtonStyle}"><StackPanel HorizontalAlignment="Center" Spacing="1"><PathIcon Width="16" Height="16" Data="M2,8 L14,8 M8,2 L8,14" /><TextBlock x:Uid="ConstructionToolLabel" FontSize="10" FontWeight="Medium" /><TextBlock Text="XL" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" /></StackPanel></Button>
                     </StackPanel>
-
                     <StackPanel x:Name="ModifyToolShelf" Orientation="Horizontal" Spacing="4" Visibility="Collapsed">
-                        <Button IsHitTestVisible="False" Opacity="0.55" Style="{StaticResource UcadToolShelfButtonStyle}">
-                            <StackPanel HorizontalAlignment="Center" Spacing="1">
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE7C2;" FontSize="16" />
-                                <TextBlock Text="MOVE" FontSize="10" FontWeight="Medium" HorizontalAlignment="Center" />
-                                <TextBlock Text="M" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" HorizontalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                        <Button IsHitTestVisible="False" Opacity="0.55" Style="{StaticResource UcadToolShelfButtonStyle}">
-                            <StackPanel HorizontalAlignment="Center" Spacing="1">
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8C8;" FontSize="16" />
-                                <TextBlock Text="COPY" FontSize="10" FontWeight="Medium" HorizontalAlignment="Center" />
-                                <TextBlock Text="CO" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" HorizontalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                        <Button IsHitTestVisible="False" Opacity="0.55" Style="{StaticResource UcadToolShelfButtonStyle}">
-                            <StackPanel HorizontalAlignment="Center" Spacing="1">
-                                <TextBlock Text="⇆" FontSize="16" FontWeight="Medium" HorizontalAlignment="Center" />
-                                <TextBlock Text="OFFSET" FontSize="10" FontWeight="Medium" HorizontalAlignment="Center" />
-                                <TextBlock Text="O" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" HorizontalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                        <Button IsHitTestVisible="False" Opacity="0.55" Style="{StaticResource UcadToolShelfButtonStyle}">
-                            <StackPanel HorizontalAlignment="Center" Spacing="1">
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE78A;" FontSize="16" />
-                                <TextBlock Text="TRIM" FontSize="10" FontWeight="Medium" HorizontalAlignment="Center" />
-                                <TextBlock Text="TR" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" HorizontalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
+                        <Button IsHitTestVisible="False" Opacity="0.55" Style="{StaticResource UcadToolShelfButtonStyle}"><StackPanel HorizontalAlignment="Center" Spacing="1"><FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE7C2;" FontSize="16" /><TextBlock Text="MOVE" FontSize="10" FontWeight="Medium" /><TextBlock Text="M" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" /></StackPanel></Button>
+                        <Button IsHitTestVisible="False" Opacity="0.55" Style="{StaticResource UcadToolShelfButtonStyle}"><StackPanel HorizontalAlignment="Center" Spacing="1"><FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE8C8;" FontSize="16" /><TextBlock Text="COPY" FontSize="10" FontWeight="Medium" /><TextBlock Text="CO" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" /></StackPanel></Button>
+                        <Button IsHitTestVisible="False" Opacity="0.55" Style="{StaticResource UcadToolShelfButtonStyle}"><StackPanel HorizontalAlignment="Center" Spacing="1"><PathIcon Width="16" Height="16" Data="M2,5 L14,5 M2,11 L14,11" /><TextBlock Text="OFFSET" FontSize="10" FontWeight="Medium" /><TextBlock Text="O" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" /></StackPanel></Button>
+                        <Button IsHitTestVisible="False" Opacity="0.55" Style="{StaticResource UcadToolShelfButtonStyle}"><StackPanel HorizontalAlignment="Center" Spacing="1"><FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE78A;" FontSize="16" /><TextBlock Text="TRIM" FontSize="10" FontWeight="Medium" /><TextBlock Text="TR" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" /></StackPanel></Button>
                     </StackPanel>
-
-                    <StackPanel x:Name="ViewToolShelf" Orientation="Horizontal" Visibility="Collapsed">
-                        <Button x:Uid="ResetViewShelfButton" Tag="RESETVIEW" Click="RunCommand_Click" Style="{StaticResource UcadToolShelfButtonStyle}">
-                            <StackPanel HorizontalAlignment="Center" Spacing="1">
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE72C;" FontSize="16" />
-                                <TextBlock x:Uid="ResetViewToolLabel" FontSize="10" FontWeight="Medium" HorizontalAlignment="Center" />
-                                <TextBlock Text="RV" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" HorizontalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-
-                    <StackPanel
-                        x:Name="UnavailableToolShelf"
-                        Orientation="Horizontal"
-                        VerticalAlignment="Center"
-                        Visibility="Collapsed">
-                        <TextBlock
-                            x:Name="UnavailableToolShelfText"
-                            Margin="12,0,0,0"
-                            VerticalAlignment="Center"
-                            FontSize="11"
-                            Foreground="{StaticResource UcadTextSecondaryBrush}" />
-                    </StackPanel>
+                    <StackPanel x:Name="ViewToolShelf" Orientation="Horizontal" Visibility="Collapsed"><Button x:Uid="ResetViewShelfButton" Tag="RESETVIEW" Click="RunCommand_Click" Style="{StaticResource UcadToolShelfButtonStyle}"><StackPanel HorizontalAlignment="Center" Spacing="1"><FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE72C;" FontSize="16" /><TextBlock x:Uid="ResetViewToolLabel" FontSize="10" FontWeight="Medium" /><TextBlock Text="RV" FontSize="8" Foreground="{StaticResource UcadTextSecondaryBrush}" /></StackPanel></Button></StackPanel>
+                    <StackPanel x:Name="UnavailableToolShelf" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed"><TextBlock x:Name="UnavailableToolShelfText" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="11" Foreground="{StaticResource UcadTextSecondaryBrush}" /></StackPanel>
                 </Grid>
-
-                <Border
-                    Grid.Column="1"
-                    Height="44"
-                    Background="{StaticResource UcadControlFillSubtleBrush}"
-                    CornerRadius="5"
-                    VerticalAlignment="Center"
-                    Padding="12,0">
-                    <TextBlock
-                        x:Name="ToolShelfHintText"
-                        x:Uid="ToolShelfHintText"
-                        VerticalAlignment="Center"
-                        FontSize="10"
-                        Foreground="{StaticResource UcadTextSecondaryBrush}" />
-                </Border>
+                <Border Grid.Column="1" Height="44" Background="{StaticResource UcadControlFillSubtleBrush}" CornerRadius="5" VerticalAlignment="Center" Padding="12,0"><TextBlock x:Name="ToolShelfHintText" x:Uid="ToolShelfHintText" VerticalAlignment="Center" FontSize="10" Foreground="{StaticResource UcadTextSecondaryBrush}" /></Border>
             </Grid>
         </Border>
 
+        <!-- Drawing workspace. -->
         <Grid Grid.Row="3">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="52" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="304" />
-            </Grid.ColumnDefinitions>
-
-            <!-- Highest-frequency rail -->
-            <Border
-                Grid.Column="0"
-                Background="{StaticResource UcadCategoryBarBrush}"
-                BorderBrush="{StaticResource UcadDividerBrush}"
-                BorderThickness="0,0,1,0">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="{StaticResource UcadToolRailWidth}" /><ColumnDefinition Width="*" /><ColumnDefinition Width="{StaticResource UcadInspectorWidth}" /></Grid.ColumnDefinitions>
+            <Border Grid.Column="0" Background="{StaticResource UcadCategoryBarBrush}" BorderBrush="{StaticResource UcadDividerBrush}" BorderThickness="0,0,1,0">
                 <Grid>
                     <StackPanel Margin="8,8,8,0" Spacing="4">
-                        <Button
-                            x:Uid="SelectRailButton"
-                            IsHitTestVisible="False"
-                            Style="{StaticResource UcadToolRailButtonStyle}">
-                            <PathIcon
-                                Width="18"
-                                Height="18"
-                                Foreground="{StaticResource UcadTextPrimaryBrush}"
-                                Data="M5 3.05854C5 2.21347 5.98325 1.74939 6.63564 2.28655L17.6418 11.3487C18.3661 11.9451 17.9444 13.1207 17.0061 13.1207H11.4142C10.9788 13.1207 10.5648 13.3099 10.2799 13.6392L6.75622 17.7117C6.15025 18.412 5 17.9835 5 17.0574L5 3.05854ZM17.0061 12.1207L6 3.05854L6 17.0574L9.52369 12.9849C9.99856 12.4361 10.6885 12.1207 11.4142 12.1207H17.0061Z" />
-                        </Button>
-                        <Button x:Uid="LineRailButton" Tag="LINE" Click="RunCommand_Click" Style="{StaticResource UcadToolRailButtonStyle}">
-                            <TextBlock Text="╱" FontSize="16" FontWeight="Medium" />
-                        </Button>
-                        <Button x:Uid="PolylineRailButton" Tag="PLINE" Click="RunCommand_Click" Style="{StaticResource UcadToolRailButtonStyle}">
-                            <TextBlock Text="⌁" FontSize="16" FontWeight="Medium" />
-                        </Button>
-                        <Button x:Uid="MoveRailButton" IsHitTestVisible="False" Opacity="0.52" Style="{StaticResource UcadToolRailButtonStyle}">
-                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE7C2;" FontSize="16" />
-                        </Button>
-                        <Button x:Uid="CopyRailButton" IsHitTestVisible="False" Opacity="0.52" Style="{StaticResource UcadToolRailButtonStyle}">
-                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8C8;" FontSize="16" />
-                        </Button>
-                        <Button x:Uid="OffsetRailButton" IsHitTestVisible="False" Opacity="0.52" Style="{StaticResource UcadToolRailButtonStyle}">
-                            <TextBlock Text="⇆" FontSize="16" FontWeight="Medium" />
-                        </Button>
-                        <Button x:Uid="TrimRailButton" IsHitTestVisible="False" Opacity="0.52" Style="{StaticResource UcadToolRailButtonStyle}">
-                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE78A;" FontSize="16" />
-                        </Button>
+                        <Button x:Uid="SelectRailButton" IsHitTestVisible="False" Style="{StaticResource UcadToolRailButtonStyle}"><PathIcon Width="18" Height="18" Data="M5 3.05854C5 2.21347 5.98325 1.74939 6.63564 2.28655L17.6418 11.3487C18.3661 11.9451 17.9444 13.1207 17.0061 13.1207H11.4142C10.9788 13.1207 10.5648 13.3099 10.2799 13.6392L6.75622 17.7117C6.15025 18.412 5 17.9835 5 17.0574L5 3.05854Z" /></Button>
+                        <Button x:Uid="LineRailButton" Tag="LINE" Click="RunCommand_Click" Style="{StaticResource UcadToolRailButtonStyle}"><PathIcon Width="16" Height="16" Data="M2,14 L14,2" /></Button>
+                        <Button x:Uid="PolylineRailButton" Tag="PLINE" Click="RunCommand_Click" Style="{StaticResource UcadToolRailButtonStyle}"><PathIcon Width="16" Height="16" Data="M2,13 L6,7 L10,11 L14,3" /></Button>
+                        <Button x:Uid="MoveRailButton" IsHitTestVisible="False" Opacity="0.52" Style="{StaticResource UcadToolRailButtonStyle}"><FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE7C2;" FontSize="16" /></Button>
+                        <Button x:Uid="CopyRailButton" IsHitTestVisible="False" Opacity="0.52" Style="{StaticResource UcadToolRailButtonStyle}"><FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE8C8;" FontSize="16" /></Button>
+                        <Button x:Uid="OffsetRailButton" IsHitTestVisible="False" Opacity="0.52" Style="{StaticResource UcadToolRailButtonStyle}"><PathIcon Width="16" Height="16" Data="M2,5 L14,5 M2,11 L14,11" /></Button>
+                        <Button x:Uid="TrimRailButton" IsHitTestVisible="False" Opacity="0.52" Style="{StaticResource UcadToolRailButtonStyle}"><FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE78A;" FontSize="16" /></Button>
                     </StackPanel>
-
-                    <Button
-                        x:Uid="MoreRailButton"
-                        VerticalAlignment="Bottom"
-                        HorizontalAlignment="Center"
-                        Margin="0,0,0,8"
-                        Style="{StaticResource UcadToolRailButtonStyle}">
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE712;" FontSize="16" />
-                        <Button.Flyout>
-                            <MenuFlyout>
-                                <MenuFlyoutItem x:Uid="RectangleMoreItem" Tag="RECTANGLE" Click="RunCommand_Click" />
-                                <MenuFlyoutItem x:Uid="CircleMoreItem" Tag="CIRCLE" Click="RunCommand_Click" />
-                                <MenuFlyoutItem x:Uid="ArcMoreItem" Tag="ARC" Click="RunCommand_Click" />
-                                <MenuFlyoutSeparator />
-                                <MenuFlyoutItem x:Name="UndoMoreItem" x:Uid="UndoMoreItem" Tag="UNDO" Click="RunCommand_Click" />
-                                <MenuFlyoutItem x:Name="RedoMoreItem" x:Uid="RedoMoreItem" Tag="REDO" Click="RunCommand_Click" />
-                                <MenuFlyoutItem x:Uid="ClearMoreItem" Tag="CLEAR" Click="RunCommand_Click" />
-                                <MenuFlyoutSeparator />
-                                <MenuFlyoutItem x:Uid="ResetViewMoreItem" Tag="RESETVIEW" Click="RunCommand_Click" />
-                            </MenuFlyout>
-                        </Button.Flyout>
-                    </Button>
+                    <Button x:Uid="MoreRailButton" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,8" Style="{StaticResource UcadToolRailButtonStyle}"><FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE712;" FontSize="16" /><Button.Flyout><MenuFlyout><MenuFlyoutItem x:Uid="RectangleMoreItem" Tag="RECTANGLE" Click="RunCommand_Click" /><MenuFlyoutItem x:Uid="CircleMoreItem" Tag="CIRCLE" Click="RunCommand_Click" /><MenuFlyoutItem x:Uid="ArcMoreItem" Tag="ARC" Click="RunCommand_Click" /><MenuFlyoutSeparator /><MenuFlyoutItem x:Name="UndoMoreItem" x:Uid="UndoMoreItem" Tag="UNDO" Click="RunCommand_Click" /><MenuFlyoutItem x:Name="RedoMoreItem" x:Uid="RedoMoreItem" Tag="REDO" Click="RunCommand_Click" /><MenuFlyoutItem x:Uid="ClearMoreItem" Tag="CLEAR" Click="RunCommand_Click" /><MenuFlyoutSeparator /><MenuFlyoutItem x:Uid="ResetViewMoreItem" Tag="RESETVIEW" Click="RunCommand_Click" /></MenuFlyout></Button.Flyout></Button>
                 </Grid>
             </Border>
-
-            <Border Grid.Column="1" Background="{StaticResource UcadCanvasBrush}">
-                <ContentControl
-                    x:Name="ViewportHost"
-                    HorizontalContentAlignment="Stretch"
-                    VerticalContentAlignment="Stretch" />
-            </Border>
-
-            <!-- Inspector -->
-            <Border
-                Grid.Column="2"
-                Background="{StaticResource UcadPanelBrush}"
-                BorderBrush="{StaticResource UcadDividerBrush}"
-                BorderThickness="1,0,0,0">
+            <Border Grid.Column="1" Background="{StaticResource UcadCanvasBrush}"><ContentControl x:Name="ViewportHost" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" /></Border>
+            <Border Grid.Column="2" Background="{StaticResource UcadPanelBrush}" BorderBrush="{StaticResource UcadDividerBrush}" BorderThickness="1,0,0,0">
                 <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="44" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-
-                    <Border Grid.Row="0" Background="{StaticResource UcadCategoryBarBrush}">
-                        <StackPanel Orientation="Horizontal" Spacing="6" Margin="12,8,0,8">
-                            <ToggleButton
-                                x:Name="PropertiesTabButton"
-                                x:Uid="PropertiesTabButton"
-                                IsChecked="True"
-                                Background="{StaticResource UcadAccentBrush}"
-                                Foreground="{StaticResource UcadTextPrimaryBrush}"
-                                FontWeight="SemiBold"
-                                Style="{StaticResource UcadInspectorTabStyle}" />
-                            <ToggleButton
-                                x:Uid="LayersTabButton"
-                                IsHitTestVisible="False"
-                                Opacity="0.72"
-                                Style="{StaticResource UcadInspectorTabStyle}" />
-                        </StackPanel>
-                    </Border>
-
+                    <Grid.RowDefinitions><RowDefinition Height="44" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                    <Border Grid.Row="0" Background="{StaticResource UcadCategoryBarBrush}"><StackPanel Orientation="Horizontal" Spacing="6" Margin="12,8,0,8"><ToggleButton x:Name="PropertiesTabButton" x:Uid="PropertiesTabButton" IsChecked="True" Background="{StaticResource UcadAccentBrush}" Foreground="{StaticResource UcadTextPrimaryBrush}" FontWeight="SemiBold" Style="{StaticResource UcadInspectorTabStyle}" /><ToggleButton x:Uid="LayersTabButton" IsHitTestVisible="False" Opacity="0.72" Style="{StaticResource UcadInspectorTabStyle}" /></StackPanel></Border>
                     <StackPanel Grid.Row="1" Padding="16" Spacing="12">
-                        <TextBlock
-                            x:Uid="NoSelectionText"
-                            FontSize="16"
-                            FontWeight="SemiBold"
-                            Foreground="{StaticResource UcadTextPrimaryBrush}" />
-                        <TextBlock
-                            x:Uid="SelectionUnavailableText"
-                            FontSize="11"
-                            Foreground="{StaticResource UcadTextSecondaryBrush}"
-                            TextWrapping="Wrap" />
-                        <TextBlock
-                            x:Uid="DocumentSectionText"
-                            Margin="0,12,0,0"
-                            FontSize="11"
-                            FontWeight="SemiBold"
-                            Foreground="{StaticResource UcadTextSecondaryBrush}" />
-
-                        <Grid Height="28">
-                            <TextBlock x:Uid="EntityCountLabel" VerticalAlignment="Center" FontSize="11" Foreground="{StaticResource UcadTextSecondaryBrush}" />
-                            <Border HorizontalAlignment="Right" Background="{StaticResource UcadControlFillBrush}" CornerRadius="3" Padding="8,4">
-                                <TextBlock x:Name="EntityCountValue" VerticalAlignment="Center" FontSize="11" Foreground="{StaticResource UcadTextPrimaryBrush}" />
-                            </Border>
-                        </Grid>
-                        <Grid Height="28">
-                            <TextBlock x:Uid="ActiveCommandLabel" VerticalAlignment="Center" FontSize="11" Foreground="{StaticResource UcadTextSecondaryBrush}" />
-                            <Border HorizontalAlignment="Right" Background="{StaticResource UcadControlFillBrush}" CornerRadius="3" Padding="8,4">
-                                <TextBlock x:Name="ActiveCommandValue" VerticalAlignment="Center" FontSize="11" Foreground="{StaticResource UcadTextPrimaryBrush}" />
-                            </Border>
-                        </Grid>
-                        <Grid Height="28">
-                            <TextBlock x:Uid="UndoAvailableLabel" VerticalAlignment="Center" FontSize="11" Foreground="{StaticResource UcadTextSecondaryBrush}" />
-                            <Border HorizontalAlignment="Right" Background="{StaticResource UcadControlFillBrush}" CornerRadius="3" Padding="8,4">
-                                <TextBlock x:Name="UndoAvailableValue" VerticalAlignment="Center" FontSize="11" Foreground="{StaticResource UcadTextPrimaryBrush}" />
-                            </Border>
-                        </Grid>
-                        <Grid Height="28">
-                            <TextBlock x:Uid="RedoAvailableLabel" VerticalAlignment="Center" FontSize="11" Foreground="{StaticResource UcadTextSecondaryBrush}" />
-                            <Border HorizontalAlignment="Right" Background="{StaticResource UcadControlFillBrush}" CornerRadius="3" Padding="8,4">
-                                <TextBlock x:Name="RedoAvailableValue" VerticalAlignment="Center" FontSize="11" Foreground="{StaticResource UcadTextPrimaryBrush}" />
-                            </Border>
-                        </Grid>
-
-                        <Border
-                            Margin="0,16,0,0"
-                            Padding="10"
-                            Background="{StaticResource UcadControlFillSubtleBrush}"
-                            BorderBrush="{StaticResource UcadDividerBrush}"
-                            BorderThickness="1"
-                            CornerRadius="4">
-                            <TextBlock
-                                x:Uid="V04FoundationHint"
-                                FontSize="10"
-                                Foreground="{StaticResource UcadTextSecondaryBrush}"
-                                TextWrapping="Wrap" />
-                        </Border>
+                        <TextBlock x:Uid="NoSelectionText" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource UcadTextPrimaryBrush}" />
+                        <TextBlock x:Uid="SelectionUnavailableText" FontSize="11" Foreground="{StaticResource UcadTextSecondaryBrush}" TextWrapping="Wrap" />
+                        <TextBlock x:Uid="DocumentSectionText" Margin="0,12,0,0" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource UcadTextSecondaryBrush}" />
+                        <Grid Height="28"><TextBlock x:Uid="EntityCountLabel" VerticalAlignment="Center" FontSize="11" Foreground="{StaticResource UcadTextSecondaryBrush}" /><Border HorizontalAlignment="Right" Background="{StaticResource UcadControlFillBrush}" CornerRadius="3" Padding="8,4"><TextBlock x:Name="EntityCountValue" FontSize="11" /></Border></Grid>
+                        <Grid Height="28"><TextBlock x:Uid="ActiveCommandLabel" VerticalAlignment="Center" FontSize="11" Foreground="{StaticResource UcadTextSecondaryBrush}" /><Border HorizontalAlignment="Right" Background="{StaticResource UcadControlFillBrush}" CornerRadius="3" Padding="8,4"><TextBlock x:Name="ActiveCommandValue" FontSize="11" /></Border></Grid>
+                        <Grid Height="28"><TextBlock x:Uid="UndoAvailableLabel" VerticalAlignment="Center" FontSize="11" Foreground="{StaticResource UcadTextSecondaryBrush}" /><Border HorizontalAlignment="Right" Background="{StaticResource UcadControlFillBrush}" CornerRadius="3" Padding="8,4"><TextBlock x:Name="UndoAvailableValue" FontSize="11" /></Border></Grid>
+                        <Grid Height="28"><TextBlock x:Uid="RedoAvailableLabel" VerticalAlignment="Center" FontSize="11" Foreground="{StaticResource UcadTextSecondaryBrush}" /><Border HorizontalAlignment="Right" Background="{StaticResource UcadControlFillBrush}" CornerRadius="3" Padding="8,4"><TextBlock x:Name="RedoAvailableValue" FontSize="11" /></Border></Grid>
+                        <Border Margin="0,16,0,0" Padding="10" Background="{StaticResource UcadControlFillSubtleBrush}" BorderBrush="{StaticResource UcadDividerBrush}" BorderThickness="1" CornerRadius="4"><TextBlock x:Uid="V04FoundationHint" FontSize="10" Foreground="{StaticResource UcadTextSecondaryBrush}" TextWrapping="Wrap" /></Border>
                     </StackPanel>
                 </Grid>
             </Border>
         </Grid>
 
-        <!-- Command line -->
-        <Border
-            Grid.Row="4"
-            Background="{StaticResource UcadToolShelfBrush}"
-            BorderBrush="{StaticResource UcadDividerBrush}"
-            BorderThickness="0,1,0,0">
+        <Border Grid.Row="4" Background="{StaticResource UcadToolShelfBrush}" BorderBrush="{StaticResource UcadDividerBrush}" BorderThickness="0,1,0,0">
             <Grid Padding="12,0" ColumnSpacing="8">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBlock
-                    Text="›"
-                    VerticalAlignment="Center"
-                    FontSize="15"
-                    FontWeight="SemiBold"
-                    Foreground="{StaticResource UcadAccentBrightBrush}" />
-                <TextBlock
-                    x:Uid="CommandPrompt"
-                    Grid.Column="1"
-                    VerticalAlignment="Center"
-                    FontWeight="SemiBold"
-                    FontSize="11"
-                    Foreground="{StaticResource UcadTextSecondaryBrush}" />
-                <TextBox
-                    x:Name="CommandInput"
-                    x:Uid="CommandInput"
-                    Grid.Column="2"
-                    Height="32"
-                    Padding="4,2"
-                    Background="Transparent"
-                    Foreground="{StaticResource UcadTextPrimaryBrush}"
-                    BorderThickness="0"
-                    FontSize="11"
-                    KeyDown="CommandInput_KeyDown" />
-                <TextBlock
-                    x:Name="ModeText"
-                    Grid.Column="3"
-                    MaxWidth="360"
-                    VerticalAlignment="Center"
-                    TextTrimming="CharacterEllipsis"
-                    FontSize="10"
-                    Foreground="{StaticResource UcadTextSecondaryBrush}" />
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE756;" FontSize="13" Foreground="{StaticResource UcadAccentBrightBrush}" VerticalAlignment="Center" />
+                <TextBlock x:Uid="CommandPrompt" Grid.Column="1" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource UcadTextSecondaryBrush}" />
+                <TextBox x:Name="CommandInput" x:Uid="CommandInput" Grid.Column="2" Height="32" Padding="4,2" Background="Transparent" Foreground="{StaticResource UcadTextPrimaryBrush}" BorderThickness="0" FontSize="11" KeyDown="CommandInput_KeyDown" />
+                <TextBlock x:Name="ModeText" Grid.Column="3" MaxWidth="360" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" FontSize="10" Foreground="{StaticResource UcadTextSecondaryBrush}" />
             </Grid>
         </Border>
 
-        <!-- Status bar -->
         <Border Grid.Row="5" Background="{StaticResource UcadStatusBarBrush}">
             <Grid Padding="12,0" ColumnSpacing="8">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBlock
-                    x:Name="CoordinateText"
-                    VerticalAlignment="Center"
-                    Text="X 0.00   Y 0.00"
-                    FontSize="10"
-                    Foreground="{StaticResource UcadTextSecondaryBrush}" />
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <TextBlock x:Name="CoordinateText" VerticalAlignment="Center" Text="X 0.00   Y 0.00" FontSize="10" Foreground="{StaticResource UcadTextSecondaryBrush}" />
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                    <Button x:Uid="SnapStatusButton" IsHitTestVisible="False" Style="{StaticResource UcadStatusButtonStyle}" />
-                    <Button x:Uid="GridStatusButton" IsHitTestVisible="False" Style="{StaticResource UcadStatusButtonStyle}" />
-                    <Button x:Uid="OrthoStatusButton" IsHitTestVisible="False" Style="{StaticResource UcadStatusButtonStyle}" />
-                    <Button x:Uid="PolarStatusButton" IsHitTestVisible="False" Style="{StaticResource UcadStatusButtonStyle}" />
-                    <Button x:Uid="OsnapStatusButton" IsHitTestVisible="False" Style="{StaticResource UcadStatusButtonStyle}" />
-                    <Button x:Uid="OtrackStatusButton" IsHitTestVisible="False" Style="{StaticResource UcadStatusButtonStyle}" />
-                    <Rectangle Width="1" Height="18" Margin="3,0" Fill="{StaticResource UcadDividerBrush}" />
-                    <TextBlock x:Name="ZoomText" Text="100%" VerticalAlignment="Center" FontSize="10" Foreground="{StaticResource UcadTextSecondaryBrush}" />
-                    <TextBlock Text="mm" VerticalAlignment="Center" FontSize="10" Foreground="{StaticResource UcadTextSecondaryBrush}" />
-                    <Rectangle Width="1" Height="18" Margin="3,0" Fill="{StaticResource UcadDividerBrush}" />
-                    <TextBlock x:Name="VersionText" VerticalAlignment="Center" FontSize="10" Foreground="{StaticResource UcadTextSecondaryBrush}" />
+                    <Button x:Uid="SnapStatusButton" IsHitTestVisible="False" Style="{StaticResource UcadStatusButtonStyle}" /><Button x:Uid="GridStatusButton" IsHitTestVisible="False" Style="{StaticResource UcadStatusButtonStyle}" /><Button x:Uid="OrthoStatusButton" IsHitTestVisible="False" Style="{StaticResource UcadStatusButtonStyle}" /><Button x:Uid="PolarStatusButton" IsHitTestVisible="False" Style="{StaticResource UcadStatusButtonStyle}" /><Button x:Uid="OsnapStatusButton" IsHitTestVisible="False" Style="{StaticResource UcadStatusButtonStyle}" /><Button x:Uid="OtrackStatusButton" IsHitTestVisible="False" Style="{StaticResource UcadStatusButtonStyle}" />
+                    <Rectangle Width="1" Height="18" Margin="3,0" Fill="{StaticResource UcadDividerBrush}" /><TextBlock x:Name="ZoomText" Text="100%" VerticalAlignment="Center" FontSize="10" Foreground="{StaticResource UcadTextSecondaryBrush}" /><TextBlock Text="mm" VerticalAlignment="Center" FontSize="10" Foreground="{StaticResource UcadTextSecondaryBrush}" /><Rectangle Width="1" Height="18" Margin="3,0" Fill="{StaticResource UcadDividerBrush}" /><TextBlock x:Name="VersionText" VerticalAlignment="Center" FontSize="10" Foreground="{StaticResource UcadTextSecondaryBrush}" />
                 </StackPanel>
             </Grid>
+        </Border>
+
+        <!-- Start and Settings cover every Drawing-only surface below the shared category bar. -->
+        <Border x:Name="PageOverlay" Grid.Row="2" Grid.RowSpan="4" Canvas.ZIndex="100" Visibility="Collapsed" Background="{StaticResource UcadAppBackgroundBrush}">
+            <ContentControl x:Name="PageContentHost" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
         </Border>
     </Grid>
 </Window>
