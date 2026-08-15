@@ -30,9 +30,9 @@ jobs:
         with:
           dotnet-version: '10.0.302'
       - name: Restore app
-        run: dotnet restore src/UCAD.App/UCAD.App.csproj -p:Platform=x64 -p:RuntimeIdentifier=win-x64
+        run: dotnet restore src/UCAD.App/UCAD.App.csproj -p:Platform=x64 -r win-x64
       - name: Build app
-        run: dotnet build src/UCAD.App/UCAD.App.csproj --configuration Release --no-restore -p:Platform=x64 -p:RuntimeIdentifier=win-x64
+        run: dotnet build src/UCAD.App/UCAD.App.csproj --configuration Release --no-restore -p:Platform=x64 -r win-x64
 
   package-validation:
     runs-on: windows-latest
@@ -45,7 +45,7 @@ jobs:
         shell: pwsh
         run: |
           $output = Join-Path $env:RUNNER_TEMP 'UCAD-AppPackages'
-          dotnet build src/UCAD.App/UCAD.App.csproj -c Release -p:Platform=x64 -p:RuntimeIdentifier=win-x64 -p:GenerateAppxPackageOnBuild=true -p:AppxPackageSigningEnabled=false -p:AppxBundle=Always -p:AppxBundlePlatforms=x64 -p:UapAppxPackageBuildMode=SideloadOnly -p:AppxPackageDir="$output\"
+          dotnet build src/UCAD.App/UCAD.App.csproj -c Release -p:Platform=x64 -r win-x64 -p:GenerateAppxPackageOnBuild=true -p:AppxPackageSigningEnabled=false -p:AppxBundle=Always -p:AppxBundlePlatforms=x64 -p:UapAppxPackageBuildMode=SideloadOnly -p:AppxPackageDir="$output\"
           if ($LASTEXITCODE -ne 0) { throw "MSIX build failed: $LASTEXITCODE" }
           $bundle = @(Get-ChildItem $output -Recurse -Filter '*.msixbundle') | Select-Object -First 1
           if (-not $bundle) { throw 'MSIX bundle was not produced.' }
