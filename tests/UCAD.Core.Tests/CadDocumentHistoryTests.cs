@@ -50,4 +50,38 @@ public sealed class CadDocumentHistoryTests
         Assert.True(document.Undo());
         Assert.Equal(2, document.Entities.Count);
     }
+
+    [Fact]
+    public void ChangedEventPublishesRevisionAndEntityCount()
+    {
+        var document = new CadDocument();
+        var changes = new List<CadDocumentChangedEventArgs>();
+        document.Changed += (_, args) => changes.Add(args);
+
+        document.Add(new LineEntity(new CadPoint(0, 0), new CadPoint(2, 0)));
+        document.Undo();
+        document.Redo();
+
+        Assert.Equal(3, document.Revision);
+        Assert.Collection(
+            changes,
+            change =>
+            {
+                Assert.Equal(CadDocumentChangeKind.Add, change.Kind);
+                Assert.Equal(1, change.EntityCount);
+                Assert.Equal(1, change.Revision);
+            },
+            change =>
+            {
+                Assert.Equal(CadDocumentChangeKind.Undo, change.Kind);
+                Assert.Equal(0, change.EntityCount);
+                Assert.Equal(2, change.Revision);
+            },
+            change =>
+            {
+                Assert.Equal(CadDocumentChangeKind.Redo, change.Kind);
+                Assert.Equal(1, change.EntityCount);
+                Assert.Equal(3, change.Revision);
+            });
+    }
 }
