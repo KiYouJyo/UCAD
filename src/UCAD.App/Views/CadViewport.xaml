@@ -1,0 +1,16 @@
+<UserControl
+    x:Class="UCAD.Views.CadViewport"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:canvas="using:Microsoft.Graphics.Canvas.UI.Xaml">
+
+    <Grid Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+        <canvas:CanvasControl
+            x:Name="Canvas"
+            Draw="Canvas_Draw"
+            PointerMoved="Canvas_PointerMoved"
+            PointerPressed="Canvas_PointerPressed"
+            PointerReleased="Canvas_PointerReleased"
+            PointerWheelChanged="Canvas_PointerWheelChanged" />
+    </Grid>
+</UserControl>

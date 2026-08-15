@@ -1,0 +1,17 @@
+name: Feature request
+description: Propose a focused drafting, architecture, or planning feature
+title: "[Feature] "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Workflow problem
+      description: Describe the drafting/planning workflow this solves.
+    validations:
+      required: true
+  - type: textarea
+    id: interaction
+    attributes:
+      label: Proposed interaction
+      description: Explain command aliases, pointer behavior, prompts, or expected output if relevant.
