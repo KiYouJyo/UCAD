@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="Start_TabTitle" xml:space="preserve"><value>开始</value></data>
+  <data name="Settings_TabTitle" xml:space="preserve"><value>设置</value></data>
+  <data name="Common_Close" xml:space="preserve"><value>关闭</value></data>
+  <data name="Feature_Files_Title" xml:space="preserve"><value>打开图纸</value></data>
+  <data name="Feature_Files_Message" xml:space="preserve"><value>文件打开与保存将在后续文件层接入。本版本保留入口，但不会伪造尚未实现的文件能力。</value></data>
+  <data name="Feature_Updates_Title" xml:space="preserve"><value>检查更新</value></data>
+  <data name="Feature_Updates_Message" xml:space="preserve"><value>更新服务尚未接入 v0.3.9。本页已保留稳定入口。</value></data>
+  <data name="Feature_Learn_Title" xml:space="preserve"><value>学习 UCAD</value></data>
+  <data name="Feature_Learn_Message" xml:space="preserve"><value>该学习内容将在后续文档体系接入。当前不会打开虚假的教程流程。</value></data>
+  <data name="Start_Title.Text" xml:space="preserve"><value>开始使用 UCAD</value></data>
+  <data name="Start_Subtitle.Text" xml:space="preserve"><value>新建或打开图纸，继续最近的工作，或从模板开始。</value></data>
+  <data name="Start_NewDrawing_Title.Text" xml:space="preserve"><value>新建图纸</value></data>
+  <data name="Start_NewDrawing_Description.Text" xml:space="preserve"><value>创建一个空白二维 CAD 图纸</value></data>
+  <data name="Start_OpenDrawing_Title.Text" xml:space="preserve"><value>打开图纸</value></data>
+  <data name="Start_OpenDrawing_Description.Text" xml:space="preserve"><value>从文件打开现有图纸</value></data>
+  <data name="Start_Recent_Title.Text" xml:space="preserve"><value>最近使用</value></data>
+  <data name="Start_Recent_ShowAll.Content" xml:space="preserve"><value>显示全部</value></data>
+  <data name="Start_Recent_EmptyTitle.Text" xml:space="preserve"><value>还没有最近使用的图纸</value></data>
+  <data name="Start_Recent_EmptyDescription.Text" xml:space="preserve"><value>打开或保存图纸后，它们会显示在这里。</value></data>
+  <data name="Start_Templates_Title.Text" xml:space="preserve"><value>模板</value></data>
+  <data name="Start_Template_Blank_Title.Text" xml:space="preserve"><value>空白</value></data>
+  <data name="Start_Template_Blank_Description.Text" xml:space="preserve"><value>标准空白图纸</value></data>
+  <data name="Start_Template_Architecture_Title.Text" xml:space="preserve"><value>建筑设计</value></data>
+  <data name="Start_Template_Architecture_Description.Text" xml:space="preserve"><value>建筑绘图预设</value></data>
+  <data name="Start_Template_Urban_Title.Text" xml:space="preserve"><value>城市规划</value></data>
+  <data name="Start_Template_Urban_Description.Text" xml:space="preserve"><value>规划绘图预设</value></data>
+  <data name="Common_ComingSoon.Text" xml:space="preserve"><value>即将推出</value></data>
+  <data name="Start_Learn_Title.Text" xml:space="preserve"><value>学习 UCAD</value></data>
+  <data name="Start_Learn_Shortcuts.Text" xml:space="preserve"><value>快捷键</value></data>
+  <data name="Start_Learn_BasicDrawing.Text" xml:space="preserve"><value>基本绘图</value></data>
+  <data name="Start_Learn_Commands.Text" xml:space="preserve"><value>命令与别名</value></data>
+  <data name="Start_Learn_Docs.Text" xml:space="preserve"><value>查看文档</value></data>
+  <data name="Settings_Nav_Title" xml:space="preserve"><value>设置</value></data>
+  <data name="Settings_Nav_General" xml:space="preserve"><value>常规</value></data>
+  <data name="Settings_Nav_Appearance" xml:space="preserve"><value>外观</value></data>
+  <data name="Settings_Nav_Drafting" xml:space="preserve"><value>绘图</value></data>
+  <data name="Settings_Nav_Input" xml:space="preserve"><value>输入与交互</value></data>
+  <data name="Settings_Nav_Files" xml:space="preserve"><value>文件与保存</value></data>
+  <data name="Settings_Nav_Language" xml:space="preserve"><value>语言与区域</value></data>
+  <data name="Settings_Nav_About" xml:space="preserve"><value>关于 UCAD</value></data>
+  <data name="Settings_Option_StartPage" xml:space="preserve"><value>显示开始页</value></data>
+  <data name="Settings_Option_BlankDrawing" xml:space="preserve"><value>新建空白图纸</value></data>
+  <data name="Settings_Option_RestoreSession" xml:space="preserve"><value>恢复上次会话</value></data>
+  <data name="Settings_Option_System" xml:space="preserve"><value>跟随系统</value></data>
+  <data name="Settings_Option_Dark" xml:space="preserve"><value>深色</value></data>
+  <data name="Settings_Option_Light" xml:space="preserve"><value>浅色</value></data>
+  <data name="Settings_Option_CanvasBlack" xml:space="preserve"><value>黑色 · #0E1012</value></data>
+  <data name="Settings_Option_CanvasGraphite" xml:space="preserve"><value>石墨 · #18181A</value></data>
+  <data name="Settings_Option_CanvasWhite" xml:space="preserve"><value>白色 · #FFFFFF</value></data>
+  <data name="Settings_Option_Opacity10" xml:space="preserve"><value>10%</value></data>
+  <data name="Settings_Option_Opacity22" xml:space="preserve"><value>22%</value></data>
+  <data name="Settings_Option_Opacity50" xml:space="preserve"><value>50%</value></data>
+  <data name="Settings_Option_Opacity75" xml:space="preserve"><value>75%</value></data>
+  <data name="Settings_Option_Scale100" xml:space="preserve"><value>100%</value></data>
+  <data name="Settings_Option_Scale125" xml:space="preserve"><value>125%</value></data>
+  <data name="Settings_Option_Scale150" xml:space="preserve"><value>150%</value></data>
+  <data name="Settings_Option_Millimeters" xml:space="preserve"><value>毫米</value></data>
+  <data name="Settings_Option_Meters" xml:space="preserve"><value>米</value></data>
+  <data name="Settings_Option_Inches" xml:space="preserve"><value>英寸</value></data>
+  <data name="Settings_Option_Precision0" xml:space="preserve"><value>0</value></data>
+  <data name="Settings_Option_Precision1" xml:space="preserve"><value>0.0</value></data>
+  <data name="Settings_Option_Precision2" xml:space="preserve"><value>0.00</value></data>
+  <data name="Settings_Option_Precision3" xml:space="preserve"><value>0.000</value></data>
+  <data name="Settings_Option_DecimalDegrees" xml:space="preserve"><value>十进制度</value></data>
+  <data name="Settings_Option_Radians" xml:space="preserve"><value>弧度</value></data>
+  <data name="Settings_Option_SnapCore" xml:space="preserve"><value>端点 / 中点 / 交点</value></data>
+  <data name="Settings_Option_SnapBasic" xml:space="preserve"><value>端点 / 中点</value></data>
+  <data name="Settings_Option_CadStandard" xml:space="preserve"><value>标准 Window / Crossing</value></data>
+  <data name="Settings_Option_Minutes5" xml:space="preserve"><value>5 分钟</value></data>
+  <data name="Settings_Option_Minutes10" xml:space="preserve"><value>10 分钟</value></data>
+  <data name="Settings_Option_Minutes15" xml:space="preserve"><value>15 分钟</value></data>
+  <data name="Settings_Option_Minutes30" xml:space="preserve"><value>30 分钟</value></data>
+  <data name="Settings_Option_Count10" xml:space="preserve"><value>10</value></data>
+  <data name="Settings_Option_Count20" xml:space="preserve"><value>20</value></data>
+  <data name="Settings_Option_Count30" xml:space="preserve"><value>30</value></data>
+  <data name="Settings_Option_SystemLanguage" xml:space="preserve"><value>系统语言</value></data>
+  <data name="Settings_Option_Chinese" xml:space="preserve"><value>简体中文</value></data>
+  <data name="Settings_Option_Japanese" xml:space="preserve"><value>日本語</value></data>
+  <data name="Settings_Option_English" xml:space="preserve"><value>English</value></data>
+  <data name="Settings_Option_SystemRegion" xml:space="preserve"><value>系统区域格式</value></data>
+  <data name="Settings_Option_InvariantRegion" xml:space="preserve"><value>固定格式</value></data>
+  <data name="Settings_Option_Metric" xml:space="preserve"><value>公制</value></data>
+  <data name="Settings_Option_Imperial" xml:space="preserve"><value>英制</value></data>
+  <data name="Settings_Option_Automatic" xml:space="preserve"><value>自动</value></data>
+  <data name="Settings_Option_DecimalDot" xml:space="preserve"><value>小数点（.）</value></data>
+  <data name="Settings_Option_DecimalComma" xml:space="preserve"><value>小数逗号（,）</value></data>
+  <data name="Settings_Action_CheckNow" xml:space="preserve"><value>检查更新</value></data>
+  <data name="Settings_Action_Clear" xml:space="preserve"><value>清除</value></data>
+  <data name="Settings_Action_Open" xml:space="preserve"><value>打开</value></data>
+  <data name="Settings_Action_View" xml:space="preserve"><value>查看</value></data>
+  <data name="Settings_General_Title" xml:space="preserve"><value>常规</value></data>
+  <data name="Settings_General_Subtitle" xml:space="preserve"><value>设置 UCAD 的启动方式、标签页行为与更新偏好。</value></data>
+  <data name="Settings_General_StartupSection" xml:space="preserve"><value>启动与会话</value></data>
+  <data name="Settings_General_StartupBehavior_Title" xml:space="preserve"><value>启动 UCAD 时</value></data>
+  <data name="Settings_General_StartupBehavior_Description" xml:space="preserve"><value>选择启动后首先显示的内容。</value></data>
+  <data name="Settings_General_NewTab_Title" xml:space="preserve"><value>新标签页显示开始页</value></data>
+  <data name="Settings_General_NewTab_Description" xml:space="preserve"><value>点击标题栏 + 时进入 Start，而不是直接创建图纸。</value></data>
+  <data name="Settings_General_CloseUnsaved_Title" xml:space="preserve"><value>关闭未保存图纸前确认</value></data>
+  <data name="Settings_General_CloseUnsaved_Description" xml:space="preserve"><value>关闭包含未保存内容的图纸时显示确认。</value></data>
+  <data name="Settings_General_UpdatesSection" xml:space="preserve"><value>更新</value></data>
+  <data name="Settings_General_AutoUpdate_Title" xml:space="preserve"><value>自动检查更新</value></data>
+  <data name="Settings_General_AutoUpdate_Description" xml:space="preserve"><value>启动 UCAD 后自动检查可用更新。</value></data>
+  <data name="Settings_General_CheckUpdate_Title" xml:space="preserve"><value>检查更新</value></data>
+  <data name="Settings_General_CheckUpdate_Description" xml:space="preserve"><value>手动检查 UCAD 的最新版本。</value></data>
+  <data name="Settings_Appearance_Title" xml:space="preserve"><value>外观</value></data>
+  <data name="Settings_Appearance_Subtitle" xml:space="preserve"><value>分别设置应用界面与 CAD 画布的视觉主题。</value></data>
+  <data name="Settings_Appearance_ThemeSection" xml:space="preserve"><value>主题</value></data>
+  <data name="Settings_Appearance_AppTheme_Title" xml:space="preserve"><value>应用主题</value></data>
+  <data name="Settings_Appearance_AppTheme_Description" xml:space="preserve"><value>控制 UCAD 界面控件与窗口的明暗外观。</value></data>
+  <data name="Settings_Appearance_CanvasTheme_Title" xml:space="preserve"><value>画布主题</value></data>
+  <data name="Settings_Appearance_CanvasTheme_Description" xml:space="preserve"><value>独立控制 CAD 画布，不随应用主题强制变化。</value></data>
+  <data name="Settings_Appearance_CanvasBackground_Title" xml:space="preserve"><value>画布背景</value></data>
+  <data name="Settings_Appearance_CanvasBackground_Description" xml:space="preserve"><value>选择 CAD 工作区的背景颜色。</value></data>
+  <data name="Settings_Appearance_CanvasSection" xml:space="preserve"><value>画布</value></data>
+  <data name="Settings_Appearance_ShowGrid_Title" xml:space="preserve"><value>显示栅格</value></data>
+  <data name="Settings_Appearance_ShowGrid_Description" xml:space="preserve"><value>在 CAD 画布上显示参考栅格。</value></data>
+  <data name="Settings_Appearance_GridOpacity_Title" xml:space="preserve"><value>栅格不透明度</value></data>
+  <data name="Settings_Appearance_GridOpacity_Description" xml:space="preserve"><value>调整参考栅格的视觉强度。</value></data>
+  <data name="Settings_Appearance_UiScale_Title" xml:space="preserve"><value>界面缩放</value></data>
+  <data name="Settings_Appearance_UiScale_Description" xml:space="preserve"><value>设置 UCAD 界面的缩放偏好；系统 DPI 仍由 PerMonitorV2 处理。</value></data>
+  <data name="Settings_Drafting_Title" xml:space="preserve"><value>绘图</value></data>
+  <data name="Settings_Drafting_Subtitle" xml:space="preserve"><value>设置新图纸的单位、精度与绘图辅助默认值。</value></data>
+  <data name="Settings_Drafting_DefaultsSection" xml:space="preserve"><value>单位与精度</value></data>
+  <data name="Settings_Drafting_LengthUnit_Title" xml:space="preserve"><value>长度单位</value></data>
+  <data name="Settings_Drafting_LengthUnit_Description" xml:space="preserve"><value>设置新图纸使用的默认长度单位。</value></data>
+  <data name="Settings_Drafting_Precision_Title" xml:space="preserve"><value>精度</value></data>
+  <data name="Settings_Drafting_Precision_Description" xml:space="preserve"><value>设置长度值默认显示的小数位数。</value></data>
+  <data name="Settings_Drafting_AngleUnit_Title" xml:space="preserve"><value>角度单位</value></data>
+  <data name="Settings_Drafting_AngleUnit_Description" xml:space="preserve"><value>设置角度输入与显示的默认单位。</value></data>
+  <data name="Settings_Drafting_AidsSection" xml:space="preserve"><value>绘图辅助</value></data>
+  <data name="Settings_Drafting_ObjectSnap_Title" xml:space="preserve"><value>默认对象捕捉</value></data>
+  <data name="Settings_Drafting_ObjectSnap_Description" xml:space="preserve"><value>为新图纸保存对象捕捉默认状态。</value></data>
+  <data name="Settings_Drafting_SnapTypes_Title" xml:space="preserve"><value>默认捕捉类型</value></data>
+  <data name="Settings_Drafting_SnapTypes_Description" xml:space="preserve"><value>预设端点、中点、交点等捕捉类型。</value></data>
+  <data name="Settings_Drafting_Ortho_Title" xml:space="preserve"><value>默认正交</value></data>
+  <data name="Settings_Drafting_Ortho_Description" xml:space="preserve"><value>为新图纸保存正交模式默认状态。</value></data>
+  <data name="Settings_Drafting_PendingNote" xml:space="preserve"><value>对象捕捉与正交 Core 尚未接入；v0.3.9 仅保存设置模型，不伪造绘图行为。</value></data>
+  <data name="Settings_Input_Title" xml:space="preserve"><value>输入与交互</value></data>
+  <data name="Settings_Input_Subtitle" xml:space="preserve"><value>调整鼠标、选择和命令输入的交互方式。</value></data>
+  <data name="Settings_Input_MouseSection" xml:space="preserve"><value>鼠标与视图</value></data>
+  <data name="Settings_Input_ZoomCursor_Title" xml:space="preserve"><value>以光标为中心缩放</value></data>
+  <data name="Settings_Input_ZoomCursor_Description" xml:space="preserve"><value>滚轮缩放时保持光标所指世界坐标稳定。</value></data>
+  <data name="Settings_Input_MiddlePan_Title" xml:space="preserve"><value>鼠标中键平移</value></data>
+  <data name="Settings_Input_MiddlePan_Description" xml:space="preserve"><value>按住鼠标中键拖动 CAD 视图。</value></data>
+  <data name="Settings_Input_ReverseWheel_Title" xml:space="preserve"><value>反转滚轮缩放</value></data>
+  <data name="Settings_Input_ReverseWheel_Description" xml:space="preserve"><value>交换滚轮向上与向下的缩放方向。</value></data>
+  <data name="Settings_Input_SelectionSection" xml:space="preserve"><value>选择</value></data>
+  <data name="Settings_Input_WindowCrossing_Title" xml:space="preserve"><value>Window / Crossing 选择</value></data>
+  <data name="Settings_Input_WindowCrossing_Description" xml:space="preserve"><value>采用 CAD 标准的方向性框选语义。</value></data>
+  <data name="Settings_Input_SelectionPreview_Title" xml:space="preserve"><value>选择预览</value></data>
+  <data name="Settings_Input_SelectionPreview_Description" xml:space="preserve"><value>光标经过可选对象时显示预览状态。</value></data>
+  <data name="Settings_Input_CommandSection" xml:space="preserve"><value>命令</value></data>
+  <data name="Settings_Input_CommandSuggestions_Title" xml:space="preserve"><value>命令建议</value></data>
+  <data name="Settings_Input_CommandSuggestions_Description" xml:space="preserve"><value>输入命令时显示名称与别名建议。</value></data>
+  <data name="Settings_Files_Title" xml:space="preserve"><value>文件与保存</value></data>
+  <data name="Settings_Files_Subtitle" xml:space="preserve"><value>设置自动保存、备份与最近使用记录。</value></data>
+  <data name="Settings_Files_AutoSaveSection" xml:space="preserve"><value>自动保存与备份</value></data>
+  <data name="Settings_Files_AutoSave_Title" xml:space="preserve"><value>自动保存</value></data>
+  <data name="Settings_Files_AutoSave_Description" xml:space="preserve"><value>为未来文件层保存自动保存偏好。</value></data>
+  <data name="Settings_Files_AutoSaveInterval_Title" xml:space="preserve"><value>自动保存间隔</value></data>
+  <data name="Settings_Files_AutoSaveInterval_Description" xml:space="preserve"><value>设置自动保存的目标时间间隔。</value></data>
+  <data name="Settings_Files_Backup_Title" xml:space="preserve"><value>保存时创建备份</value></data>
+  <data name="Settings_Files_Backup_Description" xml:space="preserve"><value>为未来保存流程保留备份偏好。</value></data>
+  <data name="Settings_Files_RecentSection" xml:space="preserve"><value>最近使用</value></data>
+  <data name="Settings_Files_ShowRecent_Title" xml:space="preserve"><value>显示最近使用的图纸</value></data>
+  <data name="Settings_Files_ShowRecent_Description" xml:space="preserve"><value>在 Start 页面显示最近使用列表。</value></data>
+  <data name="Settings_Files_RecentCount_Title" xml:space="preserve"><value>最近文件数量</value></data>
+  <data name="Settings_Files_RecentCount_Description" xml:space="preserve"><value>设置 Start 页面未来最多显示的条目数。</value></data>
+  <data name="Settings_Files_ClearRecent_Title" xml:space="preserve"><value>清除最近记录</value></data>
+  <data name="Settings_Files_ClearRecent_Description" xml:space="preserve"><value>清除最近文件记录；当前没有伪造的示例文件。</value></data>
+  <data name="Settings_Language_Title" xml:space="preserve"><value>语言与区域</value></data>
+  <data name="Settings_Language_Subtitle" xml:space="preserve"><value>设置显示语言、数字格式和单位显示偏好。</value></data>
+  <data name="Settings_Language_LanguageSection" xml:space="preserve"><value>语言</value></data>
+  <data name="Settings_Language_Display_Title" xml:space="preserve"><value>显示语言</value></data>
+  <data name="Settings_Language_Display_Description" xml:space="preserve"><value>选择 UCAD 界面使用的语言。</value></data>
+  <data name="Settings_Language_FollowSystem_Title" xml:space="preserve"><value>跟随系统语言</value></data>
+  <data name="Settings_Language_FollowSystem_Description" xml:space="preserve"><value>允许 UCAD 根据 Windows 语言偏好选择界面语言。</value></data>
+  <data name="Settings_Language_RegionalSection" xml:space="preserve"><value>区域格式</value></data>
+  <data name="Settings_Language_NumberFormat_Title" xml:space="preserve"><value>数字格式</value></data>
+  <data name="Settings_Language_NumberFormat_Description" xml:space="preserve"><value>设置数字分组和区域格式偏好。</value></data>
+  <data name="Settings_Language_UnitDisplay_Title" xml:space="preserve"><value>单位显示</value></data>
+  <data name="Settings_Language_UnitDisplay_Description" xml:space="preserve"><value>设置界面中单位体系的显示偏好。</value></data>
+  <data name="Settings_Language_AngleDecimal_Title" xml:space="preserve"><value>角度 / 小数格式</value></data>
+  <data name="Settings_Language_AngleDecimal_Description" xml:space="preserve"><value>设置小数分隔符与角度数值的格式偏好。</value></data>
+  <data name="Settings_Language_ReloadNote" xml:space="preserve"><value>更改显示语言将在下次启动 UCAD 时完整应用，避免当前会话出现局部语言混用。</value></data>
+  <data name="Settings_About_Title" xml:space="preserve"><value>关于 UCAD</value></data>
+  <data name="Settings_About_Subtitle" xml:space="preserve"><value>版本、项目链接与开源信息。</value></data>
+  <data name="Settings_About_AppInfoSection" xml:space="preserve"><value>应用信息</value></data>
+  <data name="Settings_About_AppDescription" xml:space="preserve"><value>面向城市规划与建筑设计的轻量二维 CAD</value></data>
+  <data name="Settings_About_Preview" xml:space="preserve"><value>预览</value></data>
+  <data name="Settings_About_ProjectSection" xml:space="preserve"><value>项目</value></data>
+  <data name="Settings_About_GitHub_Title" xml:space="preserve"><value>GitHub 仓库</value></data>
+  <data name="Settings_About_GitHub_Description" xml:space="preserve"><value>查看 UCAD 的公开源码与开发历史。</value></data>
+  <data name="Settings_About_Releases_Title" xml:space="preserve"><value>Releases</value></data>
+  <data name="Settings_About_Releases_Description" xml:space="preserve"><value>查看已发布版本与安装包。</value></data>
+  <data name="Settings_About_Issue_Title" xml:space="preserve"><value>报告问题</value></data>
+  <data name="Settings_About_Issue_Description" xml:space="preserve"><value>在 GitHub Issues 提交错误或建议。</value></data>
+  <data name="Settings_About_OpenSourceSection" xml:space="preserve"><value>开源与致谢</value></data>
+  <data name="Settings_About_OpenSource_Title" xml:space="preserve"><value>开源信息</value></data>
+  <data name="Settings_About_OpenSource_Description" xml:space="preserve"><value>UCAD 的源码、许可证与第三方依赖信息。</value></data>
+  <data name="Settings_About_Credits_Title" xml:space="preserve"><value>致谢</value></data>
+  <data name="Settings_About_Credits_Description" xml:space="preserve"><value>WinUI 3、Windows App SDK、Win2D 与开源社区。</value></data>
+</root>
