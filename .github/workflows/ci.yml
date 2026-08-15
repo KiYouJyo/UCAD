@@ -127,13 +127,74 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "signtool failed: $LASTEXITCODE" }
           "CERTIFICATE_PATH=$cer" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           "CERTIFICATE_THUMBPRINT=$($cert.Thumbprint)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
-      - name: Generate and validate one-click package
+      - name: Generate and validate production one-click package
         shell: pwsh
         run: |
           $release = Get-Content release/release.json -Raw | ConvertFrom-Json
           $stage = Join-Path $env:RUNNER_TEMP 'one-click'
           $root = & ./packaging/New-GitHubOneClickInstallerPackage.ps1 -SignedBundlePath $env:BUNDLE_PATH -PublicCertificatePath $env:CERTIFICATE_PATH -OutputDirectory $stage -DisplayVersion $release.product.version -PackageVersion $release.product.packageVersion -PackageIdentityName $release.product.packageIdentityName -Publisher $release.product.publisher -CertificateThumbprint $env:CERTIFICATE_THUMBPRINT
           & ./packaging/Test-GitHubOneClickInstallerPackage.ps1 -ReleaseDirectory $root
+      - name: Build self-contained PR acceptance package
+        if: github.event_name == 'pull_request'
+        shell: pwsh
+        run: |
+          $release = Get-Content release/release.json -Raw | ConvertFrom-Json
+          $root = Join-Path $env:RUNNER_TEMP "UCAD-v$($release.product.version)-PR-acceptance"
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+          $bundleName = "UCAD_$($release.product.packageVersion)_x64.msixbundle"
+          $certificateName = "UCAD-v$($release.product.version)-acceptance.cer"
+          Copy-Item -LiteralPath $env:BUNDLE_PATH -Destination (Join-Path $root $bundleName) -Force
+          Copy-Item -LiteralPath $env:CERTIFICATE_PATH -Destination (Join-Path $root $certificateName) -Force
+          $metadata = [ordered]@{
+            version = $release.product.version
+            packageVersion = $release.product.packageVersion
+            packageIdentityName = $release.product.packageIdentityName
+            publisher = $release.product.publisher
+            applicationId = $release.product.applicationId
+            bundleFileName = $bundleName
+            certificateFileName = $certificateName
+            certificateThumbprint = $env:CERTIFICATE_THUMBPRINT
+          }
+          $metadata | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $root 'AcceptanceMetadata.json') -Encoding UTF8
+          $installer = @'
+          [CmdletBinding()]
+          param([switch]$Elevated)
+          $ErrorActionPreference = 'Stop'
+          $root = Split-Path -Parent $MyInvocation.MyCommand.Path
+          $metadata = Get-Content (Join-Path $root 'AcceptanceMetadata.json') -Raw | ConvertFrom-Json
+          $bundle = Join-Path $root $metadata.bundleFileName
+          $cer = Join-Path $root $metadata.certificateFileName
+          function Is-Administrator {
+              $principal = [Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent())
+              return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+          }
+          if (-not (Is-Administrator)) {
+              $args = @('-NoLogo','-NoProfile','-ExecutionPolicy','Bypass','-File',('"{0}"' -f $PSCommandPath),'-Elevated') -join ' '
+              $p = Start-Process powershell.exe -ArgumentList $args -Verb RunAs -Wait -PassThru
+              exit $p.ExitCode
+          }
+          $cert = [Security.Cryptography.X509Certificates.X509Certificate2]::new($cer)
+          if ($cert.Subject -cne $metadata.publisher -or $cert.Thumbprint -cne $metadata.certificateThumbprint) { throw 'Acceptance certificate metadata mismatch.' }
+          $trusted = Get-ChildItem Cert:\LocalMachine\TrustedPeople -ErrorAction SilentlyContinue | Where-Object Thumbprint -eq $cert.Thumbprint | Select-Object -First 1
+          if (-not $trusted) { Import-Certificate -FilePath $cer -CertStoreLocation Cert:\LocalMachine\TrustedPeople | Out-Null }
+          Add-AppxPackage -Path $bundle -ForceApplicationShutdown -ErrorAction Stop
+          $installed = Get-AppxPackage -Name $metadata.packageIdentityName | Where-Object Publisher -eq $metadata.publisher | Sort-Object Version -Descending | Select-Object -First 1
+          if (-not $installed) { throw 'UCAD acceptance package was not found after installation.' }
+          if ([version]$installed.Version -ne [version]$metadata.packageVersion) { throw "Installed version mismatch: $($installed.Version)" }
+          Start-Process explorer.exe "shell:AppsFolder\$($installed.PackageFamilyName)!$($metadata.applicationId)"
+          Write-Host "UCAD $($metadata.packageVersion) acceptance build installed and launched."
+          '@
+          Set-Content -LiteralPath (Join-Path $root 'Install-Acceptance.ps1') -Value $installer -Encoding UTF8
+          $cmd = '@echo off' + "`r`n" + 'powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0Install-Acceptance.ps1"' + "`r`n" + 'pause'
+          Set-Content -LiteralPath (Join-Path $root '安装并启动UCAD-v0.3.6-验收版.cmd') -Value $cmd -Encoding ASCII
+          @(
+            'UCAD v0.3.6 PR acceptance build',
+            '1. Double-click 安装并启动UCAD-v0.3.6-验收版.cmd.',
+            '2. Accept the one-time UAC prompt. The script trusts only the included temporary CI certificate.',
+            '3. The package updates the existing UCAD identity to 0.3.6.0 and launches it.',
+            '4. This certificate/build is for acceptance only. The final GitHub Release will be rebuilt with the normal release certificate.',
+            '5. If UCAD still does not open, send %LOCALAPPDATA%\UCAD\Logs\startup.log.'
+          ) | Set-Content -LiteralPath (Join-Path $root 'README-ACCEPTANCE.txt') -Encoding UTF8
           "ACCEPTANCE_PACKAGE_PATH=$root" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Upload PR acceptance package
         if: github.event_name == 'pull_request'
