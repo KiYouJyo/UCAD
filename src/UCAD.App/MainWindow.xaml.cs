@@ -18,6 +18,7 @@ public sealed partial class MainWindow : Window
     private CadWorkspaceSession? _activeSession;
     private int _nextDocumentOrdinal = 1;
     private string? _activeShelfCategory = "DRAW";
+    private bool _initialWorkspaceCreated;
 
     public MainWindow()
     {
@@ -36,16 +37,46 @@ public sealed partial class MainWindow : Window
             .OrderBy(token => token, StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
-        CreateNewWorkspace();
+        RootLayout.Loaded += RootLayout_Loaded;
         UpdateToolShelfHint();
     }
 
     private CadWorkspaceSession? ActiveSession => _activeSession;
 
+    private void RootLayout_Loaded(object sender, RoutedEventArgs e)
+    {
+        RootLayout.Loaded -= RootLayout_Loaded;
+        if (_initialWorkspaceCreated)
+        {
+            return;
+        }
+
+        _initialWorkspaceCreated = true;
+        App.WriteStartupEvent("RootLayout loaded; creating initial workspace");
+        try
+        {
+            CreateNewWorkspace();
+            App.WriteStartupEvent("Initial workspace created");
+        }
+        catch (Exception ex)
+        {
+            App.WriteStartupFailure("CreateInitialWorkspace", ex);
+            throw;
+        }
+    }
+
     private string GetString(string key)
     {
-        var value = _resources.GetString(key);
-        return string.IsNullOrWhiteSpace(value) ? key : value;
+        try
+        {
+            var value = _resources.GetString(key);
+            return string.IsNullOrWhiteSpace(value) ? key : value;
+        }
+        catch (System.Runtime.InteropServices.COMException ex) when (ex.HResult == unchecked((int)0x80073B17))
+        {
+            App.WriteStartupFailure($"MissingResource:{key}", ex);
+            return key;
+        }
     }
 
     private CadWorkspaceSession CreateNewWorkspace()
@@ -282,7 +313,7 @@ public sealed partial class MainWindow : Window
         UpdateToolShelfHint();
     }
 
-    private void UpdateToolShelfHint() => ToolShelfHintText.Text = GetString("ToolShelfHintText.Text");
+    private void UpdateToolShelfHint() => ToolShelfHintText.Text = GetString("ToolShelfHint");
 
     private void CommandInput_KeyDown(object sender, KeyRoutedEventArgs e)
     {

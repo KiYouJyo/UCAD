@@ -34,6 +34,70 @@ jobs:
       - name: Build app
         run: dotnet build src/UCAD.App/UCAD.App.csproj --configuration Release --no-restore -p:Platform=x64 -r win-x64
 
+  startup-smoke:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.302'
+      - name: Validate runtime resource keys
+        shell: pwsh
+        run: |
+          $code = Get-Content src/UCAD.App/MainWindow.xaml.cs -Raw
+          $keys = [regex]::Matches($code, 'GetString\("([^"]+)"\)') | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
+          $propertyKeys = @($keys | Where-Object { $_ -match '\.' })
+          if ($propertyKeys.Count -gt 0) {
+            throw "Runtime ResourceLoader keys must be plain named resources, not x:Uid property keys: $($propertyKeys -join ', ')"
+          }
+          foreach ($file in Get-ChildItem src/UCAD.App/Strings -Recurse -Filter Resources.resw) {
+            [xml]$xml = Get-Content $file.FullName -Raw
+            $names = @($xml.root.data | ForEach-Object { [string]$_.name })
+            $missing = @($keys | Where-Object { $_ -notin $names })
+            if ($missing.Count -gt 0) {
+              throw "Missing runtime resources in $($file.FullName): $($missing -join ', ')"
+            }
+          }
+          Write-Output "Validated $($keys.Count) runtime ResourceLoader keys across all locales."
+      - name: Build app for startup smoke test
+        shell: pwsh
+        run: |
+          dotnet restore src/UCAD.App/UCAD.App.csproj -p:Platform=x64 -r win-x64
+          if ($LASTEXITCODE -ne 0) { throw "Restore failed: $LASTEXITCODE" }
+          dotnet build src/UCAD.App/UCAD.App.csproj -c Release --no-restore -p:Platform=x64 -r win-x64
+          if ($LASTEXITCODE -ne 0) { throw "Build failed: $LASTEXITCODE" }
+      - name: Launch UCAD and verify it stays alive
+        shell: pwsh
+        run: |
+          $log = Join-Path $env:LOCALAPPDATA 'UCAD\Logs\startup.log'
+          Remove-Item -LiteralPath $log -Force -ErrorAction SilentlyContinue
+          $exe = Get-ChildItem src/UCAD.App/bin -Recurse -Filter 'UCAD.App.exe' | Where-Object FullName -match '\\Release\\' | Select-Object -First 1
+          if (-not $exe) { throw 'UCAD.App.exe was not found after build.' }
+          Write-Output "Launching $($exe.FullName)"
+          $process = Start-Process -FilePath $exe.FullName -WorkingDirectory $exe.DirectoryName -PassThru
+          Start-Sleep -Seconds 8
+          $process.Refresh()
+          if ($process.HasExited) {
+            if (Test-Path -LiteralPath $log) {
+              Write-Output '--- UCAD startup.log ---'
+              Get-Content -LiteralPath $log -Raw
+              Write-Output '--- end startup.log ---'
+            }
+            throw "UCAD exited during startup smoke test with code $($process.ExitCode)."
+          }
+          if (Test-Path -LiteralPath $log) {
+            $startupLog = Get-Content -LiteralPath $log -Raw
+            if ($startupLog -match 'MissingResource:') {
+              Write-Output '--- UCAD startup.log ---'
+              Write-Output $startupLog
+              Write-Output '--- end startup.log ---'
+              Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+              throw 'UCAD remained alive but reported a missing runtime resource.'
+            }
+          }
+          Write-Output "UCAD remained alive for 8 seconds (PID $($process.Id))."
+          Stop-Process -Id $process.Id -Force
+
   package-validation:
     runs-on: windows-latest
     steps:
@@ -63,10 +127,80 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "signtool failed: $LASTEXITCODE" }
           "CERTIFICATE_PATH=$cer" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           "CERTIFICATE_THUMBPRINT=$($cert.Thumbprint)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
-      - name: Generate and validate one-click package
+      - name: Generate and validate production one-click package
         shell: pwsh
         run: |
           $release = Get-Content release/release.json -Raw | ConvertFrom-Json
           $stage = Join-Path $env:RUNNER_TEMP 'one-click'
           $root = & ./packaging/New-GitHubOneClickInstallerPackage.ps1 -SignedBundlePath $env:BUNDLE_PATH -PublicCertificatePath $env:CERTIFICATE_PATH -OutputDirectory $stage -DisplayVersion $release.product.version -PackageVersion $release.product.packageVersion -PackageIdentityName $release.product.packageIdentityName -Publisher $release.product.publisher -CertificateThumbprint $env:CERTIFICATE_THUMBPRINT
           & ./packaging/Test-GitHubOneClickInstallerPackage.ps1 -ReleaseDirectory $root
+      - name: Build self-contained PR acceptance package
+        if: github.event_name == 'pull_request'
+        shell: pwsh
+        run: |
+          $release = Get-Content release/release.json -Raw | ConvertFrom-Json
+          $root = Join-Path $env:RUNNER_TEMP "UCAD-v$($release.product.version)-PR-acceptance"
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+          $bundleName = "UCAD_$($release.product.packageVersion)_x64.msixbundle"
+          $certificateName = "UCAD-v$($release.product.version)-acceptance.cer"
+          Copy-Item -LiteralPath $env:BUNDLE_PATH -Destination (Join-Path $root $bundleName) -Force
+          Copy-Item -LiteralPath $env:CERTIFICATE_PATH -Destination (Join-Path $root $certificateName) -Force
+          $metadata = [ordered]@{
+            version = $release.product.version
+            packageVersion = $release.product.packageVersion
+            packageIdentityName = $release.product.packageIdentityName
+            publisher = $release.product.publisher
+            applicationId = $release.product.applicationId
+            bundleFileName = $bundleName
+            certificateFileName = $certificateName
+            certificateThumbprint = $env:CERTIFICATE_THUMBPRINT
+          }
+          $metadata | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $root 'AcceptanceMetadata.json') -Encoding UTF8
+          $installer = @'
+          [CmdletBinding()]
+          param([switch]$Elevated)
+          $ErrorActionPreference = 'Stop'
+          $root = Split-Path -Parent $MyInvocation.MyCommand.Path
+          $metadata = Get-Content (Join-Path $root 'AcceptanceMetadata.json') -Raw | ConvertFrom-Json
+          $bundle = Join-Path $root $metadata.bundleFileName
+          $cer = Join-Path $root $metadata.certificateFileName
+          function Is-Administrator {
+              $principal = [Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent())
+              return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+          }
+          if (-not (Is-Administrator)) {
+              $args = @('-NoLogo','-NoProfile','-ExecutionPolicy','Bypass','-File',('"{0}"' -f $PSCommandPath),'-Elevated') -join ' '
+              $p = Start-Process powershell.exe -ArgumentList $args -Verb RunAs -Wait -PassThru
+              exit $p.ExitCode
+          }
+          $cert = [Security.Cryptography.X509Certificates.X509Certificate2]::new($cer)
+          if ($cert.Subject -cne $metadata.publisher -or $cert.Thumbprint -cne $metadata.certificateThumbprint) { throw 'Acceptance certificate metadata mismatch.' }
+          $trusted = Get-ChildItem Cert:\LocalMachine\TrustedPeople -ErrorAction SilentlyContinue | Where-Object Thumbprint -eq $cert.Thumbprint | Select-Object -First 1
+          if (-not $trusted) { Import-Certificate -FilePath $cer -CertStoreLocation Cert:\LocalMachine\TrustedPeople | Out-Null }
+          Add-AppxPackage -Path $bundle -ForceApplicationShutdown -ErrorAction Stop
+          $installed = Get-AppxPackage -Name $metadata.packageIdentityName | Where-Object Publisher -eq $metadata.publisher | Sort-Object Version -Descending | Select-Object -First 1
+          if (-not $installed) { throw 'UCAD acceptance package was not found after installation.' }
+          if ([version]$installed.Version -ne [version]$metadata.packageVersion) { throw "Installed version mismatch: $($installed.Version)" }
+          Start-Process explorer.exe "shell:AppsFolder\$($installed.PackageFamilyName)!$($metadata.applicationId)"
+          Write-Host "UCAD $($metadata.packageVersion) acceptance build installed and launched."
+          '@
+          Set-Content -LiteralPath (Join-Path $root 'Install-Acceptance.ps1') -Value $installer -Encoding UTF8
+          $cmd = '@echo off' + "`r`n" + 'powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0Install-Acceptance.ps1"' + "`r`n" + 'pause'
+          Set-Content -LiteralPath (Join-Path $root '安装并启动UCAD-v0.3.6-验收版.cmd') -Value $cmd -Encoding ASCII
+          @(
+            'UCAD v0.3.6 PR acceptance build',
+            '1. Double-click 安装并启动UCAD-v0.3.6-验收版.cmd.',
+            '2. Accept the one-time UAC prompt. The script trusts only the included temporary CI certificate.',
+            '3. The package updates the existing UCAD identity to 0.3.6.0 and launches it.',
+            '4. This certificate/build is for acceptance only. The final GitHub Release will be rebuilt with the normal release certificate.',
+            '5. If UCAD still does not open, send %LOCALAPPDATA%\UCAD\Logs\startup.log.'
+          ) | Set-Content -LiteralPath (Join-Path $root 'README-ACCEPTANCE.txt') -Encoding UTF8
+          "ACCEPTANCE_PACKAGE_PATH=$root" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Upload PR acceptance package
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: UCAD-v0.3.6-x64-PR-acceptance
+          path: ${{ env.ACCEPTANCE_PACKAGE_PATH }}
+          if-no-files-found: error
+          retention-days: 7
