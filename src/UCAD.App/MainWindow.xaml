@@ -5,7 +5,13 @@
     xmlns:views="using:UCAD.Views"
     Title="UCAD — Urban Computer-Aided Design">
 
-    <Grid RowDefinitions="Auto,*,Auto">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
         <CommandBar DefaultLabelPosition="Right">
             <AppBarButton Icon="Add" Label="Line" Click="Line_Click" />
             <AppBarButton Icon="Delete" Label="Clear" Click="Clear_Click" />
@@ -16,7 +22,12 @@
         <views:CadViewport x:Name="Viewport" Grid.Row="1" />
 
         <Border Grid.Row="2" Padding="12,6" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
-            <Grid ColumnDefinitions="Auto,*,Auto">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
                 <TextBlock x:Name="ModeText" Text="READY" FontFamily="Cascadia Mono" />
                 <TextBlock Grid.Column="1" HorizontalAlignment="Center" Text="UCAD v0.1 · Foundation Preview" Opacity="0.7" />
                 <TextBlock x:Name="CoordinateText" Grid.Column="2" Text="X 0.00  Y 0.00" FontFamily="Cascadia Mono" />
