@@ -41,6 +41,28 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.302'
+      - name: Validate HiDPI and shell fidelity contract
+        shell: pwsh
+        run: |
+          $manifest = Get-Content src/UCAD.App/app.manifest -Raw
+          if ($manifest -notmatch 'PerMonitorV2') {
+            throw 'UCAD must declare PerMonitorV2 in the application manifest.'
+          }
+          $xaml = Get-Content src/UCAD.App/MainWindow.xaml -Raw
+          if ($xaml -match 'UCAD v0\.3\.\d') {
+            throw 'The shell must not hardcode a v0.3.x display version; use runtime assembly metadata.'
+          }
+          $code = Get-Content src/UCAD.App/MainWindow.xaml.cs -Raw
+          if ($code -match 'AppTitleBar\.Title\s*=') {
+            throw 'The browser-like title strip must not inject a separate TitleBar.Title label.'
+          }
+          $tokens = Get-Content src/UCAD.App/Styles/UcadDesignTokens.xaml -Raw
+          foreach ($required in @('UcadTitleBarBrush','UcadCategoryBarBrush','UcadToolShelfBrush','UcadCanvasBrush','UcadPanelBrush','UcadStatusBarBrush')) {
+            if ($tokens -notmatch [regex]::Escape($required)) {
+              throw "Missing UCAD design token: $required"
+            }
+          }
+          Write-Output 'Validated PerMonitorV2, runtime versioning, browser-title contract, and core shell design tokens.'
       - name: Validate runtime resource keys
         shell: pwsh
         run: |
@@ -185,13 +207,14 @@ jobs:
           Write-Host "UCAD $($metadata.packageVersion) acceptance build installed and launched."
           '@
           Set-Content -LiteralPath (Join-Path $root 'Install-Acceptance.ps1') -Value $installer -Encoding UTF8
+          $commandFile = "Install-UCAD-v$($release.product.version)-Acceptance.cmd"
           $cmd = '@echo off' + "`r`n" + 'powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0Install-Acceptance.ps1"' + "`r`n" + 'pause'
-          Set-Content -LiteralPath (Join-Path $root '安装并启动UCAD-v0.3.6-验收版.cmd') -Value $cmd -Encoding ASCII
+          Set-Content -LiteralPath (Join-Path $root $commandFile) -Value $cmd -Encoding ASCII
           @(
-            'UCAD v0.3.6 PR acceptance build',
-            '1. Double-click 安装并启动UCAD-v0.3.6-验收版.cmd.',
+            "UCAD v$($release.product.version) PR acceptance build",
+            "1. Double-click $commandFile.",
             '2. Accept the one-time UAC prompt. The script trusts only the included temporary CI certificate.',
-            '3. The package updates the existing UCAD identity to 0.3.6.0 and launches it.',
+            "3. The package updates the existing UCAD identity to $($release.product.packageVersion) and launches it.",
             '4. This certificate/build is for acceptance only. The final GitHub Release will be rebuilt with the normal release certificate.',
             '5. If UCAD still does not open, send %LOCALAPPDATA%\UCAD\Logs\startup.log.'
           ) | Set-Content -LiteralPath (Join-Path $root 'README-ACCEPTANCE.txt') -Encoding UTF8
@@ -200,7 +223,7 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: UCAD-v0.3.6-x64-PR-acceptance
+          name: UCAD-v0.3.7-x64-PR-acceptance
           path: ${{ env.ACCEPTANCE_PACKAGE_PATH }}
           if-no-files-found: error
           retention-days: 7

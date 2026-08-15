@@ -39,6 +39,7 @@
   <data name="ResetViewToolLabel.Text" xml:space="preserve"><value>ビューリセット</value></data>
   <data name="ToolShelfHintText.Text" xml:space="preserve"><value>選択中のカテゴリをもう一度クリックするとツール棚を閉じます</value></data>
   <data name="ToolShelfHint" xml:space="preserve"><value>選択中のカテゴリをもう一度クリックするとツール棚を閉じます</value></data>
+  <data name="ToolShelfUnavailable" xml:space="preserve"><value>このカテゴリは今後のバージョン用に予約されています。現在利用できるコマンドはありません。</value></data>
 
   <data name="RectangleMoreItem.Text" xml:space="preserve"><value>長方形</value></data>
   <data name="CircleMoreItem.Text" xml:space="preserve"><value>円</value></data>
@@ -57,7 +58,7 @@
   <data name="ActiveCommandLabel.Text" xml:space="preserve"><value>実行中コマンド</value></data>
   <data name="UndoAvailableLabel.Text" xml:space="preserve"><value>元に戻せる</value></data>
   <data name="RedoAvailableLabel.Text" xml:space="preserve"><value>やり直せる</value></data>
-  <data name="V04FoundationHint.Text" xml:space="preserve"><value>v0.3.5 ではタブ、コマンドメタデータ、図面変更状態を Core に接続し、v0.4.0 の選択・スナップ・直交に共通の状態境界を用意します。</value></data>
+  <data name="V04FoundationHint.Text" xml:space="preserve"><value>v0.3.7 で HiDPI とワークスペースの視覚基盤を固定し、v0.4.0 では既存の CadWorkspaceSession 境界に選択・スナップ・直交を接続します。</value></data>
   <data name="Inspector_None" xml:space="preserve"><value>—</value></data>
   <data name="Inspector_Yes" xml:space="preserve"><value>はい</value></data>
   <data name="Inspector_No" xml:space="preserve"><value>いいえ</value></data>
@@ -71,7 +72,7 @@
 
   <data name="Document_UntitledFormat" xml:space="preserve"><value>図面 {0}</value></data>
   <data name="CloseDirtyDialog_Title" xml:space="preserve"><value>未保存の図面を閉じますか？</value></data>
-  <data name="CloseDirtyDialog_Content" xml:space="preserve"><value>「{0}」にはファイルに保存されていない作図内容があります。v0.3.5 ではファイル保存に未対応のため、閉じると内容は失われます。</value></data>
+  <data name="CloseDirtyDialog_Content" xml:space="preserve"><value>「{0}」にはファイルに保存されていない作図内容があります。現在のバージョンではファイル保存に未対応のため、閉じると内容は失われます。</value></data>
   <data name="CloseDirtyDialog_Primary" xml:space="preserve"><value>閉じる</value></data>
   <data name="CloseDirtyDialog_Cancel" xml:space="preserve"><value>キャンセル</value></data>
 
