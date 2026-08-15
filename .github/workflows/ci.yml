@@ -51,8 +51,8 @@ jobs:
       - name: Launch UCAD and verify it stays alive
         shell: pwsh
         run: |
-          $exe = Get-ChildItem src/UCAD.App/bin -Recurse -Filter 'UCAD.exe' | Where-Object FullName -match '\\Release\\' | Select-Object -First 1
-          if (-not $exe) { throw 'UCAD.exe was not found after build.' }
+          $exe = Get-ChildItem src/UCAD.App/bin -Recurse -Filter 'UCAD.App.exe' | Where-Object FullName -match '\\Release\\' | Select-Object -First 1
+          if (-not $exe) { throw 'UCAD.App.exe was not found after build.' }
           Write-Output "Launching $($exe.FullName)"
           $process = Start-Process -FilePath $exe.FullName -WorkingDirectory $exe.DirectoryName -PassThru
           Start-Sleep -Seconds 8
@@ -95,7 +95,7 @@ jobs:
           $signtool = Get-ChildItem (Join-Path $kitsRoot 'Windows Kits\10\bin') -Recurse -Filter signtool.exe | Where-Object FullName -match '\\x64\\signtool.exe$' | Sort-Object FullName -Descending | Select-Object -First 1
           if (-not $signtool) { throw 'signtool.exe not found.' }
           & $signtool.FullName sign /fd SHA256 /sha1 $cert.Thumbprint $env:BUNDLE_PATH
-          if ($LASTEXITCODE -ne 0) { throw 'signtool failed: $LASTEXITCODE' }
+          if ($LASTEXITCODE -ne 0) { throw "signtool failed: $LASTEXITCODE" }
           "CERTIFICATE_PATH=$cer" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           "CERTIFICATE_THUMBPRINT=$($cert.Thumbprint)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Generate and validate one-click package
