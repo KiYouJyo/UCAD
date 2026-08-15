@@ -1,0 +1,40 @@
+name: UI Fidelity Screenshots
+
+on:
+  push:
+    branches:
+      - 'codex/v0.3.9-ui-fidelity'
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  capture-1440x900:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.302'
+      - name: Build UCAD
+        shell: pwsh
+        run: |
+          dotnet restore src/UCAD.App/UCAD.App.csproj -p:Platform=x64 -r win-x64
+          if ($LASTEXITCODE -ne 0) { throw "Restore failed: $LASTEXITCODE" }
+          dotnet build src/UCAD.App/UCAD.App.csproj -c Release --no-restore -p:Platform=x64 -r win-x64
+          if ($LASTEXITCODE -ne 0) { throw "Build failed: $LASTEXITCODE" }
+      - name: Capture Drawing, Start, and Settings screens
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem src/UCAD.App/bin -Recurse -Filter 'UCAD.App.exe' | Where-Object FullName -match '\\Release\\' | Select-Object -First 1
+          if (-not $exe) { throw 'UCAD.App.exe was not found after build.' }
+          ./.github/scripts/Capture-UcadUi.ps1 -ExePath $exe.FullName -OutputDirectory "$env:RUNNER_TEMP\ucad-fidelity"
+      - name: Upload fidelity screenshots
+        uses: actions/upload-artifact@v6
+        with:
+          name: ucad-v0.3.9-fidelity-1440x900
+          path: ${{ runner.temp }}\ucad-fidelity\*.png
+          if-no-files-found: error
+          retention-days: 14
