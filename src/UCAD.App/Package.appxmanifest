@@ -8,7 +8,7 @@
   <Identity
     Name="F1BD5F25-4ED6-4037-B9FE-BB7D4B326E25"
     Publisher="CN=AppPublisher"
-    Version="0.3.5.0" />
+    Version="0.3.8.0" />
 
   <Properties>
     <DisplayName>ms-resource:AppDisplayName</DisplayName>
@@ -34,6 +34,8 @@
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square310x310Logo="Assets\Square310x310Logo.png" Square71x71Logo="Assets\Square71x71Logo.png" />
+        <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
     </Application>
   </Applications>
