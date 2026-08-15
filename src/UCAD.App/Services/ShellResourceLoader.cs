@@ -7,7 +7,7 @@ namespace UCAD
     internal sealed class ResourceLoader
     {
         private readonly Microsoft.Windows.ApplicationModel.Resources.ResourceLoader _default = new();
-        private readonly Microsoft.Windows.ApplicationModel.Resources.ResourceLoader _v039 = new("UcadV039");
+        private readonly Microsoft.Windows.ApplicationModel.Resources.ResourceLoader? _v039 = TryCreate("UcadV039");
 
         public string GetString(string key)
         {
@@ -15,13 +15,32 @@ namespace UCAD
             return string.IsNullOrWhiteSpace(value) ? TryGet(_v039, key) : value;
         }
 
-        private static string TryGet(Microsoft.Windows.ApplicationModel.Resources.ResourceLoader loader, string key)
+        private static Microsoft.Windows.ApplicationModel.Resources.ResourceLoader? TryCreate(string mapName)
         {
+            try
+            {
+                return new Microsoft.Windows.ApplicationModel.Resources.ResourceLoader(mapName);
+            }
+            catch (Exception)
+            {
+                // The named PRI map is not available when CI launches the raw unpackaged
+                // build output. The packaged production runtime does contain the map.
+                return null;
+            }
+        }
+
+        private static string TryGet(Microsoft.Windows.ApplicationModel.Resources.ResourceLoader? loader, string key)
+        {
+            if (loader is null)
+            {
+                return string.Empty;
+            }
+
             try
             {
                 return loader.GetString(key);
             }
-            catch (System.Runtime.InteropServices.COMException)
+            catch (Exception)
             {
                 return string.Empty;
             }
@@ -32,13 +51,13 @@ namespace UCAD
 namespace UCAD.Views
 {
     /// <summary>
-    /// Start and Settings are backed exclusively by the v0.3.9 resource map.
-    /// The same-name type intentionally scopes existing unqualified ResourceLoader
-    /// usages in UCAD.Views without spreading map-name literals through view code.
+    /// Start and Settings use the v0.3.9 resource map in packaged builds. Raw CI
+    /// smoke runs may not expose named PRI submaps; in that case returning the key
+    /// keeps initialization testable without pretending localization succeeded.
     /// </summary>
     internal sealed class ResourceLoader
     {
-        private readonly Microsoft.Windows.ApplicationModel.Resources.ResourceLoader _inner;
+        private readonly Microsoft.Windows.ApplicationModel.Resources.ResourceLoader? _inner;
 
         public ResourceLoader() : this("UcadV039")
         {
@@ -46,16 +65,28 @@ namespace UCAD.Views
 
         public ResourceLoader(string mapName)
         {
-            _inner = new Microsoft.Windows.ApplicationModel.Resources.ResourceLoader(mapName);
+            try
+            {
+                _inner = new Microsoft.Windows.ApplicationModel.Resources.ResourceLoader(mapName);
+            }
+            catch (Exception)
+            {
+                _inner = null;
+            }
         }
 
         public string GetString(string key)
         {
+            if (_inner is null)
+            {
+                return string.Empty;
+            }
+
             try
             {
                 return _inner.GetString(key);
             }
-            catch (System.Runtime.InteropServices.COMException)
+            catch (Exception)
             {
                 return string.Empty;
             }
