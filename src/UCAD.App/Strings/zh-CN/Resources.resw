@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="AppDisplayName" xml:space="preserve"><value>UCAD</value></data>
+  <data name="AppDescription" xml:space="preserve"><value>面向城市规划与建筑设计的轻量二维 CAD</value></data>
+  <data name="AppWindowTitle" xml:space="preserve"><value>UCAD — 都市规划辅助 CAD</value></data>
+  <data name="LineButton.Label" xml:space="preserve"><value>直线</value></data>
+  <data name="ClearButton.Label" xml:space="preserve"><value>清空</value></data>
+  <data name="ResetViewButton.Label" xml:space="preserve"><value>重置视图</value></data>
+  <data name="Status_Ready" xml:space="preserve"><value>就绪 — 单击“直线”开始绘制</value></data>
+  <data name="Status_Cleared" xml:space="preserve"><value>图形已清空</value></data>
+  <data name="Status_ViewReset" xml:space="preserve"><value>视图已重置</value></data>
+  <data name="Status_LineFirst" xml:space="preserve"><value>LINE：指定第一点</value></data>
+  <data name="Status_LineSecond" xml:space="preserve"><value>LINE：指定下一点</value></data>
+</root>

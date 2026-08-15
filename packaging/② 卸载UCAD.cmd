@@ -1,31 +1,20 @@
 @echo off
 chcp 65001 >nul
-setlocal DisableDelayedExpansion
+setlocal
 set "ROOT=%~dp0"
-set "UNINSTALLER=%ROOT%payload\Uninstall.ps1"
-
-if not exist "%UNINSTALLER%" (
-  echo [UCAD] Uninstallation failed: payload\Uninstall.ps1 was not found.
-  call :wait
+set "SCRIPT=%ROOT%payload\Uninstall.ps1"
+if not exist "%SCRIPT%" (
+  echo Uninstallation failed: payload\Uninstall.ps1 was not found.
+  pause
   exit /b 2
 )
-
-powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%UNINSTALLER%"
+powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT%"
 set "EXITCODE=%ERRORLEVEL%"
-
 if not "%EXITCODE%"=="0" (
-  echo.
-  echo [UCAD] Uninstallation failed. Exit code: %EXITCODE%
-  call :wait
+  echo UCAD uninstallation failed. Exit code: %EXITCODE%
+  pause
   exit /b %EXITCODE%
 )
-
-echo.
-echo [UCAD] Uninstallation completed.
-call :wait
-exit /b 0
-
-:wait
-if defined UCAD_NO_PAUSE exit /b 0
+echo UCAD uninstallation completed.
 pause
 exit /b 0

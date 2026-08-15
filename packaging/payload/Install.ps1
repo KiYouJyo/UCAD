@@ -19,73 +19,61 @@ function Download-File([string]$Uri, [string]$Destination) {
     Invoke-WebRequest -UseBasicParsing -Uri $Uri -OutFile $Destination -Headers @{ 'User-Agent' = 'UCAD-OneClickInstaller' }
 }
 
+$tempRoot = $null
 try {
-    if (-not (Test-Path -LiteralPath $metadataPath -PathType Leaf)) { throw 'InstallerMetadata.json is missing.' }
     $metadata = Get-Content -LiteralPath $metadataPath -Raw -Encoding UTF8 | ConvertFrom-Json
-    foreach ($required in @('displayVersion','releaseTag','releaseApiUri','remoteArchiveFileName','checksumFileName','executableName')) {
-        if ([string]::IsNullOrWhiteSpace([string]$metadata.$required)) { throw "Installer metadata is missing: $required" }
-    }
+    $certificatePath = Join-Path $payloadRoot $metadata.certificateFileName
+    if (-not (Test-Path -LiteralPath $certificatePath -PathType Leaf)) { throw 'Release certificate is missing from the installer.' }
+    $certificate = [Security.Cryptography.X509Certificates.X509Certificate2]::new($certificatePath)
+    if ($certificate.HasPrivateKey) { throw 'Installer certificate must not contain a private key.' }
+    if ($certificate.Subject -cne $metadata.publisher -or $certificate.Thumbprint -cne $metadata.certificateThumbprint) { throw 'Installer certificate identity mismatch.' }
 
-    $installRoot = Join-Path $env:LOCALAPPDATA 'Programs\UCAD'
     $tempRoot = Join-Path $env:TEMP ("UCAD-Installer-" + [Guid]::NewGuid().ToString('N'))
-    $archivePath = Join-Path $tempRoot $metadata.remoteArchiveFileName
+    New-Item -ItemType Directory -Force -Path $tempRoot | Out-Null
+    $bundlePath = Join-Path $tempRoot $metadata.remoteBundleFileName
     $checksumPath = Join-Path $tempRoot $metadata.checksumFileName
-    $extractRoot = Join-Path $tempRoot 'extracted'
-    New-Item -ItemType Directory -Force -Path $tempRoot,$extractRoot | Out-Null
 
     Write-InstallerLog "UCAD $($metadata.displayVersion) installation started."
     $release = Invoke-RestMethod -Uri $metadata.releaseApiUri -Headers @{ 'User-Agent' = 'UCAD-OneClickInstaller' }
     if ($release.tag_name -ne $metadata.releaseTag) { throw "Release tag mismatch: $($release.tag_name)" }
-
-    $archiveAsset = @($release.assets | Where-Object name -eq $metadata.remoteArchiveFileName)
+    $bundleAsset = @($release.assets | Where-Object name -eq $metadata.remoteBundleFileName)
     $checksumAsset = @($release.assets | Where-Object name -eq $metadata.checksumFileName)
-    if ($archiveAsset.Count -ne 1) { throw "Expected exactly one release asset named $($metadata.remoteArchiveFileName)." }
-    if ($checksumAsset.Count -ne 1) { throw "Expected exactly one release asset named $($metadata.checksumFileName)." }
-
-    Download-File $archiveAsset[0].browser_download_url $archivePath
+    if ($bundleAsset.Count -ne 1 -or $checksumAsset.Count -ne 1) { throw 'Required GitHub Release assets are missing or duplicated.' }
+    Download-File $bundleAsset[0].browser_download_url $bundlePath
     Download-File $checksumAsset[0].browser_download_url $checksumPath
 
     $expectedHash = $null
     foreach ($line in Get-Content -LiteralPath $checksumPath -Encoding ASCII) {
-        if ($line -match '^([a-fA-F0-9]{64})\s{2}(.+)$' -and $Matches[2] -eq $metadata.remoteArchiveFileName) {
-            $expectedHash = $Matches[1].ToLowerInvariant()
-            break
-        }
+        if ($line -match '^([a-fA-F0-9]{64})\s{2}(.+)$' -and $Matches[2] -eq $metadata.remoteBundleFileName) { $expectedHash = $Matches[1].ToLowerInvariant(); break }
     }
-    if (-not $expectedHash) { throw "No SHA-256 entry found for $($metadata.remoteArchiveFileName)." }
-    $actualHash = (Get-FileHash -LiteralPath $archivePath -Algorithm SHA256).Hash.ToLowerInvariant()
-    if ($actualHash -ne $expectedHash) { throw "SHA-256 mismatch for $($metadata.remoteArchiveFileName)." }
+    if (-not $expectedHash) { throw 'No SHA-256 entry was found for the MSIX bundle.' }
+    $actualHash = (Get-FileHash -LiteralPath $bundlePath -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($actualHash -ne $expectedHash) { throw 'MSIX bundle SHA-256 verification failed.' }
     Write-InstallerLog "SHA-256 verified: $actualHash"
 
-    Expand-Archive -LiteralPath $archivePath -DestinationPath $extractRoot -Force
-    $sourceExe = Join-Path $extractRoot $metadata.executableName
-    if (-not (Test-Path -LiteralPath $sourceExe -PathType Leaf)) { throw "Published application executable is missing: $($metadata.executableName)" }
-
-    Get-Process -Name ([IO.Path]::GetFileNameWithoutExtension($metadata.executableName)) -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-    Start-Sleep -Milliseconds 300
-
-    if (Test-Path -LiteralPath $installRoot) { Remove-Item -LiteralPath $installRoot -Recurse -Force }
-    New-Item -ItemType Directory -Force -Path $installRoot | Out-Null
-    Get-ChildItem -LiteralPath $extractRoot -Force | ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $installRoot -Recurse -Force }
-
-    $installedExe = Join-Path $installRoot $metadata.executableName
-    if (-not (Test-Path -LiteralPath $installedExe -PathType Leaf)) { throw 'Installed executable verification failed.' }
-    Set-Content -LiteralPath (Join-Path $installRoot 'installed-version.txt') -Value $metadata.displayVersion -Encoding ASCII
-
-    $shell = New-Object -ComObject WScript.Shell
-    $startMenuDir = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs'
-    $desktopDir = [Environment]::GetFolderPath('Desktop')
-    foreach ($shortcutPath in @((Join-Path $startMenuDir 'UCAD.lnk'), (Join-Path $desktopDir 'UCAD.lnk'))) {
-        $shortcut = $shell.CreateShortcut($shortcutPath)
-        $shortcut.TargetPath = $installedExe
-        $shortcut.WorkingDirectory = $installRoot
-        $shortcut.IconLocation = "$installedExe,0"
-        $shortcut.Description = 'UCAD — Urban Computer-Aided Design'
-        $shortcut.Save()
+    $trusted = Get-ChildItem Cert:\CurrentUser\TrustedPeople | Where-Object Thumbprint -eq $metadata.certificateThumbprint | Select-Object -First 1
+    if (-not $trusted) {
+        Import-Certificate -FilePath $certificatePath -CertStoreLocation Cert:\CurrentUser\TrustedPeople | Out-Null
+        Write-InstallerLog "Trusted release certificate for current user: $($metadata.certificateThumbprint)"
     }
 
-    Write-InstallerLog "Installed to $installRoot"
-    Start-Process -FilePath $installedExe -WorkingDirectory $installRoot
+    $signature = Get-AuthenticodeSignature -FilePath $bundlePath
+    if (-not $signature.SignerCertificate) { throw 'Signed MSIX bundle has no signer certificate.' }
+    if ($signature.SignerCertificate.Thumbprint -cne $metadata.certificateThumbprint) { throw 'MSIX signer certificate does not match installer metadata.' }
+    if ($signature.Status -ne 'Valid') { throw "MSIX signature validation failed: $($signature.Status) / $($signature.StatusMessage)" }
+
+    $existing = Get-AppxPackage -Name $metadata.packageIdentityName -ErrorAction SilentlyContinue | Sort-Object Version -Descending | Select-Object -First 1
+    if ($existing -and [version]$existing.Version -eq [version]$metadata.packageVersion) {
+        Write-InstallerLog "UCAD $($metadata.packageVersion) is already installed."
+    }
+    else {
+        Add-AppxPackage -Path $bundlePath -ForceApplicationShutdown
+        Write-InstallerLog 'MSIX package installed successfully.'
+    }
+
+    $installed = Get-AppxPackage -Name $metadata.packageIdentityName -ErrorAction Stop | Sort-Object Version -Descending | Select-Object -First 1
+    if ([version]$installed.Version -ne [version]$metadata.packageVersion) { throw "Installed package version mismatch: $($installed.Version)" }
+    Start-Process explorer.exe "shell:AppsFolder\$($installed.PackageFamilyName)!$($metadata.applicationId)"
     Write-InstallerLog 'UCAD installation completed successfully.'
 }
 catch {
@@ -96,5 +84,4 @@ catch {
 finally {
     if ($tempRoot -and (Test-Path -LiteralPath $tempRoot)) { Remove-Item -LiteralPath $tempRoot -Recurse -Force -ErrorAction SilentlyContinue }
 }
-
 exit 0
