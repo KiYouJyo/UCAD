@@ -41,6 +41,12 @@ public sealed class CommandRegistry
     {
         var registry = new CommandRegistry();
         registry.Register(new CadCommandDefinition("LINE", "L"));
+        registry.Register(new CadCommandDefinition("PLINE", "PL"));
+        registry.Register(new CadCommandDefinition("RECTANGLE", "REC"));
+        registry.Register(new CadCommandDefinition("CIRCLE", "C"));
+        registry.Register(new CadCommandDefinition("ARC", "A"));
+        registry.Register(new CadCommandDefinition("UNDO", "U"));
+        registry.Register(new CadCommandDefinition("REDO"));
         registry.Register(new CadCommandDefinition("CLEAR"));
         registry.Register(new CadCommandDefinition("RESETVIEW", "RV"));
         return registry;
