@@ -18,19 +18,42 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.302'
-      - name: Build UCAD
+
+      - name: Build unsigned x64 MSIX bundle
         shell: pwsh
         run: |
-          dotnet restore src/UCAD.App/UCAD.App.csproj -p:Platform=x64 -r win-x64
-          if ($LASTEXITCODE -ne 0) { throw "Restore failed: $LASTEXITCODE" }
-          dotnet build src/UCAD.App/UCAD.App.csproj -c Release --no-restore -p:Platform=x64 -r win-x64
-          if ($LASTEXITCODE -ne 0) { throw "Build failed: $LASTEXITCODE" }
+          $output = Join-Path $env:RUNNER_TEMP 'UCAD-UiPackages'
+          dotnet build src/UCAD.App/UCAD.App.csproj -c Release -p:Platform=x64 -r win-x64 -p:GenerateAppxPackageOnBuild=true -p:AppxPackageSigningEnabled=false -p:AppxBundle=Always -p:AppxBundlePlatforms=x64 -p:UapAppxPackageBuildMode=SideloadOnly -p:AppxPackageDir="$output\"
+          if ($LASTEXITCODE -ne 0) { throw "MSIX build failed: $LASTEXITCODE" }
+          $bundle = @(Get-ChildItem $output -Recurse -Filter '*.msixbundle') | Select-Object -First 1
+          if (-not $bundle) { throw 'MSIX bundle was not produced.' }
+          "BUNDLE_PATH=$($bundle.FullName)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Sign and install packaged UCAD
+        shell: pwsh
+        run: |
+          $cert = New-SelfSignedCertificate -Type Custom -Subject 'CN=AppPublisher' -KeyUsage DigitalSignature -KeyAlgorithm RSA -KeyLength 2048 -HashAlgorithm SHA256 -CertStoreLocation Cert:\CurrentUser\My -KeyExportPolicy Exportable -TextExtension @('2.5.29.37={text}1.3.6.1.5.5.7.3.3')
+          $cer = Join-Path $env:RUNNER_TEMP 'ucad-ui-ci.cer'
+          Export-Certificate -Cert $cert -FilePath $cer | Out-Null
+          Import-Certificate -FilePath $cer -CertStoreLocation Cert:\CurrentUser\TrustedPeople | Out-Null
+          $kitsRoot = [Environment]::GetEnvironmentVariable('ProgramFiles(x86)')
+          $signtool = Get-ChildItem (Join-Path $kitsRoot 'Windows Kits\10\bin') -Recurse -Filter signtool.exe | Where-Object FullName -match '\\x64\\signtool.exe$' | Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $signtool) { throw 'signtool.exe not found.' }
+          & $signtool.FullName sign /fd SHA256 /sha1 $cert.Thumbprint $env:BUNDLE_PATH
+          if ($LASTEXITCODE -ne 0) { throw "signtool failed: $LASTEXITCODE" }
+          Add-AppxPackage -Path $env:BUNDLE_PATH
+          $package = Get-AppxPackage | Where-Object { $_.Name -eq 'F1BD5F25-4ED6-4037-B9FE-BB7D4B326E25' } | Select-Object -First 1
+          if (-not $package) { throw 'Installed UCAD package was not found.' }
+          $exe = Join-Path $package.InstallLocation 'UCAD.App.exe'
+          if (-not (Test-Path $exe)) { throw "Installed executable was not found: $exe" }
+          "INSTALLED_EXE=$exe" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Output "Installed packaged UCAD at $($package.InstallLocation)"
+
       - name: Capture Drawing, Start, and Settings screens
         shell: pwsh
         run: |
-          $exe = Get-ChildItem src/UCAD.App/bin -Recurse -Filter 'UCAD.App.exe' | Where-Object FullName -match '\\Release\\' | Select-Object -First 1
-          if (-not $exe) { throw 'UCAD.App.exe was not found after build.' }
-          ./.github/scripts/Capture-UcadUi.ps1 -ExePath $exe.FullName -OutputDirectory "$env:RUNNER_TEMP\ucad-fidelity"
+          ./.github/scripts/Capture-UcadUi.ps1 -ExePath $env:INSTALLED_EXE -OutputDirectory "$env:RUNNER_TEMP\ucad-fidelity"
+
       - name: Upload fidelity screenshots
         uses: actions/upload-artifact@v6
         with:
