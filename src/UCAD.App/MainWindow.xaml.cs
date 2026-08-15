@@ -67,8 +67,16 @@ public sealed partial class MainWindow : Window
 
     private string GetString(string key)
     {
-        var value = _resources.GetString(key);
-        return string.IsNullOrWhiteSpace(value) ? key : value;
+        try
+        {
+            var value = _resources.GetString(key);
+            return string.IsNullOrWhiteSpace(value) ? key : value;
+        }
+        catch (System.Runtime.InteropServices.COMException ex) when (ex.HResult == unchecked((int)0x80073B17))
+        {
+            App.WriteStartupFailure($"MissingResource:{key}", ex);
+            return key;
+        }
     }
 
     private CadWorkspaceSession CreateNewWorkspace()
@@ -305,7 +313,7 @@ public sealed partial class MainWindow : Window
         UpdateToolShelfHint();
     }
 
-    private void UpdateToolShelfHint() => ToolShelfHintText.Text = GetString("ToolShelfHintText.Text");
+    private void UpdateToolShelfHint() => ToolShelfHintText.Text = GetString("ToolShelfHint");
 
     private void CommandInput_KeyDown(object sender, KeyRoutedEventArgs e)
     {
