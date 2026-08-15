@@ -1,6 +1,7 @@
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.Windows.ApplicationModel.Resources;
@@ -370,8 +371,6 @@ public sealed partial class MainWindow : Window
                            button.Tag is string category &&
                            category == _activeShelfCategory;
 
-            // The shell owns the visual state explicitly so future categories remain legible instead
-            // of inheriting WinUI's low-opacity Disabled appearance.
             button.IsChecked = false;
             button.Background = selected ? selectedBrush : transparentBrush;
             button.Foreground = selected ? primaryBrush : secondaryBrush;
