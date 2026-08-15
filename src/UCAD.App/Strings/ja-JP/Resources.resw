@@ -8,17 +8,38 @@
   <data name="AppDescription" xml:space="preserve"><value>都市計画・建築設計向けの軽量 2D CAD</value></data>
   <data name="AppWindowTitle" xml:space="preserve"><value>UCAD — 都市計画支援 CAD</value></data>
   <data name="LineButton.Label" xml:space="preserve"><value>線分</value></data>
+  <data name="PolylineButton.Label" xml:space="preserve"><value>ポリライン</value></data>
+  <data name="RectangleButton.Label" xml:space="preserve"><value>長方形</value></data>
+  <data name="CircleButton.Label" xml:space="preserve"><value>円</value></data>
+  <data name="ArcButton.Label" xml:space="preserve"><value>円弧</value></data>
+  <data name="UndoButton.Label" xml:space="preserve"><value>元に戻す</value></data>
+  <data name="RedoButton.Label" xml:space="preserve"><value>やり直し</value></data>
   <data name="ClearButton.Label" xml:space="preserve"><value>全消去</value></data>
   <data name="ResetViewButton.Label" xml:space="preserve"><value>ビューをリセット</value></data>
   <data name="CommandPrompt.Text" xml:space="preserve"><value>コマンド:</value></data>
   <data name="CommandInput.PlaceholderText" xml:space="preserve"><value>コマンド、座標、距離を入力</value></data>
-  <data name="Status_Ready" xml:space="preserve"><value>準備完了 — コマンドを入力し Enter/Space で確定</value></data>
+  <data name="Status_Ready" xml:space="preserve"><value>準備完了 — LINE / PLINE / RECTANGLE / CIRCLE / ARC</value></data>
   <data name="Status_Cleared" xml:space="preserve"><value>図面を全消去しました</value></data>
   <data name="Status_ViewReset" xml:space="preserve"><value>ビューをリセットしました</value></data>
   <data name="Status_LineFirst" xml:space="preserve"><value>LINE：1 点目を指定</value></data>
   <data name="Status_LineNext" xml:space="preserve"><value>LINE：次の点を指定。Enter/Space で終了</value></data>
+  <data name="Status_PlineFirst" xml:space="preserve"><value>PLINE：始点を指定</value></data>
+  <data name="Status_PlineNext" xml:space="preserve"><value>PLINE：次の頂点を指定。Enter/Space で確定</value></data>
+  <data name="Status_RectFirst" xml:space="preserve"><value>RECTANGLE：1 つ目のコーナーを指定</value></data>
+  <data name="Status_RectOpposite" xml:space="preserve"><value>RECTANGLE：対角コーナーを指定</value></data>
+  <data name="Status_CircleCenter" xml:space="preserve"><value>CIRCLE：中心を指定</value></data>
+  <data name="Status_CircleRadius" xml:space="preserve"><value>CIRCLE：半径点または半径値を指定</value></data>
+  <data name="Status_ArcStart" xml:space="preserve"><value>ARC：始点を指定</value></data>
+  <data name="Status_ArcSecond" xml:space="preserve"><value>ARC：円弧上の 2 点目を指定</value></data>
+  <data name="Status_ArcEnd" xml:space="preserve"><value>ARC：終点を指定</value></data>
   <data name="Status_InvalidPoint" xml:space="preserve"><value>点の入力が無効です。x,y、@x,y、または基点指定後の距離を入力できます。</value></data>
+  <data name="Status_InvalidGeometry" xml:space="preserve"><value>無効なジオメトリです。同一点、退化長方形、半径ゼロ、または 3 点が一直線です。</value></data>
+  <data name="Status_PointRequired" xml:space="preserve"><value>このコマンドにはまだ点指定が必要です。Esc でキャンセルできます。</value></data>
   <data name="Status_CommandCancelled" xml:space="preserve"><value>*キャンセル*</value></data>
   <data name="Status_NoPreviousCommand" xml:space="preserve"><value>繰り返せる直前のコマンドがありません。</value></data>
   <data name="Status_UnknownCommand" xml:space="preserve"><value>不明なコマンド：“{0}”</value></data>
+  <data name="Status_Undo" xml:space="preserve"><value>直前の作図操作を元に戻しました</value></data>
+  <data name="Status_Redo" xml:space="preserve"><value>直前の作図操作をやり直しました</value></data>
+  <data name="Status_NothingToUndo" xml:space="preserve"><value>元に戻せる操作はありません</value></data>
+  <data name="Status_NothingToRedo" xml:space="preserve"><value>やり直せる操作はありません</value></data>
 </root>
