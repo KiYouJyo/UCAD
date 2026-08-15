@@ -54,10 +54,20 @@ public partial class App : Application
             language = string.Empty;
         }
 
-        ApplicationLanguages.PrimaryLanguageOverride = language;
-        WriteStartupEvent(string.IsNullOrEmpty(language)
-            ? "Display language: system preference"
-            : $"Display language override: {language}");
+        try
+        {
+            // This API is valid for the packaged production runtime. A raw build output
+            // launched by CI can be unpackaged, where Windows reports an invalid state;
+            // that must not turn a diagnostics-only smoke run into an application crash.
+            ApplicationLanguages.PrimaryLanguageOverride = language;
+            WriteStartupEvent(string.IsNullOrEmpty(language)
+                ? "Display language: system preference"
+                : $"Display language override: {language}");
+        }
+        catch (InvalidOperationException)
+        {
+            WriteStartupEvent("Display language override unavailable in unpackaged runtime; using the current Windows resource context");
+        }
     }
 
     private static void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e) =>
