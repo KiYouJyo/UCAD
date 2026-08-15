@@ -8,17 +8,38 @@
   <data name="AppDescription" xml:space="preserve"><value>Lightweight 2D CAD for urban planning and architectural design</value></data>
   <data name="AppWindowTitle" xml:space="preserve"><value>UCAD — Urban Computer-Aided Design</value></data>
   <data name="LineButton.Label" xml:space="preserve"><value>Line</value></data>
+  <data name="PolylineButton.Label" xml:space="preserve"><value>Polyline</value></data>
+  <data name="RectangleButton.Label" xml:space="preserve"><value>Rectangle</value></data>
+  <data name="CircleButton.Label" xml:space="preserve"><value>Circle</value></data>
+  <data name="ArcButton.Label" xml:space="preserve"><value>Arc</value></data>
+  <data name="UndoButton.Label" xml:space="preserve"><value>Undo</value></data>
+  <data name="RedoButton.Label" xml:space="preserve"><value>Redo</value></data>
   <data name="ClearButton.Label" xml:space="preserve"><value>Clear</value></data>
   <data name="ResetViewButton.Label" xml:space="preserve"><value>Reset view</value></data>
   <data name="CommandPrompt.Text" xml:space="preserve"><value>Command:</value></data>
   <data name="CommandInput.PlaceholderText" xml:space="preserve"><value>Enter command, coordinate, or distance</value></data>
-  <data name="Status_Ready" xml:space="preserve"><value>Ready — enter a command, confirm with Enter/Space</value></data>
+  <data name="Status_Ready" xml:space="preserve"><value>Ready — LINE / PLINE / RECTANGLE / CIRCLE / ARC</value></data>
   <data name="Status_Cleared" xml:space="preserve"><value>Drawing cleared</value></data>
   <data name="Status_ViewReset" xml:space="preserve"><value>View reset</value></data>
   <data name="Status_LineFirst" xml:space="preserve"><value>LINE: specify first point</value></data>
   <data name="Status_LineNext" xml:space="preserve"><value>LINE: specify next point; Enter/Space to finish</value></data>
+  <data name="Status_PlineFirst" xml:space="preserve"><value>PLINE: specify start point</value></data>
+  <data name="Status_PlineNext" xml:space="preserve"><value>PLINE: specify next vertex; Enter/Space to finish</value></data>
+  <data name="Status_RectFirst" xml:space="preserve"><value>RECTANGLE: specify first corner</value></data>
+  <data name="Status_RectOpposite" xml:space="preserve"><value>RECTANGLE: specify opposite corner</value></data>
+  <data name="Status_CircleCenter" xml:space="preserve"><value>CIRCLE: specify center</value></data>
+  <data name="Status_CircleRadius" xml:space="preserve"><value>CIRCLE: specify radius point or enter radius</value></data>
+  <data name="Status_ArcStart" xml:space="preserve"><value>ARC: specify start point</value></data>
+  <data name="Status_ArcSecond" xml:space="preserve"><value>ARC: specify second point on arc</value></data>
+  <data name="Status_ArcEnd" xml:space="preserve"><value>ARC: specify end point</value></data>
   <data name="Status_InvalidPoint" xml:space="preserve"><value>Invalid point. Enter x,y, @x,y, or a distance after a base point.</value></data>
+  <data name="Status_InvalidGeometry" xml:space="preserve"><value>Invalid geometry: coincident points, degenerate rectangle, zero radius, or collinear arc points.</value></data>
+  <data name="Status_PointRequired" xml:space="preserve"><value>This command still requires a point; press Esc to cancel.</value></data>
   <data name="Status_CommandCancelled" xml:space="preserve"><value>*Cancel*</value></data>
   <data name="Status_NoPreviousCommand" xml:space="preserve"><value>No previous command to repeat.</value></data>
   <data name="Status_UnknownCommand" xml:space="preserve"><value>Unknown command: “{0}”</value></data>
+  <data name="Status_Undo" xml:space="preserve"><value>Undid the previous drawing operation</value></data>
+  <data name="Status_Redo" xml:space="preserve"><value>Redid the previous drawing operation</value></data>
+  <data name="Status_NothingToUndo" xml:space="preserve"><value>Nothing to undo</value></data>
+  <data name="Status_NothingToRedo" xml:space="preserve"><value>Nothing to redo</value></data>
 </root>

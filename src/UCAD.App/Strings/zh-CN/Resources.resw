@@ -8,17 +8,38 @@
   <data name="AppDescription" xml:space="preserve"><value>面向城市规划与建筑设计的轻量二维 CAD</value></data>
   <data name="AppWindowTitle" xml:space="preserve"><value>UCAD — 都市规划辅助 CAD</value></data>
   <data name="LineButton.Label" xml:space="preserve"><value>直线</value></data>
+  <data name="PolylineButton.Label" xml:space="preserve"><value>多段线</value></data>
+  <data name="RectangleButton.Label" xml:space="preserve"><value>矩形</value></data>
+  <data name="CircleButton.Label" xml:space="preserve"><value>圆</value></data>
+  <data name="ArcButton.Label" xml:space="preserve"><value>圆弧</value></data>
+  <data name="UndoButton.Label" xml:space="preserve"><value>撤销</value></data>
+  <data name="RedoButton.Label" xml:space="preserve"><value>重做</value></data>
   <data name="ClearButton.Label" xml:space="preserve"><value>清空</value></data>
   <data name="ResetViewButton.Label" xml:space="preserve"><value>重置视图</value></data>
   <data name="CommandPrompt.Text" xml:space="preserve"><value>命令:</value></data>
   <data name="CommandInput.PlaceholderText" xml:space="preserve"><value>输入命令、坐标或距离</value></data>
-  <data name="Status_Ready" xml:space="preserve"><value>就绪 — 输入命令，Enter/Space 确认</value></data>
+  <data name="Status_Ready" xml:space="preserve"><value>就绪 — LINE / PLINE / RECTANGLE / CIRCLE / ARC</value></data>
   <data name="Status_Cleared" xml:space="preserve"><value>图形已清空</value></data>
   <data name="Status_ViewReset" xml:space="preserve"><value>视图已重置</value></data>
   <data name="Status_LineFirst" xml:space="preserve"><value>LINE：指定第一点</value></data>
   <data name="Status_LineNext" xml:space="preserve"><value>LINE：指定下一点，Enter/Space 结束</value></data>
+  <data name="Status_PlineFirst" xml:space="preserve"><value>PLINE：指定起点</value></data>
+  <data name="Status_PlineNext" xml:space="preserve"><value>PLINE：指定下一顶点，Enter/Space 完成</value></data>
+  <data name="Status_RectFirst" xml:space="preserve"><value>RECTANGLE：指定第一个角点</value></data>
+  <data name="Status_RectOpposite" xml:space="preserve"><value>RECTANGLE：指定对角点</value></data>
+  <data name="Status_CircleCenter" xml:space="preserve"><value>CIRCLE：指定圆心</value></data>
+  <data name="Status_CircleRadius" xml:space="preserve"><value>CIRCLE：指定半径点或输入半径</value></data>
+  <data name="Status_ArcStart" xml:space="preserve"><value>ARC：指定起点</value></data>
+  <data name="Status_ArcSecond" xml:space="preserve"><value>ARC：指定圆弧上的第二点</value></data>
+  <data name="Status_ArcEnd" xml:space="preserve"><value>ARC：指定终点</value></data>
   <data name="Status_InvalidPoint" xml:space="preserve"><value>点输入无效。可输入 x,y、@x,y，或已有基点后的距离。</value></data>
+  <data name="Status_InvalidGeometry" xml:space="preserve"><value>几何无效：点重合、矩形退化、半径为零或三点共线。</value></data>
+  <data name="Status_PointRequired" xml:space="preserve"><value>当前命令仍需要指定点；按 Esc 取消。</value></data>
   <data name="Status_CommandCancelled" xml:space="preserve"><value>*取消*</value></data>
   <data name="Status_NoPreviousCommand" xml:space="preserve"><value>没有可重复的上一条命令。</value></data>
   <data name="Status_UnknownCommand" xml:space="preserve"><value>未知命令：“{0}”</value></data>
+  <data name="Status_Undo" xml:space="preserve"><value>已撤销上一项绘图操作</value></data>
+  <data name="Status_Redo" xml:space="preserve"><value>已重做上一项绘图操作</value></data>
+  <data name="Status_NothingToUndo" xml:space="preserve"><value>没有可撤销的操作</value></data>
+  <data name="Status_NothingToRedo" xml:space="preserve"><value>没有可重做的操作</value></data>
 </root>

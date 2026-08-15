@@ -24,19 +24,29 @@ public sealed partial class MainWindow : Window
         Viewport.PointerWorldPositionChanged += point =>
             CoordinateText.Text = $"X {point.X:0.00}  Y {point.Y:0.00}";
 
-        Viewport.LinePointAccepted += point =>
+        Viewport.DrawingPointAccepted += (kind, count, point) =>
         {
             _commandBasePoint = point;
-            ModeText.Text = GetString("Status_LineNext");
+            SetDrawingPrompt(kind, count);
         };
 
-        Viewport.LineModeChanged += enabled =>
+        Viewport.DrawingCommandCompleted += kind =>
         {
-            if (!enabled && _commandSession.ActiveCommand?.Name == "LINE")
+            if (_commandSession.ActiveCommand is not null &&
+                TryGetDrawingKind(_commandSession.ActiveCommand.Name, out var activeKind) &&
+                activeKind == kind)
             {
                 _commandSession.Complete();
-                _commandBasePoint = null;
             }
+
+            _commandBasePoint = null;
+            ModeText.Text = GetString("Status_Ready");
+        };
+
+        Viewport.HistoryStateChanged += (canUndo, canRedo) =>
+        {
+            UndoButton.IsEnabled = canUndo;
+            RedoButton.IsEnabled = canRedo;
         };
     }
 
@@ -46,11 +56,23 @@ public sealed partial class MainWindow : Window
         return string.IsNullOrWhiteSpace(value) ? key : value;
     }
 
-    private void Line_Click(object sender, RoutedEventArgs e) => StartCommand("LINE");
+    private void Line_Click(object sender, RoutedEventArgs e) => StartToolbarCommand("LINE");
 
-    private void Clear_Click(object sender, RoutedEventArgs e) => ExecuteImmediateCommand("CLEAR");
+    private void Polyline_Click(object sender, RoutedEventArgs e) => StartToolbarCommand("PLINE");
 
-    private void ResetView_Click(object sender, RoutedEventArgs e) => ExecuteImmediateCommand("RESETVIEW");
+    private void Rectangle_Click(object sender, RoutedEventArgs e) => StartToolbarCommand("RECTANGLE");
+
+    private void Circle_Click(object sender, RoutedEventArgs e) => StartToolbarCommand("CIRCLE");
+
+    private void Arc_Click(object sender, RoutedEventArgs e) => StartToolbarCommand("ARC");
+
+    private void Undo_Click(object sender, RoutedEventArgs e) => StartToolbarCommand("UNDO");
+
+    private void Redo_Click(object sender, RoutedEventArgs e) => StartToolbarCommand("REDO");
+
+    private void Clear_Click(object sender, RoutedEventArgs e) => StartToolbarCommand("CLEAR");
+
+    private void ResetView_Click(object sender, RoutedEventArgs e) => StartToolbarCommand("RESETVIEW");
 
     private void CommandInput_KeyDown(object sender, KeyRoutedEventArgs e)
     {
@@ -80,23 +102,32 @@ public sealed partial class MainWindow : Window
         var input = CommandInput.Text.Trim();
         CommandInput.Text = string.Empty;
 
-        if (_commandSession.ActiveCommand?.Name == "LINE")
+        if (_commandSession.ActiveCommand is not null &&
+            TryGetDrawingKind(_commandSession.ActiveCommand.Name, out var drawingKind))
         {
             if (string.IsNullOrWhiteSpace(input))
             {
-                CompleteLineCommand();
+                if (drawingKind is DrawingCommandKind.Line or DrawingCommandKind.Polyline)
+                {
+                    Viewport.CompleteDrawingCommand();
+                }
+                else
+                {
+                    ModeText.Text = GetString("Status_PointRequired");
+                }
+
                 return;
             }
 
-            if (TryResolvePointInput(input, out var point))
-            {
-                Viewport.SubmitLinePoint(point);
-                _commandBasePoint = point;
-                ModeText.Text = GetString("Status_LineNext");
-            }
-            else
+            if (!TryResolvePointInput(input, out var point))
             {
                 ModeText.Text = GetString("Status_InvalidPoint");
+                return;
+            }
+
+            if (!Viewport.SubmitDrawingPoint(point))
+            {
+                ModeText.Text = GetString("Status_InvalidGeometry");
             }
 
             return;
@@ -132,6 +163,19 @@ public sealed partial class MainWindow : Window
         return true;
     }
 
+    private void StartToolbarCommand(string command)
+    {
+        if (_commandSession.IsActive)
+        {
+            Viewport.CancelDrawingCommand();
+            _commandSession.Cancel();
+            _commandBasePoint = null;
+        }
+
+        StartCommand(command);
+        CommandInput.Focus(FocusState.Programmatic);
+    }
+
     private void StartCommand(string? token)
     {
         var result = _commandSession.Start(token);
@@ -151,13 +195,24 @@ public sealed partial class MainWindow : Window
 
     private void DispatchStartedCommand(CadCommandDefinition command)
     {
+        if (TryGetDrawingKind(command.Name, out var drawingKind))
+        {
+            _commandBasePoint = null;
+            Viewport.BeginDrawingCommand(drawingKind);
+            SetDrawingPrompt(drawingKind, 0);
+            CommandInput.Focus(FocusState.Programmatic);
+            return;
+        }
+
         switch (command.Name)
         {
-            case "LINE":
-                _commandBasePoint = null;
-                Viewport.BeginLineCommand();
-                ModeText.Text = GetString("Status_LineFirst");
-                CommandInput.Focus(FocusState.Programmatic);
+            case "UNDO":
+                ModeText.Text = Viewport.Undo() ? GetString("Status_Undo") : GetString("Status_NothingToUndo");
+                _commandSession.Complete();
+                break;
+            case "REDO":
+                ModeText.Text = Viewport.Redo() ? GetString("Status_Redo") : GetString("Status_NothingToRedo");
+                _commandSession.Complete();
                 break;
             case "CLEAR":
                 Viewport.ClearDocument();
@@ -172,26 +227,46 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void ExecuteImmediateCommand(string command)
+    private void SetDrawingPrompt(DrawingCommandKind kind, int acceptedPointCount)
     {
-        StartCommand(command);
-        CommandInput.Focus(FocusState.Programmatic);
+        var key = kind switch
+        {
+            DrawingCommandKind.Line => acceptedPointCount == 0 ? "Status_LineFirst" : "Status_LineNext",
+            DrawingCommandKind.Polyline => acceptedPointCount == 0 ? "Status_PlineFirst" : "Status_PlineNext",
+            DrawingCommandKind.Rectangle => acceptedPointCount == 0 ? "Status_RectFirst" : "Status_RectOpposite",
+            DrawingCommandKind.Circle => acceptedPointCount == 0 ? "Status_CircleCenter" : "Status_CircleRadius",
+            DrawingCommandKind.Arc => acceptedPointCount switch
+            {
+                0 => "Status_ArcStart",
+                1 => "Status_ArcSecond",
+                _ => "Status_ArcEnd"
+            },
+            _ => "Status_Ready"
+        };
+        ModeText.Text = GetString(key);
     }
 
-    private void CompleteLineCommand()
+    private static bool TryGetDrawingKind(string commandName, out DrawingCommandKind kind)
     {
-        Viewport.CompleteLineCommand();
-        _commandSession.Complete();
-        _commandBasePoint = null;
-        ModeText.Text = GetString("Status_Ready");
+        kind = commandName switch
+        {
+            "LINE" => DrawingCommandKind.Line,
+            "PLINE" => DrawingCommandKind.Polyline,
+            "RECTANGLE" => DrawingCommandKind.Rectangle,
+            "CIRCLE" => DrawingCommandKind.Circle,
+            "ARC" => DrawingCommandKind.Arc,
+            _ => default
+        };
+
+        return commandName is "LINE" or "PLINE" or "RECTANGLE" or "CIRCLE" or "ARC";
     }
 
     private void CancelActiveCommand()
     {
         CommandInput.Text = string.Empty;
-        if (_commandSession.ActiveCommand?.Name == "LINE")
+        if (_commandSession.ActiveCommand is not null && TryGetDrawingKind(_commandSession.ActiveCommand.Name, out _))
         {
-            Viewport.CancelLineCommand();
+            Viewport.CancelDrawingCommand();
         }
 
         if (_commandSession.Cancel())
