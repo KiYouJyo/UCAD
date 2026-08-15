@@ -1,0 +1,207 @@
+name: Publish GitHub Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+    branches:
+      - main
+    paths:
+      - 'release/release.json'
+      - 'src/UCAD.App/**'
+      - 'packaging/**'
+      - 'docs/RELEASE-NOTES-v*.md'
+      - '.github/workflows/publish-github-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: github-release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  publish-x64:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.302'
+
+      - name: Resolve and validate release metadata
+        id: release
+        shell: pwsh
+        run: |
+          $release = Get-Content release/release.json -Raw | ConvertFrom-Json
+          if (-not $release.channels.github.publish) { throw 'GitHub publication is disabled.' }
+          $version = [string]$release.product.version
+          $packageVersion = [string]$release.product.packageVersion
+          if ($version -notmatch '^\d+\.\d+\.\d+$' -or $packageVersion -ne "$version.0") { throw 'Invalid release version metadata.' }
+          if ('${{ github.ref_type }}' -eq 'tag' -and '${{ github.ref_name }}' -ne "v$version") { throw 'Release tag does not match release metadata.' }
+          [xml]$project = Get-Content src/UCAD.App/UCAD.App.csproj -Raw
+          [xml]$manifest = Get-Content src/UCAD.App/Package.appxmanifest -Raw
+          $projectVersion = @($project.Project.PropertyGroup | ForEach-Object Version | Where-Object { $_ })[0]
+          if ($projectVersion -ne $version) { throw "Project version mismatch: $projectVersion" }
+          if ($manifest.Package.Identity.Version -ne $packageVersion) { throw "Manifest version mismatch: $($manifest.Package.Identity.Version)" }
+          if ($manifest.Package.Identity.Name -ne $release.product.packageIdentityName) { throw 'Package identity mismatch.' }
+          if ($manifest.Package.Identity.Publisher -ne $release.product.publisher) { throw 'Package publisher mismatch.' }
+          "version=$version" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "package_version=$packageVersion" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "tag=v$version" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "bundle_name=UCAD_${packageVersion}_x64.msixbundle" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "one_click_name=UCAD-v${version}-x64-one-click.zip" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Validate signing secrets
+        shell: pwsh
+        env:
+          RELEASE_CERTIFICATE_BASE64: ${{ secrets.GH_RELEASE_CERTIFICATE_BASE64 }}
+          RELEASE_CERTIFICATE_PASSWORD: ${{ secrets.GH_RELEASE_CERTIFICATE_PASSWORD }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:RELEASE_CERTIFICATE_BASE64) -or [string]::IsNullOrWhiteSpace($env:RELEASE_CERTIFICATE_PASSWORD)) { throw 'GitHub release signing secrets are not configured.' }
+
+      - name: Restore and test
+        shell: pwsh
+        run: |
+          dotnet restore tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj
+          dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release --no-restore
+          dotnet restore src/UCAD.App/UCAD.App.csproj -p:Platform=x64
+
+      - name: Build unsigned x64 MSIX bundle
+        shell: pwsh
+        run: |
+          $output = Join-Path $env:RUNNER_TEMP 'UCAD-AppPackages'
+          dotnet build src/UCAD.App/UCAD.App.csproj -c Release -p:Platform=x64 -p:RuntimeIdentifier=win-x64 -p:GenerateAppxPackageOnBuild=true -p:AppxPackageSigningEnabled=false -p:AppxBundle=Always -p:AppxBundlePlatforms=x64 -p:UapAppxPackageBuildMode=SideloadOnly -p:AppxPackageDir="$output\"
+          $bundle = @(Get-ChildItem $output -Recurse -Filter '*.msixbundle') | Select-Object -First 1
+          if (-not $bundle) { throw 'MSIX bundle was not produced.' }
+          $assets = Join-Path $env:RUNNER_TEMP 'UCAD-ReleaseAssets'
+          New-Item -ItemType Directory -Force -Path $assets | Out-Null
+          $finalBundle = Join-Path $assets '${{ steps.release.outputs.bundle_name }}'
+          Copy-Item -LiteralPath $bundle.FullName -Destination $finalBundle -Force
+          "BUNDLE_PATH=$finalBundle" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "ASSETS_PATH=$assets" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Sign bundle and export public certificate
+        shell: pwsh
+        env:
+          RELEASE_CERTIFICATE_BASE64: ${{ secrets.GH_RELEASE_CERTIFICATE_BASE64 }}
+          RELEASE_CERTIFICATE_PASSWORD: ${{ secrets.GH_RELEASE_CERTIFICATE_PASSWORD }}
+        run: |
+          $pfx = Join-Path $env:RUNNER_TEMP 'ucad-release.pfx'
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:RELEASE_CERTIFICATE_BASE64))
+          $securePassword = ConvertTo-SecureString $env:RELEASE_CERTIFICATE_PASSWORD -AsPlainText -Force
+          $certificate = Import-PfxCertificate -FilePath $pfx -CertStoreLocation Cert:\CurrentUser\My -Password $securePassword
+          $release = Get-Content release/release.json -Raw | ConvertFrom-Json
+          if (-not $certificate.HasPrivateKey) { throw 'Release certificate has no private key.' }
+          if ($certificate.Subject -cne $release.product.publisher) { throw "Certificate subject does not match manifest publisher: $($certificate.Subject)" }
+          $cer = Join-Path $env:ASSETS_PATH "UCAD-v${{ steps.release.outputs.version }}-release.cer"
+          Export-Certificate -Cert $certificate -FilePath $cer | Out-Null
+          $kitsRoot = [Environment]::GetEnvironmentVariable('ProgramFiles(x86)')
+          $signtool = Get-ChildItem (Join-Path $kitsRoot 'Windows Kits\10\bin') -Recurse -Filter signtool.exe | Where-Object FullName -match '\\x64\\signtool.exe$' | Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $signtool) { throw 'x64 signtool.exe was not found.' }
+          & $signtool.FullName sign /fd SHA256 /sha1 $certificate.Thumbprint /tr http://timestamp.digicert.com /td SHA256 $env:BUNDLE_PATH
+          if ($LASTEXITCODE -ne 0) { throw "signtool sign failed: $LASTEXITCODE" }
+          $signature = Get-AuthenticodeSignature -FilePath $env:BUNDLE_PATH
+          if (-not $signature.SignerCertificate) { throw 'Signed bundle has no Authenticode signer certificate.' }
+          if ($signature.SignerCertificate.Thumbprint -cne $certificate.Thumbprint) { throw 'Signed bundle signer thumbprint mismatch.' }
+          if ($signature.Status -ne 'Valid' -and $signature.Status -ne 'UnknownError') { throw "Unexpected signature status: $($signature.Status) / $($signature.StatusMessage)" }
+          Write-Output "UCAD release signer: $($certificate.Subject) / $($certificate.Thumbprint)"
+          "CERTIFICATE_PATH=$cer" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "CERTIFICATE_THUMBPRINT=$($certificate.Thumbprint)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Generate and validate one-click package
+        shell: pwsh
+        run: |
+          $release = Get-Content release/release.json -Raw | ConvertFrom-Json
+          $stage = Join-Path $env:RUNNER_TEMP 'UCAD-OneClick'
+          $root = & ./packaging/New-GitHubOneClickInstallerPackage.ps1 -SignedBundlePath $env:BUNDLE_PATH -PublicCertificatePath $env:CERTIFICATE_PATH -OutputDirectory $stage -DisplayVersion $release.product.version -PackageVersion $release.product.packageVersion -PackageIdentityName $release.product.packageIdentityName -Publisher $release.product.publisher -CertificateThumbprint $env:CERTIFICATE_THUMBPRINT
+          & ./packaging/Test-GitHubOneClickInstallerPackage.ps1 -ReleaseDirectory $root
+          $zip = Join-Path $env:ASSETS_PATH '${{ steps.release.outputs.one_click_name }}'
+          Compress-Archive -LiteralPath $root -DestinationPath $zip -CompressionLevel Optimal
+
+      - name: Generate SHA256 manifest
+        shell: pwsh
+        run: |
+          $names = @('${{ steps.release.outputs.bundle_name }}','${{ steps.release.outputs.one_click_name }}')
+          $lines = foreach ($name in $names) {
+            $file = Join-Path $env:ASSETS_PATH $name
+            "{0}  {1}" -f (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash.ToLowerInvariant(), $name
+          }
+          Set-Content -LiteralPath (Join-Path $env:ASSETS_PATH 'SHA256SUMS.txt') -Value $lines -Encoding ASCII
+
+      - name: Prepare multilingual Release body
+        shell: pwsh
+        run: |
+          $version = '${{ steps.release.outputs.version }}'
+          foreach ($suffix in @('', '.ja', '.en')) {
+            $file = "docs/RELEASE-NOTES-v$version$suffix.md"
+            if (-not (Test-Path -LiteralPath $file -PathType Leaf)) { throw "Missing Release Notes: $file" }
+          }
+          $links = "[简体中文](https://github.com/${{ github.repository }}/blob/v$version/docs/RELEASE-NOTES-v$version.md) | [日本語](https://github.com/${{ github.repository }}/blob/v$version/docs/RELEASE-NOTES-v$version.ja.md) | [English](https://github.com/${{ github.repository }}/blob/v$version/docs/RELEASE-NOTES-v$version.en.md)"
+          $body = $links + "`r`n`r`n" + (Get-Content -LiteralPath "docs/RELEASE-NOTES-v$version.md" -Raw -Encoding UTF8)
+          $bodyPath = Join-Path $env:RUNNER_TEMP 'release-body.md'
+          [IO.File]::WriteAllText($bodyPath, $body, [Text.UTF8Encoding]::new($false))
+          "RELEASE_BODY=$bodyPath" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Align release tag with source commit
+        if: github.ref_type != 'tag'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = '${{ steps.release.outputs.tag }}'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git tag -f $tag $env:GITHUB_SHA
+          git push --force origin "refs/tags/$tag"
+
+      - name: Remove obsolete Release assets
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = '${{ steps.release.outputs.tag }}'
+          $releaseJson = gh api "repos/${{ github.repository }}/releases/tags/$tag" 2>$null
+          if ($LASTEXITCODE -eq 0 -and $releaseJson) {
+            $release = $releaseJson | ConvertFrom-Json
+            $expected = @('${{ steps.release.outputs.bundle_name }}','${{ steps.release.outputs.one_click_name }}','SHA256SUMS.txt')
+            $assets = gh api "repos/${{ github.repository }}/releases/$($release.id)/assets" | ConvertFrom-Json
+            foreach ($asset in $assets) {
+              if ($asset.name -notin $expected) {
+                Write-Output "Deleting obsolete asset: $($asset.name)"
+                gh api -X DELETE "repos/${{ github.repository }}/releases/assets/$($asset.id)"
+                if ($LASTEXITCODE -ne 0) { throw "Failed to delete obsolete asset: $($asset.name)" }
+              }
+            }
+          }
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ steps.release.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: UCAD v${{ steps.release.outputs.version }} — Foundation Release
+          body_path: ${{ env.RELEASE_BODY }}
+          prerelease: false
+          make_latest: true
+          fail_on_unmatched_files: true
+          files: |
+            ${{ env.ASSETS_PATH }}/${{ steps.release.outputs.bundle_name }}
+            ${{ env.ASSETS_PATH }}/${{ steps.release.outputs.one_click_name }}
+            ${{ env.ASSETS_PATH }}/SHA256SUMS.txt
+
+      - name: Verify final Release assets
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $release = gh api "repos/${{ github.repository }}/releases/tags/${{ steps.release.outputs.tag }}" | ConvertFrom-Json
+          $names = @($release.assets | ForEach-Object name | Sort-Object)
+          $expected = @('${{ steps.release.outputs.bundle_name }}','${{ steps.release.outputs.one_click_name }}','SHA256SUMS.txt') | Sort-Object
+          if (($names -join '|') -ne ($expected -join '|')) { throw "Unexpected final Release assets: $($names -join ', ')" }
+          Write-Output "Final Release assets: $($names -join ', ')"

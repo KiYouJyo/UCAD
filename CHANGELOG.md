@@ -1,25 +1,18 @@
 # Changelog
 
-All notable changes to UCAD will be documented in this file.
+## 0.1.0 — 2026-08-15
 
-The format follows Keep a Changelog principles and version numbers follow Semantic Versioning where practical.
+### Foundation
+- Established WinUI 3 / Win2D application and independent `UCAD.Core` geometry/document layer.
+- Added grid, crosshair, coordinate transforms, zoom, pan, and two-point Line drawing.
 
-## [Unreleased]
+### Packaging and release
+- Converted GitHub distribution from unpackaged portable deployment to signed x64 MSIXBundle.
+- Added current-user one-click certificate trust and MSIX installation flow.
+- Added SHA-256 release manifests and release-asset validation.
+- Added `release/release.json` as release metadata SSOT.
 
-### Planned
-- Command foundation and keyboard-driven CAD interaction.
-
-## [0.1.0] - 2026-08-15
-
-### Added
-- Initial UCAD repository foundation.
-- WinUI 3 desktop application shell.
-- Win2D-based CAD viewport with adaptive grid and crosshair.
-- Cursor-centered zoom and middle-button pan.
-- Basic world/screen coordinate transform.
-- Core `CadPoint`, `CadVector`, `LineEntity`, and `CadDocument` types.
-- Interactive two-point line creation.
-- Core unit tests.
-- CI workflow for core tests and Windows application build.
-- Tag-driven GitHub Release workflow for x64 preview ZIP packages.
-- README, roadmap, contributing, security, issue templates, and GPL-2.0 license.
+### Repository
+- Added Simplified Chinese, Japanese, and English README / Release Notes structure.
+- Added zh-CN, ja-JP, and en-US application resources.
+- Added architecture, release-process, privacy, support, and third-party documentation.

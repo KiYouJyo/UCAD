@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="AppDisplayName" xml:space="preserve"><value>UCAD</value></data>
+  <data name="AppDescription" xml:space="preserve"><value>都市計画・建築設計向けの軽量 2D CAD</value></data>
+  <data name="AppWindowTitle" xml:space="preserve"><value>UCAD — 都市計画支援CAD</value></data>
+  <data name="LineButton.Label" xml:space="preserve"><value>線分</value></data>
+  <data name="ClearButton.Label" xml:space="preserve"><value>クリア</value></data>
+  <data name="ResetViewButton.Label" xml:space="preserve"><value>ビューをリセット</value></data>
+  <data name="Status_Ready" xml:space="preserve"><value>準備完了 — 「線分」をクリックして作図を開始</value></data>
+  <data name="Status_Cleared" xml:space="preserve"><value>図形をクリアしました</value></data>
+  <data name="Status_ViewReset" xml:space="preserve"><value>ビューをリセットしました</value></data>
+  <data name="Status_LineFirst" xml:space="preserve"><value>LINE：1点目を指定</value></data>
+  <data name="Status_LineSecond" xml:space="preserve"><value>LINE：次の点を指定</value></data>
+</root>

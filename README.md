@@ -1,93 +1,68 @@
+[简体中文](README.md) | [日本語](README.ja.md) | [English](README.en.md)
+
 # UCAD
 
-**Urban Computer-Aided Design**  
-**都市計画支援CAD（アーバンCAD）**  
-*Lightweight 2D CAD for Urban Planning & Architecture*
+**Urban Computer-Aided Design · 都市計画支援CAD**  
+面向城市规划与建筑设计的轻量二维 CAD。
 
-[![CI](https://github.com/KiYouJyo/UCAD/actions/workflows/ci.yml/badge.svg)](https://github.com/KiYouJyo/UCAD/actions/workflows/ci.yml)
-[![Release](https://github.com/KiYouJyo/UCAD/actions/workflows/release.yml/badge.svg)](https://github.com/KiYouJyo/UCAD/actions/workflows/release.yml)
-![License](https://img.shields.io/badge/license-GPL--2.0--only-blue.svg)
+![Windows](https://img.shields.io/badge/Windows-10%2F11-blue) ![Windows App SDK](https://img.shields.io/badge/Windows%20App%20SDK-1.8-blue) ![MSIX](https://img.shields.io/badge/package-MSIX-blue) ![CI](https://github.com/KiYouJyo/UCAD/actions/workflows/ci.yml/badge.svg) ![License](https://img.shields.io/badge/license-GPL--2.0-blue)
 
-> **v0.1 · Foundation Preview** — UCAD is at the technical-foundation stage. It is not yet a production CAD application and does not yet claim DXF/DWG compatibility.
+## 当前定位
 
-UCAD is an open-source Windows desktop project exploring a lightweight 2D CAD workflow for architecture and urban planning. The long-term direction is a modern WinUI 3 interface with familiar command-driven CAD interaction, a focused planning/architecture feature set, and a rendering/core architecture that can grow without turning the application into a multi-gigabyte general-purpose CAD suite.
+UCAD 目标是建立一套 Windows 原生、接近 AutoCAD 操作习惯、面向建筑与规划高频二维制图任务的轻量 CAD。项目坚持 DXF-first、2D-first，不以复制完整 AutoCAD 为目标。
 
-## v0.1 scope
+v0.1.0 是 Foundation Release：目前已经具备 Win2D 绘图视口、网格、坐标变换、缩放 / 平移和基础 Line 实体；后续将逐步加入命令系统、选择与 OSNAP、Trim / Offset 等修改工具、图层、标注、DXF 和规划专属能力。
 
-The first preview intentionally proves the minimum drawing stack:
+## 安装
 
-- WinUI 3 desktop shell
-- Win2D GPU-accelerated drawing surface
-- world/screen coordinate transform
-- adaptive drafting grid and origin axes
-- full-window crosshair
-- mouse-wheel zoom around cursor
-- middle-button pan
-- basic `LineEntity` document model
-- two-point interactive line drawing
-- independent `UCAD.Core` project and unit tests
-- CI and tag-driven GitHub Release workflow
+推荐从 [GitHub Releases](https://github.com/KiYouJyo/UCAD/releases/latest) 下载：
 
-## Architecture
+- `UCAD-v0.1.0-x64-one-click.zip`：普通用户推荐。解压后双击 `① 安装UCAD.cmd`，自动校验并安装签名 MSIX。
+- `UCAD_0.1.0.0_x64.msixbundle`：高级用户直接侧载包。
+- `SHA256SUMS.txt`：发布资产完整性校验。
+
+GitHub 版本使用项目固定发布证书进行 MSIX 签名。one-click 安装器只为当前 Windows 用户建立证书信任，无需管理员权限。
+
+## 三语支持
+
+应用与仓库从 v0.1 起建立简体中文（zh-CN）、日本語（ja-JP）、English（en-US）三语资源基础。包清单、主要 UI 字符串、README 与 Release Notes 均纳入三语结构。
+
+## 仓库结构
 
 ```text
-UCAD.App (WinUI 3)
-  └─ CadViewport (Win2D)
-       └─ UCAD.Core
-            ├─ Geometry
-            ├─ Entities
-            └─ CadDocument
+src/UCAD.Core/          CAD 几何与文档核心
+src/UCAD.App/           WinUI 3 / Win2D 应用与 MSIX 清单
+tests/                  自动化测试
+packaging/              GitHub 一键安装与发布校验
+release/                发布 SSOT 元数据
+docs/                   Release Notes 与架构文档
+.github/workflows/       CI 与 GitHub Release 工作流
 ```
 
-The UI layer does not store CAD geometry. `UCAD.Core` owns document data so future rendering, DXF I/O, command handling, snapping, selection and geometry algorithms can evolve independently.
+## 开发
 
-## Build
+需要 .NET 10 SDK、Windows 10/11 与 Visual Studio / Build Tools 的 Windows SDK。普通开发构建：
 
-Requirements:
+```powershell
+dotnet restore src/UCAD.App/UCAD.App.csproj -p:Platform=x64
+dotnet build src/UCAD.App/UCAD.App.csproj -c Debug -p:Platform=x64
+```
 
-- Windows 10 1809 or newer
-- Visual Studio 2026 with Windows application development workload
-- .NET 10 SDK
-- x64 or ARM64 target
+几何核心测试：
 
-Open `UCAD.sln`, select `x64`, and build `UCAD.App`.
+```powershell
+dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release
+```
 
-The current preview uses Windows App SDK `1.8.260710003` and Win2D `1.4.0`.
+## 文档
 
-## Controls in v0.1
+- [路线图](ROADMAP.md)
+- [贡献指南](CONTRIBUTING.md)
+- [支持](SUPPORT.md)
+- [隐私](PRIVACY.md)
+- [第三方说明](THIRD-PARTY-NOTICES.md)
+- [v0.1.0 发布说明](docs/RELEASE-NOTES-v0.1.0.md)
 
-| Input | Action |
-|---|---|
-| Mouse wheel | Zoom around cursor |
-| Middle mouse drag | Pan |
-| **Line** button | Enter/leave line mode |
-| Left click in line mode | Set points / continue line chain |
-| **Clear** | Clear drawing entities |
-| **Reset view** | Reset zoom and pan |
+## 许可证
 
-## Roadmap
-
-The next milestones are deliberately ordered around CAD interaction quality rather than feature count:
-
-1. **v0.2 — Command Foundation:** command line, aliases, Enter/Esc/Space state machine.
-2. **v0.3 — Drawing:** LINE/PLINE/RECTANGLE/CIRCLE/ARC.
-3. **v0.4 — Interaction:** selection and OSNAP.
-4. **v0.5 — Modify:** MOVE/COPY/OFFSET/TRIM/EXTEND.
-5. Later: layers/properties, annotation, architecture helpers, planning/GIS workflows and DXF-first file exchange.
-
-See [`ROADMAP.md`](ROADMAP.md) for details.
-
-## Project principles
-
-- **2D first.** No 3D/BIM scope in the 1.x line.
-- **CAD muscle memory first.** Commands and pointer interaction matter more than ribbon density.
-- **DXF first.** Future DWG support must not block the core product.
-- **Planning & architecture focused.** Features must justify themselves against real drafting/planning workflows.
-- **Performance by architecture.** CAD entities are drawn by a dedicated immediate-mode renderer, not thousands of XAML shapes.
-- **Offline first.** Core drawing work should not depend on cloud services.
-
-## License
-
-UCAD is licensed under the GNU General Public License v2.0. See [`LICENSE`](LICENSE).
-
-This repository currently contains original UCAD code only. If code from LibreCAD or other GPL projects is incorporated later, source provenance and attribution must be recorded explicitly.
+UCAD 以 **GPL-2.0** 发布。第三方组件遵循各自许可证。
