@@ -39,6 +39,7 @@
   <data name="ResetViewToolLabel.Text" xml:space="preserve"><value>重置视图</value></data>
   <data name="ToolShelfHintText.Text" xml:space="preserve"><value>再次点击当前分类可收起工具栏</value></data>
   <data name="ToolShelfHint" xml:space="preserve"><value>再次点击当前分类可收起工具栏</value></data>
+  <data name="ToolShelfUnavailable" xml:space="preserve"><value>该分类已为后续版本预留；当前尚无可用命令。</value></data>
 
   <data name="RectangleMoreItem.Text" xml:space="preserve"><value>矩形</value></data>
   <data name="CircleMoreItem.Text" xml:space="preserve"><value>圆</value></data>
@@ -57,7 +58,7 @@
   <data name="ActiveCommandLabel.Text" xml:space="preserve"><value>活动命令</value></data>
   <data name="UndoAvailableLabel.Text" xml:space="preserve"><value>可撤销</value></data>
   <data name="RedoAvailableLabel.Text" xml:space="preserve"><value>可重做</value></data>
-  <data name="V04FoundationHint.Text" xml:space="preserve"><value>v0.3.5 已将标签页、命令元数据和文档变更状态接入 Core，为 v0.4.0 的选择、捕捉与正交提供统一状态入口。</value></data>
+  <data name="V04FoundationHint.Text" xml:space="preserve"><value>v0.3.7 已冻结高 DPI 与工作区视觉基础；v0.4.0 将在现有 CadWorkspaceSession 边界上接入选择、捕捉与正交。</value></data>
   <data name="Inspector_None" xml:space="preserve"><value>—</value></data>
   <data name="Inspector_Yes" xml:space="preserve"><value>是</value></data>
   <data name="Inspector_No" xml:space="preserve"><value>否</value></data>
@@ -71,7 +72,7 @@
 
   <data name="Document_UntitledFormat" xml:space="preserve"><value>图纸 {0}</value></data>
   <data name="CloseDirtyDialog_Title" xml:space="preserve"><value>关闭未保存的图纸？</value></data>
-  <data name="CloseDirtyDialog_Content" xml:space="preserve"><value>“{0}”包含尚未保存到文件的绘图内容。v0.3.5 尚未提供文件保存；关闭后这些内容将丢失。</value></data>
+  <data name="CloseDirtyDialog_Content" xml:space="preserve"><value>“{0}”包含尚未保存到文件的绘图内容。当前版本尚未提供文件保存；关闭后这些内容将丢失。</value></data>
   <data name="CloseDirtyDialog_Primary" xml:space="preserve"><value>仍然关闭</value></data>
   <data name="CloseDirtyDialog_Cancel" xml:space="preserve"><value>取消</value></data>
 

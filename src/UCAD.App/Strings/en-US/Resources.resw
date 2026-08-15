@@ -39,6 +39,7 @@
   <data name="ResetViewToolLabel.Text" xml:space="preserve"><value>Reset view</value></data>
   <data name="ToolShelfHintText.Text" xml:space="preserve"><value>Click the active category again to collapse the tool shelf</value></data>
   <data name="ToolShelfHint" xml:space="preserve"><value>Click the active category again to collapse the tool shelf</value></data>
+  <data name="ToolShelfUnavailable" xml:space="preserve"><value>This category is reserved for a later version; no commands are available yet.</value></data>
 
   <data name="RectangleMoreItem.Text" xml:space="preserve"><value>Rectangle</value></data>
   <data name="CircleMoreItem.Text" xml:space="preserve"><value>Circle</value></data>
@@ -57,7 +58,7 @@
   <data name="ActiveCommandLabel.Text" xml:space="preserve"><value>Active command</value></data>
   <data name="UndoAvailableLabel.Text" xml:space="preserve"><value>Undo available</value></data>
   <data name="RedoAvailableLabel.Text" xml:space="preserve"><value>Redo available</value></data>
-  <data name="V04FoundationHint.Text" xml:space="preserve"><value>v0.3.5 connects tabs, command metadata, and document change state to Core, giving v0.4.0 one state boundary for selection, snapping, and ortho.</value></data>
+  <data name="V04FoundationHint.Text" xml:space="preserve"><value>v0.3.7 freezes the HiDPI and workspace visual foundation; v0.4.0 will add selection, snapping, and ortho on the existing CadWorkspaceSession boundary.</value></data>
   <data name="Inspector_None" xml:space="preserve"><value>—</value></data>
   <data name="Inspector_Yes" xml:space="preserve"><value>Yes</value></data>
   <data name="Inspector_No" xml:space="preserve"><value>No</value></data>
@@ -71,7 +72,7 @@
 
   <data name="Document_UntitledFormat" xml:space="preserve"><value>Drawing {0}</value></data>
   <data name="CloseDirtyDialog_Title" xml:space="preserve"><value>Close unsaved drawing?</value></data>
-  <data name="CloseDirtyDialog_Content" xml:space="preserve"><value>“{0}” contains drawing content that has not been saved to a file. File saving is not available in v0.3.5; closing it will discard that content.</value></data>
+  <data name="CloseDirtyDialog_Content" xml:space="preserve"><value>“{0}” contains drawing content that has not been saved to a file. File saving is not available in the current version; closing it will discard that content.</value></data>
   <data name="CloseDirtyDialog_Primary" xml:space="preserve"><value>Close anyway</value></data>
   <data name="CloseDirtyDialog_Cancel" xml:space="preserve"><value>Cancel</value></data>
 

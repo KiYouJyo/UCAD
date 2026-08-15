@@ -26,7 +26,7 @@
 
   <ItemGroup>
     <Manifest Include="$(ApplicationManifest)" />
-    <Content Include="Assets\**" />
+    <Content Include="Assets\**\*" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">

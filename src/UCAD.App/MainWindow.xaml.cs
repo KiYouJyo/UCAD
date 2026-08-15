@@ -1,6 +1,9 @@
+using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using Microsoft.Windows.ApplicationModel.Resources;
 using UCAD.Core;
 using UCAD.Core.Commands;
@@ -18,6 +21,7 @@ public sealed partial class MainWindow : Window
     private CadWorkspaceSession? _activeSession;
     private int _nextDocumentOrdinal = 1;
     private string? _activeShelfCategory = "DRAW";
+    private bool _initialWorkspaceCreated;
 
     public MainWindow()
     {
@@ -28,7 +32,7 @@ public sealed partial class MainWindow : Window
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
         Title = GetString("AppWindowTitle");
-        AppTitleBar.Title = "UCAD";
+        VersionText.Text = GetDisplayVersion();
 
         CommandSearch.ItemsSource = _commandRegistry.Commands
             .SelectMany(command => command.Tokens)
@@ -36,16 +40,70 @@ public sealed partial class MainWindow : Window
             .OrderBy(token => token, StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
-        CreateNewWorkspace();
+        RootLayout.Loaded += RootLayout_Loaded;
+        UpdateCategoryVisuals();
         UpdateToolShelfHint();
     }
 
     private CadWorkspaceSession? ActiveSession => _activeSession;
 
+    private ToggleButton[] CategoryButtons =>
+    [
+        DrawCategoryButton,
+        ModifyCategoryButton,
+        AnnotateCategoryButton,
+        LayersCategoryButton,
+        BlocksCategoryButton,
+        MeasureCategoryButton,
+        ViewCategoryButton
+    ];
+
+    private void RootLayout_Loaded(object sender, RoutedEventArgs e)
+    {
+        RootLayout.Loaded -= RootLayout_Loaded;
+        if (_initialWorkspaceCreated)
+        {
+            return;
+        }
+
+        _initialWorkspaceCreated = true;
+        App.WriteStartupEvent("RootLayout loaded; creating initial workspace");
+        try
+        {
+            CreateNewWorkspace();
+            App.WriteStartupEvent("Initial workspace created");
+        }
+        catch (Exception ex)
+        {
+            App.WriteStartupFailure("CreateInitialWorkspace", ex);
+            throw;
+        }
+    }
+
     private string GetString(string key)
     {
-        var value = _resources.GetString(key);
-        return string.IsNullOrWhiteSpace(value) ? key : value;
+        try
+        {
+            var value = _resources.GetString(key);
+            return string.IsNullOrWhiteSpace(value) ? key : value;
+        }
+        catch (System.Runtime.InteropServices.COMException ex) when (ex.HResult == unchecked((int)0x80073B17))
+        {
+            App.WriteStartupFailure($"MissingResource:{key}", ex);
+            return key;
+        }
+    }
+
+    private static string GetDisplayVersion()
+    {
+        var version = typeof(MainWindow).Assembly.GetName().Version;
+        if (version is null)
+        {
+            return "UCAD";
+        }
+
+        var build = Math.Max(version.Build, 0);
+        return $"UCAD v{version.Major}.{version.Minor}.{build}";
     }
 
     private CadWorkspaceSession CreateNewWorkspace()
@@ -61,7 +119,9 @@ public sealed partial class MainWindow : Window
         {
             Tag = session,
             Header = displayName,
-            IsClosable = true
+            IsClosable = true,
+            Width = 190,
+            Height = 34
         };
         _sessions[tab] = session;
 
@@ -152,7 +212,7 @@ public sealed partial class MainWindow : Window
     }
 
     private void UpdateCoordinateText(CadWorkspaceSession session) =>
-        CoordinateText.Text = $"X {session.PointerWorldPosition.X:0.00}  Y {session.PointerWorldPosition.Y:0.00}";
+        CoordinateText.Text = $"X {session.PointerWorldPosition.X:0.00}   Y {session.PointerWorldPosition.Y:0.00}";
 
     private void UpdateZoomText(CadWorkspaceSession session) =>
         ZoomText.Text = $"{session.Viewport.Zoom * 100:0}%";
@@ -258,31 +318,68 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void DrawCategoryButton_Click(object sender, RoutedEventArgs e) => ToggleToolShelf("DRAW");
-
-    private void ViewCategoryButton_Click(object sender, RoutedEventArgs e) => ToggleToolShelf("VIEW");
+    private void CategoryButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is ToggleButton button && button.Tag is string category)
+        {
+            ToggleToolShelf(category);
+        }
+    }
 
     private void ToggleToolShelf(string category)
     {
         if (_activeShelfCategory == category && ToolShelfHost.Visibility == Visibility.Visible)
         {
             ToolShelfHost.Visibility = Visibility.Collapsed;
-            DrawCategoryButton.IsChecked = false;
-            ViewCategoryButton.IsChecked = false;
             _activeShelfCategory = null;
+            DrawToolShelf.Visibility = Visibility.Collapsed;
+            ModifyToolShelf.Visibility = Visibility.Collapsed;
+            ViewToolShelf.Visibility = Visibility.Collapsed;
+            UnavailableToolShelf.Visibility = Visibility.Collapsed;
+            UpdateCategoryVisuals();
             return;
         }
 
         _activeShelfCategory = category;
         ToolShelfHost.Visibility = Visibility.Visible;
         DrawToolShelf.Visibility = category == "DRAW" ? Visibility.Visible : Visibility.Collapsed;
+        ModifyToolShelf.Visibility = category == "MODIFY" ? Visibility.Visible : Visibility.Collapsed;
         ViewToolShelf.Visibility = category == "VIEW" ? Visibility.Visible : Visibility.Collapsed;
-        DrawCategoryButton.IsChecked = category == "DRAW";
-        ViewCategoryButton.IsChecked = category == "VIEW";
+
+        var unavailable = category is not ("DRAW" or "MODIFY" or "VIEW");
+        UnavailableToolShelf.Visibility = unavailable ? Visibility.Visible : Visibility.Collapsed;
+        if (unavailable)
+        {
+            UnavailableToolShelfText.Text = GetString("ToolShelfUnavailable");
+        }
+
+        UpdateCategoryVisuals();
         UpdateToolShelfHint();
     }
 
-    private void UpdateToolShelfHint() => ToolShelfHintText.Text = GetString("ToolShelfHintText.Text");
+    private void UpdateCategoryVisuals()
+    {
+        var resources = Application.Current.Resources;
+        var selectedBrush = (Brush)resources["UcadCategorySelectedBrush"];
+        var primaryBrush = (Brush)resources["UcadTextPrimaryBrush"];
+        var secondaryBrush = (Brush)resources["UcadTextSecondaryBrush"];
+        var transparentBrush = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+
+        foreach (var button in CategoryButtons)
+        {
+            var selected = ToolShelfHost.Visibility == Visibility.Visible &&
+                           button.Tag is string category &&
+                           category == _activeShelfCategory;
+
+            button.IsChecked = false;
+            button.Background = selected ? selectedBrush : transparentBrush;
+            button.Foreground = selected ? primaryBrush : secondaryBrush;
+            button.FontWeight = selected ? FontWeights.SemiBold : FontWeights.Normal;
+        }
+    }
+
+    private void UpdateToolShelfHint() =>
+        ToolShelfHintText.Text = GetString("ToolShelfHint");
 
     private void CommandInput_KeyDown(object sender, KeyRoutedEventArgs e)
     {
