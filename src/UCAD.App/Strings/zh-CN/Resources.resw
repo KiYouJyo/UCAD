@@ -10,9 +10,15 @@
   <data name="LineButton.Label" xml:space="preserve"><value>直线</value></data>
   <data name="ClearButton.Label" xml:space="preserve"><value>清空</value></data>
   <data name="ResetViewButton.Label" xml:space="preserve"><value>重置视图</value></data>
-  <data name="Status_Ready" xml:space="preserve"><value>就绪 — 单击“直线”开始绘制</value></data>
+  <data name="CommandPrompt.Text" xml:space="preserve"><value>命令:</value></data>
+  <data name="CommandInput.PlaceholderText" xml:space="preserve"><value>输入命令、坐标或距离</value></data>
+  <data name="Status_Ready" xml:space="preserve"><value>就绪 — 输入命令，Enter/Space 确认</value></data>
   <data name="Status_Cleared" xml:space="preserve"><value>图形已清空</value></data>
   <data name="Status_ViewReset" xml:space="preserve"><value>视图已重置</value></data>
   <data name="Status_LineFirst" xml:space="preserve"><value>LINE：指定第一点</value></data>
-  <data name="Status_LineSecond" xml:space="preserve"><value>LINE：指定下一点</value></data>
+  <data name="Status_LineNext" xml:space="preserve"><value>LINE：指定下一点，Enter/Space 结束</value></data>
+  <data name="Status_InvalidPoint" xml:space="preserve"><value>点输入无效。可输入 x,y、@x,y，或已有基点后的距离。</value></data>
+  <data name="Status_CommandCancelled" xml:space="preserve"><value>*取消*</value></data>
+  <data name="Status_NoPreviousCommand" xml:space="preserve"><value>没有可重复的上一条命令。</value></data>
+  <data name="Status_UnknownCommand" xml:space="preserve"><value>未知命令：“{0}”</value></data>
 </root>

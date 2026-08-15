@@ -6,13 +6,19 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
   <data name="AppDisplayName" xml:space="preserve"><value>UCAD</value></data>
   <data name="AppDescription" xml:space="preserve"><value>都市計画・建築設計向けの軽量 2D CAD</value></data>
-  <data name="AppWindowTitle" xml:space="preserve"><value>UCAD — 都市計画支援CAD</value></data>
+  <data name="AppWindowTitle" xml:space="preserve"><value>UCAD — 都市計画支援 CAD</value></data>
   <data name="LineButton.Label" xml:space="preserve"><value>線分</value></data>
-  <data name="ClearButton.Label" xml:space="preserve"><value>クリア</value></data>
+  <data name="ClearButton.Label" xml:space="preserve"><value>全消去</value></data>
   <data name="ResetViewButton.Label" xml:space="preserve"><value>ビューをリセット</value></data>
-  <data name="Status_Ready" xml:space="preserve"><value>準備完了 — 「線分」をクリックして作図を開始</value></data>
-  <data name="Status_Cleared" xml:space="preserve"><value>図形をクリアしました</value></data>
+  <data name="CommandPrompt.Text" xml:space="preserve"><value>コマンド:</value></data>
+  <data name="CommandInput.PlaceholderText" xml:space="preserve"><value>コマンド、座標、距離を入力</value></data>
+  <data name="Status_Ready" xml:space="preserve"><value>準備完了 — コマンドを入力し Enter/Space で確定</value></data>
+  <data name="Status_Cleared" xml:space="preserve"><value>図面を全消去しました</value></data>
   <data name="Status_ViewReset" xml:space="preserve"><value>ビューをリセットしました</value></data>
-  <data name="Status_LineFirst" xml:space="preserve"><value>LINE：1点目を指定</value></data>
-  <data name="Status_LineSecond" xml:space="preserve"><value>LINE：次の点を指定</value></data>
+  <data name="Status_LineFirst" xml:space="preserve"><value>LINE：1 点目を指定</value></data>
+  <data name="Status_LineNext" xml:space="preserve"><value>LINE：次の点を指定。Enter/Space で終了</value></data>
+  <data name="Status_InvalidPoint" xml:space="preserve"><value>点の入力が無効です。x,y、@x,y、または基点指定後の距離を入力できます。</value></data>
+  <data name="Status_CommandCancelled" xml:space="preserve"><value>*キャンセル*</value></data>
+  <data name="Status_NoPreviousCommand" xml:space="preserve"><value>繰り返せる直前のコマンドがありません。</value></data>
+  <data name="Status_UnknownCommand" xml:space="preserve"><value>不明なコマンド：“{0}”</value></data>
 </root>

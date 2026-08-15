@@ -20,13 +20,13 @@ UCAD aims to become a lightweight Windows-native 2D CAD focused on architecture 
 
 ## v0.2 — Command Foundation
 
-- [ ] command line UI
-- [ ] command registry and aliases
-- [ ] Enter / Space confirmation
-- [ ] Esc cancellation
-- [ ] repeat previous command
-- [ ] numeric and coordinate input
-- [ ] relative coordinates (`@x,y`)
+- [x] command line UI
+- [x] command registry and aliases
+- [x] Enter / Space confirmation
+- [x] Esc cancellation
+- [x] repeat previous command
+- [x] numeric and coordinate input
+- [x] relative coordinates (`@x,y`)
 
 ## v0.3 — Drawing
 

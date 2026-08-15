@@ -4,10 +4,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:views="using:UCAD.Views">
 
-    <Grid>
+    <Grid x:Name="RootLayout" KeyDown="RootLayout_KeyDown">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
@@ -20,16 +21,34 @@
 
         <views:CadViewport x:Name="Viewport" Grid.Row="1" />
 
-        <Border Grid.Row="2" Padding="12,6" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
-            <Grid>
+        <Border Grid.Row="2" Padding="10,6" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+            <Grid ColumnSpacing="8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBlock x:Name="ModeText" FontFamily="Cascadia Mono" />
-                <TextBlock Grid.Column="1" HorizontalAlignment="Center" Text="UCAD v0.1" Opacity="0.7" />
-                <TextBlock x:Name="CoordinateText" Grid.Column="2" Text="X 0.00  Y 0.00" FontFamily="Cascadia Mono" />
+                <TextBlock x:Uid="CommandPrompt" VerticalAlignment="Center" FontFamily="Cascadia Mono" FontWeight="SemiBold" />
+                <TextBox
+                    x:Name="CommandInput"
+                    x:Uid="CommandInput"
+                    Grid.Column="1"
+                    MinHeight="32"
+                    Padding="8,3"
+                    FontFamily="Cascadia Mono"
+                    KeyDown="CommandInput_KeyDown" />
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="3" Padding="12,6" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="ModeText" TextTrimming="CharacterEllipsis" FontFamily="Cascadia Mono" />
+                <TextBlock Grid.Column="1" HorizontalAlignment="Center" Text="UCAD v0.2" Margin="20,0" Opacity="0.7" />
+                <TextBlock x:Name="CoordinateText" Grid.Column="2" HorizontalAlignment="Right" Text="X 0.00  Y 0.00" FontFamily="Cascadia Mono" />
             </Grid>
         </Border>
     </Grid>
