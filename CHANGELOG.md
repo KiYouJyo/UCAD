@@ -3,12 +3,15 @@
 ## 0.3.6 — 2026-08-15
 
 ### Startup reliability
-- Deferred initial `CadWorkspaceSession` / Win2D `CadViewport` creation until the root visual tree is loaded instead of constructing it inside `MainWindow()` before window activation.
+- Fixed the v0.3.5 launch crash caused by passing the XAML `x:Uid` property resource key `ToolShelfHintText.Text` to `ResourceLoader.GetString()`, which raised `0x80073B17 NamedResource Not Found` before the window appeared.
+- Switched code-side lookup to the plain named `ToolShelfHint` resource and added a guarded fallback that records missing runtime resources instead of allowing one localization lookup to terminate startup.
+- Deferred initial `CadWorkspaceSession` / Win2D `CadViewport` creation until the root visual tree is loaded, reducing additional early-startup initialization risk.
 - Added startup diagnostics at `%LOCALAPPDATA%\UCAD\Logs\startup.log` for launch stages and unhandled exceptions.
 - Preserved the v0.3.5 multi-document workspace architecture and existing CAD commands.
 
 ### Validation
 - Added a Windows `startup-smoke` CI job that actually launches `UCAD.App.exe`, waits eight seconds, and fails if the process exits unexpectedly.
+- Added a runtime localization contract that rejects `GetString()` calls using XAML property-style resource keys, checks all runtime keys across zh-CN / ja-JP / en-US, and fails when startup diagnostics report a missing resource.
 - Startup smoke prints the startup diagnostic log on failure.
 - Added a PR-only one-click acceptance package so installed-environment startup can be manually verified before release.
 
