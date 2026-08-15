@@ -41,6 +41,24 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.302'
+      - name: Validate runtime resource keys
+        shell: pwsh
+        run: |
+          $code = Get-Content src/UCAD.App/MainWindow.xaml.cs -Raw
+          $keys = [regex]::Matches($code, 'GetString\("([^"]+)"\)') | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
+          $propertyKeys = @($keys | Where-Object { $_ -match '\.' })
+          if ($propertyKeys.Count -gt 0) {
+            throw "Runtime ResourceLoader keys must be plain named resources, not x:Uid property keys: $($propertyKeys -join ', ')"
+          }
+          foreach ($file in Get-ChildItem src/UCAD.App/Strings -Recurse -Filter Resources.resw) {
+            [xml]$xml = Get-Content $file.FullName -Raw
+            $names = @($xml.root.data | ForEach-Object { [string]$_.name })
+            $missing = @($keys | Where-Object { $_ -notin $names })
+            if ($missing.Count -gt 0) {
+              throw "Missing runtime resources in $($file.FullName): $($missing -join ', ')"
+            }
+          }
+          Write-Output "Validated $($keys.Count) runtime ResourceLoader keys across all locales."
       - name: Build app for startup smoke test
         shell: pwsh
         run: |
@@ -51,6 +69,8 @@ jobs:
       - name: Launch UCAD and verify it stays alive
         shell: pwsh
         run: |
+          $log = Join-Path $env:LOCALAPPDATA 'UCAD\Logs\startup.log'
+          Remove-Item -LiteralPath $log -Force -ErrorAction SilentlyContinue
           $exe = Get-ChildItem src/UCAD.App/bin -Recurse -Filter 'UCAD.App.exe' | Where-Object FullName -match '\\Release\\' | Select-Object -First 1
           if (-not $exe) { throw 'UCAD.App.exe was not found after build.' }
           Write-Output "Launching $($exe.FullName)"
@@ -58,13 +78,22 @@ jobs:
           Start-Sleep -Seconds 8
           $process.Refresh()
           if ($process.HasExited) {
-            $log = Join-Path $env:LOCALAPPDATA 'UCAD\Logs\startup.log'
             if (Test-Path -LiteralPath $log) {
               Write-Output '--- UCAD startup.log ---'
               Get-Content -LiteralPath $log -Raw
               Write-Output '--- end startup.log ---'
             }
             throw "UCAD exited during startup smoke test with code $($process.ExitCode)."
+          }
+          if (Test-Path -LiteralPath $log) {
+            $startupLog = Get-Content -LiteralPath $log -Raw
+            if ($startupLog -match 'MissingResource:') {
+              Write-Output '--- UCAD startup.log ---'
+              Write-Output $startupLog
+              Write-Output '--- end startup.log ---'
+              Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+              throw 'UCAD remained alive but reported a missing runtime resource.'
+            }
           }
           Write-Output "UCAD remained alive for 8 seconds (PID $($process.Id))."
           Stop-Process -Id $process.Id -Force
