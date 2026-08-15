@@ -7,10 +7,13 @@ on:
     branches:
       - main
     paths:
+      - 'VERSION'
+      - 'Directory.Build.props'
       - 'release/release.json'
       - 'src/UCAD.App/**'
       - 'packaging/**'
       - 'docs/RELEASE-NOTES-v*.md'
+      - '.github/scripts/Validate-UcadUi.ps1'
       - '.github/workflows/publish-github-release.yml'
   workflow_dispatch:
 
@@ -46,19 +49,24 @@ jobs:
           if ($version -notmatch '^\d+\.\d+\.\d+$' -or $packageVersion -ne "$version.0") { throw 'Invalid release version metadata.' }
           if ([string]::IsNullOrWhiteSpace($releaseTitle)) { throw 'Release title is required.' }
           if ('${{ github.ref_type }}' -eq 'tag' -and '${{ github.ref_name }}' -ne "v$version") { throw 'Release tag does not match release metadata.' }
-          [xml]$project = Get-Content src/UCAD.App/UCAD.App.csproj -Raw
+          $rootVersion = (Get-Content VERSION -Raw).Trim()
+          if ($rootVersion -ne $version) { throw "VERSION mismatch: $rootVersion" }
           [xml]$manifest = Get-Content src/UCAD.App/Package.appxmanifest -Raw
-          $projectVersion = @($project.Project.PropertyGroup | ForEach-Object Version | Where-Object { $_ })[0]
-          if ($projectVersion -ne $version) { throw "Project version mismatch: $projectVersion" }
           if ($manifest.Package.Identity.Version -ne $packageVersion) { throw "Manifest version mismatch: $($manifest.Package.Identity.Version)" }
           if ($manifest.Package.Identity.Name -ne $release.product.packageIdentityName) { throw 'Package identity mismatch.' }
           if ($manifest.Package.Identity.Publisher -ne $release.product.publisher) { throw 'Package publisher mismatch.' }
+          $project = Get-Content src/UCAD.App/UCAD.App.csproj -Raw
+          if ($project -match '<Version>|<AssemblyVersion>|<FileVersion>|<InformationalVersion>') { throw 'UCAD.App.csproj must consume the root VERSION SSOT instead of hardcoding version metadata.' }
           "version=$version" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "package_version=$packageVersion" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "release_title=$releaseTitle" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "tag=v$version" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "bundle_name=UCAD_${packageVersion}_x64.msixbundle" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "one_click_name=UCAD-v${version}-x64-one-click.zip" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Validate UI and release contracts
+        shell: pwsh
+        run: ./.github/scripts/Validate-UcadUi.ps1
 
       - name: Validate signing secrets
         shell: pwsh
