@@ -3,15 +3,17 @@ UCAD GitHub 一键安装包
 
 推荐安装方式：双击“① 安装UCAD.cmd”。
 
-安装器会：
-1. 从当前版本的官方 GitHub Release 下载签名后的 x64 MSIXBundle；
-2. 按 SHA256SUMS.txt 校验下载内容；
-3. 验证随安装器附带的 UCAD 公钥证书及证书指纹；
-4. 将该证书加入当前 Windows 用户的 TrustedPeople 证书库；
-5. 通过 Windows Add-AppxPackage 安装 UCAD；
-6. 安装完成后启动 UCAD。
+首次安装时，Windows 会弹出一次 UAC 提示，用于把 UCAD 的公钥发布证书加入 LocalMachine\TrustedPeople。该提升只用于建立自签 MSIX 的证书信任；应用安装本身仍通过当前用户的 Add-AppxPackage 完成。
 
-无需管理员权限。卸载请双击“② 卸载UCAD.cmd”。
-卸载应用时不会删除已信任的 UCAD 发布证书，以保证后续版本升级仍可使用相同发布身份。
+安装器会：
+1. 验证 one-click 包内的 UCAD 公钥证书及证书指纹；
+2. 若尚未信任，申请一次 UAC 提升并导入公钥证书；
+3. 从当前版本官方 GitHub Release 下载签名后的 x64 MSIXBundle；
+4. 按 SHA256SUMS.txt 校验下载内容；
+5. 验证 MSIX Authenticode 签名与证书指纹；
+6. 通过 Windows Add-AppxPackage 安装或升级 UCAD；
+7. 安装完成后启动 UCAD。
+
+后续使用同一发布证书的 UCAD 更新通常不需要再次导入证书。卸载请双击“② 卸载UCAD.cmd”。卸载应用时不会删除已信任的 UCAD 发布证书。
 
 项目主页：https://github.com/KiYouJyo/UCAD

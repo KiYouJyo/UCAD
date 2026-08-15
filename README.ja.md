@@ -21,7 +21,7 @@ v0.1.0 は Foundation Release です。Win2D ビューポート、グリッド�
 - `UCAD_0.1.0.0_x64.msixbundle`：直接サイドロードする場合。
 - `SHA256SUMS.txt`：Release アセット検証用。
 
-GitHub 版 MSIX は UCAD の固定 Release 証明書で署名されます。one-click インストーラーは現在の Windows ユーザーにのみ証明書を信頼させるため、管理者権限は不要です。
+初回 one-click インストールでは、UCAD の公開証明書を `LocalMachine\TrustedPeople` に登録するため Windows UAC が一度表示されます。昇格は証明書の信頼設定だけに使われ、その後の MSIX インストールは通常ユーザーのコンテキストで実行されます。同じ Release 証明書を使う更新では通常、再登録は不要です。
 
 ## 3 言語対応
 
@@ -42,6 +42,9 @@ docs/                   ドキュメント
 ## ドキュメント
 
 - [Roadmap](ROADMAP.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Release process](docs/RELEASE-PROCESS.md)
+- [Packaging](packaging/README.md)
 - [Contributing](CONTRIBUTING.md)
 - [Support](SUPPORT.md)
 - [Privacy](PRIVACY.md)
@@ -50,4 +53,4 @@ docs/                   ドキュメント
 
 ## ライセンス
 
-UCAD は **GPL-2.0** で公開されています。第三者コンポーネントは各ライセンスに従います。
+UCAD は **GPL-2.0-only** で公開されています。第三者コンポーネントは各ライセンスに従います。

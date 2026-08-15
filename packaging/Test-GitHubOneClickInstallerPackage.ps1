@@ -18,9 +18,10 @@ if ($certificate.HasPrivateKey) { throw 'Public installer certificate unexpected
 if ($certificate.Subject -cne $metadata.publisher -or $certificate.Thumbprint -cne $metadata.certificateThumbprint) { throw 'Public certificate metadata mismatch.' }
 
 $install = Get-Content -LiteralPath (Join-Path $payload 'Install.ps1') -Raw
-foreach ($needle in @('Get-FileHash','Import-Certificate','Get-AuthenticodeSignature','Add-AppxPackage','TrustedPeople')) {
+foreach ($needle in @('Get-FileHash','Import-Certificate','Get-AuthenticodeSignature','Add-AppxPackage','Cert:\LocalMachine\TrustedPeople','-Verb RunAs','-ImportCertificateOnly')) {
     if (-not $install.Contains($needle)) { throw "Install script is missing required behavior: $needle" }
 }
+if ($install.Contains('Cert:\CurrentUser\TrustedPeople')) { throw 'Installer must not rely on CurrentUser TrustedPeople for MSIX trust.' }
 $uninstall = Get-Content -LiteralPath (Join-Path $payload 'Uninstall.ps1') -Raw
 if (-not $uninstall.Contains('Remove-AppxPackage')) { throw 'Uninstall script must use Remove-AppxPackage.' }
 

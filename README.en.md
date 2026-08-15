@@ -21,7 +21,7 @@ Download from [GitHub Releases](https://github.com/KiYouJyo/UCAD/releases/latest
 - `UCAD_0.1.0.0_x64.msixbundle`: direct sideload package.
 - `SHA256SUMS.txt`: release asset integrity manifest.
 
-GitHub MSIX builds are signed with UCAD's fixed release certificate. The one-click installer establishes trust only for the current Windows user and does not require administrator privileges.
+On the first one-click installation, Windows shows a one-time UAC prompt so the UCAD public release certificate can be imported into `LocalMachine\TrustedPeople`. Elevation is used only for certificate trust setup; the MSIX installation then runs in the normal user context. Updates signed by the same release certificate normally do not need another certificate import.
 
 ## Three-language foundation
 
@@ -44,8 +44,8 @@ docs/                   documentation and release notes
 Build the app with .NET 10 and a current Windows SDK:
 
 ```powershell
-dotnet restore src/UCAD.App/UCAD.App.csproj -p:Platform=x64
-dotnet build src/UCAD.App/UCAD.App.csproj -c Debug -p:Platform=x64
+dotnet restore src/UCAD.App/UCAD.App.csproj -p:Platform=x64 -r win-x64
+dotnet build src/UCAD.App/UCAD.App.csproj -c Debug -p:Platform=x64 -r win-x64
 ```
 
 Run core tests:
@@ -57,6 +57,9 @@ dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release
 ## Documentation
 
 - [Roadmap](ROADMAP.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Release process](docs/RELEASE-PROCESS.md)
+- [Packaging](packaging/README.md)
 - [Contributing](CONTRIBUTING.md)
 - [Support](SUPPORT.md)
 - [Privacy](PRIVACY.md)
@@ -65,4 +68,4 @@ dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release
 
 ## License
 
-UCAD is released under **GPL-2.0**. Third-party components remain under their respective licenses.
+UCAD is released under **GPL-2.0-only**. Third-party components remain under their respective licenses.
