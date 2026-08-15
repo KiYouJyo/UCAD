@@ -45,19 +45,19 @@
     <SolidColorBrush x:Key="UcadGeometryBrush" Color="#E69ED9F2" />
     <SolidColorBrush x:Key="UcadGeometrySecondaryBrush" Color="#949ED9F2" />
 
-    <!-- Figma geometry / spacing contract -->
-    <x:Double x:Key="UcadTitleBarHeight">44</x:Double>
-    <x:Double x:Key="UcadCategoryBarHeight">44</x:Double>
+    <!-- Figma geometry / spacing contract. GridLength is required for Grid rows/columns at runtime. -->
+    <GridLength x:Key="UcadTitleBarHeight">44</GridLength>
+    <GridLength x:Key="UcadCategoryBarHeight">44</GridLength>
     <x:Double x:Key="UcadToolShelfHeight">64</x:Double>
-    <x:Double x:Key="UcadCommandLineHeight">34</x:Double>
-    <x:Double x:Key="UcadStatusBarHeight">30</x:Double>
+    <GridLength x:Key="UcadCommandLineHeight">34</GridLength>
+    <GridLength x:Key="UcadStatusBarHeight">30</GridLength>
     <x:Double x:Key="UcadDocumentTabWidth">190</x:Double>
     <x:Double x:Key="UcadDocumentTabHeight">34</x:Double>
     <x:Double x:Key="UcadCommandSearchWidth">172</x:Double>
     <x:Double x:Key="UcadSettingsButtonWidth">36</x:Double>
-    <x:Double x:Key="UcadToolRailWidth">52</x:Double>
-    <x:Double x:Key="UcadInspectorWidth">304</x:Double>
-    <x:Double x:Key="UcadSettingsNavWidth">228</x:Double>
+    <GridLength x:Key="UcadToolRailWidth">52</GridLength>
+    <GridLength x:Key="UcadInspectorWidth">304</GridLength>
+    <GridLength x:Key="UcadSettingsNavWidth">228</GridLength>
     <x:Double x:Key="UcadSettingsContentPadding">54</x:Double>
     <x:Double x:Key="UcadSettingsContentTopPadding">42</x:Double>
     <x:Double x:Key="UcadSettingsCardWidth">940</x:Double>
