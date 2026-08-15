@@ -8,17 +8,22 @@ public sealed class CadDocument
     private readonly Stack<ICadEntity[]> _undo = new();
     private readonly Stack<ICadEntity[]> _redo = new();
 
+    public event EventHandler<CadDocumentChangedEventArgs>? Changed;
+
     public IReadOnlyList<ICadEntity> Entities => _entities;
 
     public bool CanUndo => _undo.Count > 0;
 
     public bool CanRedo => _redo.Count > 0;
 
+    public long Revision { get; private set; }
+
     public void Add(ICadEntity entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
         RecordMutation();
         _entities.Add(entity);
+        RaiseChanged(CadDocumentChangeKind.Add);
     }
 
     public void AddRange(IEnumerable<ICadEntity> entities)
@@ -37,6 +42,7 @@ public sealed class CadDocument
 
         RecordMutation();
         _entities.AddRange(additions);
+        RaiseChanged(CadDocumentChangeKind.AddRange);
     }
 
     public bool Remove(Guid id)
@@ -49,6 +55,7 @@ public sealed class CadDocument
 
         RecordMutation();
         _entities.RemoveAt(index);
+        RaiseChanged(CadDocumentChangeKind.Remove);
         return true;
     }
 
@@ -61,6 +68,7 @@ public sealed class CadDocument
 
         RecordMutation();
         _entities.Clear();
+        RaiseChanged(CadDocumentChangeKind.Clear);
     }
 
     public bool Undo()
@@ -72,6 +80,7 @@ public sealed class CadDocument
 
         _redo.Push(_entities.ToArray());
         Restore(_undo.Pop());
+        RaiseChanged(CadDocumentChangeKind.Undo);
         return true;
     }
 
@@ -84,6 +93,7 @@ public sealed class CadDocument
 
         _undo.Push(_entities.ToArray());
         Restore(_redo.Pop());
+        RaiseChanged(CadDocumentChangeKind.Redo);
         return true;
     }
 
@@ -97,5 +107,11 @@ public sealed class CadDocument
     {
         _entities.Clear();
         _entities.AddRange(snapshot);
+    }
+
+    private void RaiseChanged(CadDocumentChangeKind kind)
+    {
+        Revision++;
+        Changed?.Invoke(this, new CadDocumentChangedEventArgs(kind, _entities.Count, Revision));
     }
 }
