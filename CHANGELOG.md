@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.3.9 — 2026-08-16
+
+### UI Completion / Figma Fidelity
+- Promoted the 1440×900 UCAD Figma file to the production UI visual SSOT and centralized its critical geometry in `UcadDesignTokens.xaml`.
+- Rebuilt the title strip as an explicit browser-style Brand → Document Tabs → `+` → drag region → native caption layout with approximately 190×34 tabs.
+- Added explicit Drawing / Start / Settings page modes so CAD-only Tool Rail, Inspector, Command Line, and Status Bar are not shown beside Start or Settings content.
+- Completed the Start Center with New/Open, Recent, Blank/Architecture/Urban Planning template information architecture, and Learn UCAD surfaces while keeping unsupported file/template behavior honest.
+- Completed General, Appearance, Drafting, Input & Interaction, Files & Save, Language & Region, and About UCAD Settings pages using the Figma 228 px navigation, 940×72 cards, and 35 / 12 / 8 / 30 px vertical rhythm.
+- Replaced Unicode placeholder glyphs with Fluent / WinUI icons or UCAD-style `PathIcon` geometry.
+
+### Settings, localization, and versioning
+- Added centralized `AppSettings` / `SettingsService` persistence under `%LOCALAPPDATA%\UCAD\settings.json`.
+- Kept App Theme and CAD Canvas state independent; existing canvas background/grid and mouse zoom/pan options now flow into `CadViewport` without adding new CAD Core features.
+- Added complete Start/Settings resource maps for zh-CN, ja-JP, and en-US with CI key-parity validation.
+- Made root `VERSION` the product version SSOT and aligned assembly metadata, runtime UI, release metadata, and MSIX package identity to 0.3.9 / 0.3.9.0.
+- Preserved `PerMonitorV2` and XAML DIP layout behavior.
+
+### Validation
+- Kept Core tests, WinUI app build, runtime startup smoke, and MSIX / one-click package validation.
+- Expanded UI contracts to cover Figma dimensions, page/section existence, version SSOT, localization parity, PerMonitorV2, and removal of Unicode fake icons.
+- Added a real 1440×900 runtime screenshot workflow for Drawing, Start, Settings General, Appearance, Input & Interaction, and About.
+
 ## 0.3.7 — 2026-08-16
 
 ### UI fidelity and HiDPI
