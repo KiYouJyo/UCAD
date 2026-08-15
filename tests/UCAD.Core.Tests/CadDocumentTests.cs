@@ -1,6 +1,7 @@
 using UCAD.Core;
 using UCAD.Core.Entities;
 using UCAD.Core.Geometry;
+using Xunit;
 
 namespace UCAD.Core.Tests;
 
