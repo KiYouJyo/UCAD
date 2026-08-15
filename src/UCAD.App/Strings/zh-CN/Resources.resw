@@ -7,6 +7,74 @@
   <data name="AppDisplayName" xml:space="preserve"><value>UCAD</value></data>
   <data name="AppDescription" xml:space="preserve"><value>面向城市规划与建筑设计的轻量二维 CAD</value></data>
   <data name="AppWindowTitle" xml:space="preserve"><value>UCAD — 都市规划辅助 CAD</value></data>
+
+  <data name="FileMenuButton.Content" xml:space="preserve"><value>文件</value></data>
+  <data name="EditMenuButton.Content" xml:space="preserve"><value>编辑</value></data>
+  <data name="ViewMenuButton.Content" xml:space="preserve"><value>视图</value></data>
+  <data name="NewDrawingMenuItem.Text" xml:space="preserve"><value>新建图纸</value></data>
+  <data name="CloseDrawingMenuItem.Text" xml:space="preserve"><value>关闭当前图纸</value></data>
+  <data name="UndoMenuItem.Text" xml:space="preserve"><value>撤销</value></data>
+  <data name="RedoMenuItem.Text" xml:space="preserve"><value>重做</value></data>
+  <data name="ClearMenuItem.Text" xml:space="preserve"><value>清空图形</value></data>
+  <data name="ResetViewMenuItem.Text" xml:space="preserve"><value>重置视图</value></data>
+
+  <data name="DrawCategoryButton.Content" xml:space="preserve"><value>绘图</value></data>
+  <data name="ModifyCategoryButton.Content" xml:space="preserve"><value>修改</value></data>
+  <data name="AnnotateCategoryButton.Content" xml:space="preserve"><value>注释</value></data>
+  <data name="LayersCategoryButton.Content" xml:space="preserve"><value>图层</value></data>
+  <data name="BlocksCategoryButton.Content" xml:space="preserve"><value>图块</value></data>
+  <data name="MeasureCategoryButton.Content" xml:space="preserve"><value>测量</value></data>
+  <data name="ViewCategoryButton.Content" xml:space="preserve"><value>视图</value></data>
+  <data name="CommandSearch.PlaceholderText" xml:space="preserve"><value>搜索命令</value></data>
+
+  <data name="LineToolLabel.Text" xml:space="preserve"><value>直线</value></data>
+  <data name="PolylineToolLabel.Text" xml:space="preserve"><value>多段线</value></data>
+  <data name="RectangleToolLabel.Text" xml:space="preserve"><value>矩形</value></data>
+  <data name="CircleToolLabel.Text" xml:space="preserve"><value>圆</value></data>
+  <data name="ArcToolLabel.Text" xml:space="preserve"><value>圆弧</value></data>
+  <data name="HatchToolLabel.Text" xml:space="preserve"><value>填充</value></data>
+  <data name="BoundaryToolLabel.Text" xml:space="preserve"><value>边界</value></data>
+  <data name="RayToolLabel.Text" xml:space="preserve"><value>射线</value></data>
+  <data name="ConstructionToolLabel.Text" xml:space="preserve"><value>构造线</value></data>
+  <data name="ResetViewToolLabel.Text" xml:space="preserve"><value>重置视图</value></data>
+  <data name="ToolShelfHintText.Text" xml:space="preserve"><value>再次点击当前分类可收起工具栏</value></data>
+  <data name="ToolShelfHint" xml:space="preserve"><value>再次点击当前分类可收起工具栏</value></data>
+
+  <data name="RectangleMoreItem.Text" xml:space="preserve"><value>矩形</value></data>
+  <data name="CircleMoreItem.Text" xml:space="preserve"><value>圆</value></data>
+  <data name="ArcMoreItem.Text" xml:space="preserve"><value>圆弧</value></data>
+  <data name="UndoMoreItem.Text" xml:space="preserve"><value>撤销</value></data>
+  <data name="RedoMoreItem.Text" xml:space="preserve"><value>重做</value></data>
+  <data name="ClearMoreItem.Text" xml:space="preserve"><value>清空图形</value></data>
+  <data name="ResetViewMoreItem.Text" xml:space="preserve"><value>重置视图</value></data>
+
+  <data name="PropertiesTabButton.Content" xml:space="preserve"><value>属性</value></data>
+  <data name="LayersTabButton.Content" xml:space="preserve"><value>图层</value></data>
+  <data name="NoSelectionText.Text" xml:space="preserve"><value>未选择对象</value></data>
+  <data name="SelectionUnavailableText.Text" xml:space="preserve"><value>选择功能将在 v0.4.0 接入；当前面板先显示活动文档状态。</value></data>
+  <data name="DocumentSectionText.Text" xml:space="preserve"><value>文档</value></data>
+  <data name="EntityCountLabel.Text" xml:space="preserve"><value>实体数</value></data>
+  <data name="ActiveCommandLabel.Text" xml:space="preserve"><value>活动命令</value></data>
+  <data name="UndoAvailableLabel.Text" xml:space="preserve"><value>可撤销</value></data>
+  <data name="RedoAvailableLabel.Text" xml:space="preserve"><value>可重做</value></data>
+  <data name="V04FoundationHint.Text" xml:space="preserve"><value>v0.3.5 已将标签页、命令元数据和文档变更状态接入 Core，为 v0.4.0 的选择、捕捉与正交提供统一状态入口。</value></data>
+  <data name="Inspector_None" xml:space="preserve"><value>—</value></data>
+  <data name="Inspector_Yes" xml:space="preserve"><value>是</value></data>
+  <data name="Inspector_No" xml:space="preserve"><value>否</value></data>
+
+  <data name="SnapStatusButton.Content" xml:space="preserve"><value>捕捉</value></data>
+  <data name="GridStatusButton.Content" xml:space="preserve"><value>栅格</value></data>
+  <data name="OrthoStatusButton.Content" xml:space="preserve"><value>正交</value></data>
+  <data name="PolarStatusButton.Content" xml:space="preserve"><value>极轴</value></data>
+  <data name="OsnapStatusButton.Content" xml:space="preserve"><value>对象捕捉</value></data>
+  <data name="OtrackStatusButton.Content" xml:space="preserve"><value>对象追踪</value></data>
+
+  <data name="Document_UntitledFormat" xml:space="preserve"><value>图纸 {0}</value></data>
+  <data name="CloseDirtyDialog_Title" xml:space="preserve"><value>关闭未保存的图纸？</value></data>
+  <data name="CloseDirtyDialog_Content" xml:space="preserve"><value>“{0}”包含尚未保存到文件的绘图内容。v0.3.5 尚未提供文件保存；关闭后这些内容将丢失。</value></data>
+  <data name="CloseDirtyDialog_Primary" xml:space="preserve"><value>仍然关闭</value></data>
+  <data name="CloseDirtyDialog_Cancel" xml:space="preserve"><value>取消</value></data>
+
   <data name="LineButton.Label" xml:space="preserve"><value>直线</value></data>
   <data name="PolylineButton.Label" xml:space="preserve"><value>多段线</value></data>
   <data name="RectangleButton.Label" xml:space="preserve"><value>矩形</value></data>
