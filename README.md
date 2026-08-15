@@ -21,7 +21,7 @@ v0.1.0 是 Foundation Release：目前已经具备 Win2D 绘图视口、网格�
 - `UCAD_0.1.0.0_x64.msixbundle`：高级用户直接侧载包。
 - `SHA256SUMS.txt`：发布资产完整性校验。
 
-GitHub 版本使用项目固定发布证书进行 MSIX 签名。one-click 安装器只为当前 Windows 用户建立证书信任，无需管理员权限。
+GitHub 版本使用固定发布证书进行 MSIX 签名。首次 one-click 安装会出现一次 Windows UAC 提示，仅用于把 UCAD 公钥证书加入 `LocalMachine\TrustedPeople`；随后由当前用户上下文完成 MSIX 安装。后续使用同一发布证书的更新通常无需再次导入证书。
 
 ## 三语支持
 
@@ -44,8 +44,8 @@ docs/                   Release Notes 与架构文档
 需要 .NET 10 SDK、Windows 10/11 与 Visual Studio / Build Tools 的 Windows SDK。普通开发构建：
 
 ```powershell
-dotnet restore src/UCAD.App/UCAD.App.csproj -p:Platform=x64
-dotnet build src/UCAD.App/UCAD.App.csproj -c Debug -p:Platform=x64
+dotnet restore src/UCAD.App/UCAD.App.csproj -p:Platform=x64 -r win-x64
+dotnet build src/UCAD.App/UCAD.App.csproj -c Debug -p:Platform=x64 -r win-x64
 ```
 
 几何核心测试：
@@ -57,6 +57,9 @@ dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release
 ## 文档
 
 - [路线图](ROADMAP.md)
+- [架构说明](docs/ARCHITECTURE.md)
+- [发布流程](docs/RELEASE-PROCESS.md)
+- [打包说明](packaging/README.md)
 - [贡献指南](CONTRIBUTING.md)
 - [支持](SUPPORT.md)
 - [隐私](PRIVACY.md)
@@ -65,4 +68,4 @@ dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release
 
 ## 许可证
 
-UCAD 以 **GPL-2.0** 发布。第三方组件遵循各自许可证。
+UCAD 以 **GPL-2.0-only** 发布。第三方组件遵循各自许可证。

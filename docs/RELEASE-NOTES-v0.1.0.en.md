@@ -12,11 +12,13 @@ UCAD v0.1.0 establishes the first runnable technical foundation for a lightweigh
 - Basic `CadPoint`, `CadVector`, `LineEntity`, and `CadDocument` types.
 - Interactive two-point line drawing.
 - Simplified Chinese, Japanese, and English resource foundation.
-- Windows CI, MSIXBundle packaging, signing, and GitHub Release automation.
+- Windows CI, MSIXBundle packaging, fixed-certificate signing, and GitHub Release automation.
 
 ## Installation
 
-For most users, download `UCAD-v0.1.0-x64-one-click.zip`, extract it, and run `① 安装UCAD.cmd`. The bootstrap verifies SHA-256 and the release certificate before installing the signed `UCAD_0.1.0.0_x64.msixbundle`.
+For most users, download `UCAD-v0.1.0-x64-one-click.zip`, extract it, and run `① 安装UCAD.cmd`. The bootstrap verifies the public certificate, Release SHA-256, and MSIX Authenticode signer before installing `UCAD_0.1.0.0_x64.msixbundle`.
+
+The first one-click installation shows a one-time Windows UAC prompt to trust the UCAD public release certificate in `LocalMachine\TrustedPeople`. Later releases signed by the same certificate normally do not require this trust setup again.
 
 ## Current scope
 

@@ -12,13 +12,13 @@ UCAD v0.1.0 建立了面向城市规划与建筑设计的轻量二维 CAD 的首
 - 基础 `CadPoint`、`CadVector`、`LineEntity`、`CadDocument`。
 - 两点式交互直线绘制。
 - 简体中文、日本語、English 三语资源基础。
-- GitHub Windows CI、MSIXBundle 打包与自动化 Release 基础设施。
+- GitHub Windows CI、MSIXBundle 打包、固定证书签名与自动化 Release 基础设施。
 
 ## 安装
 
-普通用户请下载 `UCAD-v0.1.0-x64-one-click.zip`，解压后双击 `① 安装UCAD.cmd`。安装器会验证 SHA-256 与签名证书，并安装签名后的 `UCAD_0.1.0.0_x64.msixbundle`。
+普通用户请下载 `UCAD-v0.1.0-x64-one-click.zip`，解压后双击 `① 安装UCAD.cmd`。安装器会验证公钥证书、Release SHA-256 和 MSIX Authenticode 签名，然后安装 `UCAD_0.1.0.0_x64.msixbundle`。
 
-也可以直接下载 MSIXBundle；由于 GitHub 版本使用项目自有发布证书，首次侧载前需要信任 Release 中 one-click 包附带的 UCAD 公钥证书。
+首次使用 one-click 安装时会出现一次 Windows UAC 提示，仅用于把 UCAD 公钥发布证书加入 `LocalMachine\TrustedPeople`。后续使用同一证书签名的 UCAD 更新通常无需再次建立信任。
 
 ## 当前范围
 

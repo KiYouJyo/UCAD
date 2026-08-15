@@ -15,6 +15,8 @@ A release build must:
 9. publish three assets only: signed MSIXBundle, one-click ZIP, and SHA256 manifest;
 10. publish tag-pinned Simplified Chinese, Japanese, and English Release Notes links.
 
+The one-click bootstrap validates the embedded public certificate and its pinned thumbprint. On first install it requests UAC elevation only to import that public certificate into `LocalMachine\TrustedPeople`; the normal process then verifies the downloaded bundle and installs it using `Add-AppxPackage`.
+
 Required GitHub Actions secrets:
 
 - `GH_RELEASE_CERTIFICATE_BASE64`
