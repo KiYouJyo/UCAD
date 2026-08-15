@@ -3,54 +3,39 @@
 # UCAD
 
 **Urban Computer-Aided Design · 都市計画支援CAD**  
-A lightweight 2D CAD for urban planning and architecture.
+Lightweight 2D CAD for urban planning and architectural design.
 
-![Windows](https://img.shields.io/badge/Windows-10%2F11-blue) ![Windows App SDK](https://img.shields.io/badge/Windows%20App%20SDK-1.8-blue) ![MSIX](https://img.shields.io/badge/package-MSIX-blue) ![CI](https://github.com/KiYouJyo/UCAD/actions/workflows/ci.yml/badge.svg) ![License](https://img.shields.io/badge/license-GPL--2.0-blue)
+![Windows](https://img.shields.io/badge/Windows-10%2F11-blue) ![Windows App SDK](https://img.shields.io/badge/Windows%20App%20SDK-1.8-blue) ![MSIX](https://img.shields.io/badge/package-MSIX-blue) ![CI](https://github.com/KiYouJyo/UCAD/actions/workflows/ci.yml/badge.svg) ![License](https://img.shields.io/badge/license-GPL--2.0--only-blue)
 
 ## Positioning
 
-UCAD aims to be a Windows-native lightweight CAD with familiar AutoCAD-style interaction and a deliberately focused 2D feature set for architecture and urban planning. It follows a DXF-first, 2D-first roadmap rather than attempting to reproduce the whole AutoCAD product surface.
+UCAD aims to be a Windows-native lightweight 2D CAD with familiar AutoCAD-style interaction and a deliberately bounded architecture/planning feature set. The project is DXF-first and 2D-first rather than an attempt to clone all of AutoCAD.
 
-v0.1.0 is the Foundation Release. It currently includes a Win2D CAD viewport, adaptive grid, coordinate transforms, zoom/pan, and a basic Line entity.
+**Current version: v0.2.0 — Command Foundation.** It combines the Win2D viewport and world coordinate system with a reusable CAD command foundation: aliases, Enter / Space confirmation, Esc cancellation, repeat previous command, absolute/relative coordinates, and distance input.
 
 ## Installation
 
 Download from [GitHub Releases](https://github.com/KiYouJyo/UCAD/releases/latest):
 
-- `UCAD-v0.1.0-x64-one-click.zip`: recommended for most users. Extract and run `① 安装UCAD.cmd`; it verifies the release and installs the signed MSIX.
-- `UCAD_0.1.0.0_x64.msixbundle`: direct sideload package.
-- `SHA256SUMS.txt`: release asset integrity manifest.
+- `UCAD-v0.2.0-x64-one-click.zip`: recommended.
+- `UCAD_0.2.0.0_x64.msixbundle`: direct sideload package.
+- `SHA256SUMS.txt`: integrity manifest.
 
-On the first one-click installation, Windows shows a one-time UAC prompt so the UCAD public release certificate can be imported into `LocalMachine\TrustedPeople`. Elevation is used only for certificate trust setup; the MSIX installation then runs in the normal user context. Updates signed by the same release certificate normally do not need another certificate import.
+The first one-click install may show one UAC prompt to trust the UCAD public certificate in `LocalMachine\TrustedPeople`; the MSIX itself is installed in the normal user context.
 
-## Three-language foundation
+## Command input
 
-Since v0.1, the application and repository use Simplified Chinese (zh-CN), Japanese (ja-JP), and English (en-US) resources. Main UI text, package metadata, README files, and Release Notes follow the same structure.
+Current commands include `LINE` / `L`, `CLEAR`, and `RESETVIEW` / `RV`. Point input accepts `x,y` and `@x,y`; after a base point exists, a number alone specifies distance along the current cursor direction. Enter / Space confirms, Esc cancels, and confirming empty input repeats the previous command.
 
-## Repository layout
+## Localization
 
-```text
-src/UCAD.Core/          CAD geometry/document core
-src/UCAD.App/           WinUI 3 / Win2D app and MSIX manifest
-tests/                  automated tests
-packaging/              one-click installer and release validation
-release/                release SSOT metadata
-docs/                   documentation and release notes
-.github/workflows/       CI and GitHub Release workflows
-```
+The application and repository use Simplified Chinese (zh-CN), Japanese (ja-JP), and English (en-US) resources.
 
 ## Development
-
-Build the app with .NET 10 and a current Windows SDK:
 
 ```powershell
 dotnet restore src/UCAD.App/UCAD.App.csproj -p:Platform=x64 -r win-x64
 dotnet build src/UCAD.App/UCAD.App.csproj -c Debug -p:Platform=x64 -r win-x64
-```
-
-Run core tests:
-
-```powershell
 dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release
 ```
 
@@ -60,12 +45,8 @@ dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release
 - [Architecture](docs/ARCHITECTURE.md)
 - [Release process](docs/RELEASE-PROCESS.md)
 - [Packaging](packaging/README.md)
-- [Contributing](CONTRIBUTING.md)
-- [Support](SUPPORT.md)
-- [Privacy](PRIVACY.md)
-- [Third-party notices](THIRD-PARTY-NOTICES.md)
-- [v0.1.0 Release Notes](docs/RELEASE-NOTES-v0.1.0.en.md)
+- [v0.2.0 Release Notes](docs/RELEASE-NOTES-v0.2.0.en.md)
 
 ## License
 
-UCAD is released under **GPL-2.0-only**. Third-party components remain under their respective licenses.
+UCAD is released under **GPL-2.0-only**.

@@ -42,7 +42,9 @@ jobs:
           if (-not $release.channels.github.publish) { throw 'GitHub publication is disabled.' }
           $version = [string]$release.product.version
           $packageVersion = [string]$release.product.packageVersion
+          $releaseTitle = [string]$release.product.releaseTitle
           if ($version -notmatch '^\d+\.\d+\.\d+$' -or $packageVersion -ne "$version.0") { throw 'Invalid release version metadata.' }
+          if ([string]::IsNullOrWhiteSpace($releaseTitle)) { throw 'Release title is required.' }
           if ('${{ github.ref_type }}' -eq 'tag' -and '${{ github.ref_name }}' -ne "v$version") { throw 'Release tag does not match release metadata.' }
           [xml]$project = Get-Content src/UCAD.App/UCAD.App.csproj -Raw
           [xml]$manifest = Get-Content src/UCAD.App/Package.appxmanifest -Raw
@@ -53,6 +55,7 @@ jobs:
           if ($manifest.Package.Identity.Publisher -ne $release.product.publisher) { throw 'Package publisher mismatch.' }
           "version=$version" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "package_version=$packageVersion" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "release_title=$releaseTitle" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "tag=v$version" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "bundle_name=UCAD_${packageVersion}_x64.msixbundle" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "one_click_name=UCAD-v${version}-x64-one-click.zip" | Out-File $env:GITHUB_OUTPUT -Encoding utf8 -Append
@@ -185,7 +188,7 @@ jobs:
         with:
           tag_name: ${{ steps.release.outputs.tag }}
           target_commitish: ${{ github.sha }}
-          name: UCAD v${{ steps.release.outputs.version }} — Foundation Release
+          name: UCAD v${{ steps.release.outputs.version }} — ${{ steps.release.outputs.release_title }}
           body_path: ${{ env.RELEASE_BODY }}
           prerelease: false
           make_latest: true

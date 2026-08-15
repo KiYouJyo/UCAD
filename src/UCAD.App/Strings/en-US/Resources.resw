@@ -5,14 +5,20 @@
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
   <data name="AppDisplayName" xml:space="preserve"><value>UCAD</value></data>
-  <data name="AppDescription" xml:space="preserve"><value>Lightweight 2D CAD for urban planning and architecture</value></data>
+  <data name="AppDescription" xml:space="preserve"><value>Lightweight 2D CAD for urban planning and architectural design</value></data>
   <data name="AppWindowTitle" xml:space="preserve"><value>UCAD — Urban Computer-Aided Design</value></data>
   <data name="LineButton.Label" xml:space="preserve"><value>Line</value></data>
   <data name="ClearButton.Label" xml:space="preserve"><value>Clear</value></data>
   <data name="ResetViewButton.Label" xml:space="preserve"><value>Reset view</value></data>
-  <data name="Status_Ready" xml:space="preserve"><value>Ready — click Line to start drawing</value></data>
+  <data name="CommandPrompt.Text" xml:space="preserve"><value>Command:</value></data>
+  <data name="CommandInput.PlaceholderText" xml:space="preserve"><value>Enter command, coordinate, or distance</value></data>
+  <data name="Status_Ready" xml:space="preserve"><value>Ready — enter a command, confirm with Enter/Space</value></data>
   <data name="Status_Cleared" xml:space="preserve"><value>Drawing cleared</value></data>
   <data name="Status_ViewReset" xml:space="preserve"><value>View reset</value></data>
   <data name="Status_LineFirst" xml:space="preserve"><value>LINE: specify first point</value></data>
-  <data name="Status_LineSecond" xml:space="preserve"><value>LINE: specify next point</value></data>
+  <data name="Status_LineNext" xml:space="preserve"><value>LINE: specify next point; Enter/Space to finish</value></data>
+  <data name="Status_InvalidPoint" xml:space="preserve"><value>Invalid point. Enter x,y, @x,y, or a distance after a base point.</value></data>
+  <data name="Status_CommandCancelled" xml:space="preserve"><value>*Cancel*</value></data>
+  <data name="Status_NoPreviousCommand" xml:space="preserve"><value>No previous command to repeat.</value></data>
+  <data name="Status_UnknownCommand" xml:space="preserve"><value>Unknown command: “{0}”</value></data>
 </root>

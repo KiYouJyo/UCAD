@@ -22,7 +22,10 @@ public sealed partial class CadViewport : UserControl
     private CadPoint? _lineStart;
 
     public event Action<CadPoint>? PointerWorldPositionChanged;
+    public event Action<CadPoint>? LinePointAccepted;
     public event Action<bool>? LineModeChanged;
+
+    public CadPoint CurrentPointerWorldPosition => ScreenToWorld(_pointerScreen);
 
     public CadViewport()
     {
@@ -31,11 +34,60 @@ public sealed partial class CadViewport : UserControl
         _document.Add(new LineEntity(new CadPoint(0, 0), new CadPoint(0, 300)));
     }
 
+    public void BeginLineCommand()
+    {
+        _lineMode = true;
+        _lineStart = null;
+        LineModeChanged?.Invoke(true);
+        Canvas.Invalidate();
+    }
+
     public void ToggleLineMode()
     {
-        _lineMode = !_lineMode;
+        if (_lineMode)
+        {
+            CompleteLineCommand();
+        }
+        else
+        {
+            BeginLineCommand();
+        }
+    }
+
+    public void CompleteLineCommand()
+    {
+        _lineMode = false;
         _lineStart = null;
-        LineModeChanged?.Invoke(_lineMode);
+        LineModeChanged?.Invoke(false);
+        Canvas.Invalidate();
+    }
+
+    public void CancelLineCommand()
+    {
+        _lineMode = false;
+        _lineStart = null;
+        LineModeChanged?.Invoke(false);
+        Canvas.Invalidate();
+    }
+
+    public void SubmitLinePoint(CadPoint world)
+    {
+        if (!_lineMode)
+        {
+            return;
+        }
+
+        if (_lineStart is null)
+        {
+            _lineStart = world;
+        }
+        else
+        {
+            _document.Add(new LineEntity(_lineStart.Value, world));
+            _lineStart = world;
+        }
+
+        LinePointAccepted?.Invoke(world);
         Canvas.Invalidate();
     }
 
@@ -129,7 +181,7 @@ public sealed partial class CadViewport : UserControl
             _lastPanPointer = _pointerScreen;
         }
 
-        PointerWorldPositionChanged?.Invoke(ScreenToWorld(_pointerScreen));
+        PointerWorldPositionChanged?.Invoke(CurrentPointerWorldPosition);
         Canvas.Invalidate();
     }
 
@@ -146,23 +198,10 @@ public sealed partial class CadViewport : UserControl
             return;
         }
 
-        if (!point.Properties.IsLeftButtonPressed || !_lineMode)
+        if (point.Properties.IsLeftButtonPressed && _lineMode)
         {
-            return;
+            SubmitLinePoint(CurrentPointerWorldPosition);
         }
-
-        var world = ScreenToWorld(_pointerScreen);
-        if (_lineStart is null)
-        {
-            _lineStart = world;
-        }
-        else
-        {
-            _document.Add(new LineEntity(_lineStart.Value, world));
-            _lineStart = world;
-        }
-
-        Canvas.Invalidate();
     }
 
     private void Canvas_PointerReleased(object sender, PointerRoutedEventArgs e)
