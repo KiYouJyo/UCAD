@@ -65,7 +65,8 @@ jobs:
             if ($tokens -notmatch [regex]::Escape($required)) { throw "Missing Figma design token: $required" }
           }
           foreach ($pair in @(@('UcadDocumentTabWidth','190'),@('UcadSettingsNavWidth','228'),@('UcadSettingsCardWidth','940'),@('UcadSettingsCardHeight','72'),@('UcadSettingsTitleToSectionSpacing','35'),@('UcadSettingsSectionToCardSpacing','12'),@('UcadSettingsCardSpacing','8'),@('UcadSettingsSectionSpacing','30'))) {
-            if ($tokens -notmatch ("x:Key=\"{0}\">{1}<" -f $pair[0],$pair[1])) { throw "Figma token mismatch: $($pair[0])" }
+            $needle = ('x:Key="{0}">{1}<' -f $pair[0], $pair[1])
+            if (-not $tokens.Contains($needle)) { throw "Figma token mismatch: $($pair[0])" }
           }
 
           $version = (Get-Content VERSION -Raw).Trim()
