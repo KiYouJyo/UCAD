@@ -8,6 +8,8 @@ on:
       - main
     paths:
       - VERSION
+      - packaging/**
+      - .github/workflows/release.yml
   workflow_dispatch:
 
 permissions:
@@ -30,13 +32,17 @@ jobs:
         run: |
           if ("${{ github.ref_type }}" -eq "tag") {
             $tag = "${{ github.ref_name }}"
+            $version = $tag.TrimStart('v')
           }
           else {
             $version = (Get-Content VERSION -Raw).Trim()
             $tag = "v$version"
           }
+          if ($version -notmatch '^\d+\.\d+\.\d+$') { throw "Invalid release version: $version" }
+          "version=$version" >> $env:GITHUB_OUTPUT
           "tag=$tag" >> $env:GITHUB_OUTPUT
           "archive=UCAD-$tag-win-x64.zip" >> $env:GITHUB_OUTPUT
+          "oneclick=UCAD-$tag-x64-one-click.zip" >> $env:GITHUB_OUTPUT
 
       - name: Test core
         run: dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj --configuration Release
@@ -50,15 +56,48 @@ jobs:
           --self-contained true
           --output artifacts/UCAD-win-x64
 
-      - name: Create ZIP
+      - name: Create portable ZIP
         shell: pwsh
-        run: Compress-Archive -Path artifacts/UCAD-win-x64/* -DestinationPath artifacts/${{ steps.version.outputs.archive }}
+        run: Compress-Archive -Path artifacts/UCAD-win-x64/* -DestinationPath artifacts/${{ steps.version.outputs.archive }} -CompressionLevel Optimal
 
-      - name: Upload workflow artifact
+      - name: Generate and validate one-click installer
+        shell: pwsh
+        run: |
+          $staging = Join-Path $env:RUNNER_TEMP 'UCAD-OneClick'
+          New-Item -ItemType Directory -Force -Path $staging | Out-Null
+          & ./packaging/New-GitHubOneClickInstallerPackage.ps1 -OutputDirectory $staging -DisplayVersion '${{ steps.version.outputs.version }}' -ArchiveName '${{ steps.version.outputs.archive }}'
+          $packageRoot = Join-Path $staging "UCAD-v${{ steps.version.outputs.version }}-x64-one-click"
+          & ./packaging/Test-GitHubOneClickInstallerPackage.ps1 -ReleaseDirectory $packageRoot
+          $zip = Join-Path (Resolve-Path artifacts) '${{ steps.version.outputs.oneclick }}'
+          Compress-Archive -LiteralPath $packageRoot -DestinationPath $zip -CompressionLevel Optimal
+          $extracted = Join-Path $env:RUNNER_TEMP 'UCAD-OneClick-Extracted'
+          Expand-Archive -LiteralPath $zip -DestinationPath $extracted -Force
+          & ./packaging/Test-GitHubOneClickInstallerPackage.ps1 -ReleaseDirectory (Join-Path $extracted "UCAD-v${{ steps.version.outputs.version }}-x64-one-click") -ZipPath $zip
+
+      - name: Generate SHA256 manifest
+        shell: pwsh
+        run: |
+          $files = @(
+            'artifacts/${{ steps.version.outputs.archive }}',
+            'artifacts/${{ steps.version.outputs.oneclick }}'
+          )
+          $lines = foreach ($file in $files) {
+            $item = Get-Item -LiteralPath $file
+            "{0}  {1}" -f (Get-FileHash -LiteralPath $item.FullName -Algorithm SHA256).Hash.ToLowerInvariant(), $item.Name
+          }
+          Set-Content -LiteralPath artifacts/SHA256SUMS.txt -Value $lines -Encoding ASCII
+          foreach ($line in Get-Content artifacts/SHA256SUMS.txt) {
+            if ($line -notmatch '^[a-f0-9]{64}  .+$') { throw "Invalid SHA256 manifest line: $line" }
+          }
+
+      - name: Upload workflow artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: UCAD-${{ steps.version.outputs.tag }}-win-x64
-          path: artifacts/${{ steps.version.outputs.archive }}
+          name: UCAD-${{ steps.version.outputs.tag }}-release-assets
+          path: |
+            artifacts/${{ steps.version.outputs.archive }}
+            artifacts/${{ steps.version.outputs.oneclick }}
+            artifacts/SHA256SUMS.txt
           if-no-files-found: error
 
       - name: Publish GitHub Release
@@ -71,4 +110,7 @@ jobs:
           prerelease: false
           make_latest: true
           fail_on_unmatched_files: true
-          files: artifacts/${{ steps.version.outputs.archive }}
+          files: |
+            artifacts/${{ steps.version.outputs.archive }}
+            artifacts/${{ steps.version.outputs.oneclick }}
+            artifacts/SHA256SUMS.txt
