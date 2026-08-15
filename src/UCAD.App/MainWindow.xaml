@@ -10,7 +10,6 @@
     <Grid
         x:Name="RootLayout"
         Background="{StaticResource UcadAppBackgroundBrush}"
-        Foreground="{StaticResource UcadTextPrimaryBrush}"
         RequestedTheme="Dark"
         KeyDown="RootLayout_KeyDown">
 
@@ -132,7 +131,6 @@
                     Grid.Column="3"
                     Width="1"
                     Height="24"
-                    Margin="0,0,0,0"
                     Fill="{StaticResource UcadDividerBrush}" />
 
                 <ToggleButton
