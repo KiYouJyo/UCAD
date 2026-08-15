@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "product": {
     "name": "UCAD",
-    "version": "0.3.6",
-    "packageVersion": "0.3.6.0",
-    "releaseTitle": "Startup Reliability Hotfix",
+    "version": "0.3.7",
+    "packageVersion": "0.3.7.0",
+    "releaseTitle": "UI Fidelity & HiDPI Foundation",
     "packageIdentityName": "F1BD5F25-4ED6-4037-B9FE-BB7D4B326E25",
     "publisher": "CN=AppPublisher",
     "applicationId": "App"
