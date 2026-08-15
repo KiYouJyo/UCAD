@@ -2,39 +2,35 @@
     x:Class="UCAD.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:UCAD">
+    xmlns:views="using:UCAD.Views">
 
-    <Grid Background="#16191D">
+    <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <CommandBar Grid.Row="0" DefaultLabelPosition="Right">
-            <AppBarButton x:Uid="LineButton" Icon="Edit" Click="Line_Click"/>
-            <AppBarButton x:Uid="ClearButton" Icon="Delete" Click="Clear_Click"/>
-            <CommandBar.SecondaryCommands>
-                <AppBarButton x:Uid="ResetViewButton" Click="ResetView_Click"/>
-            </CommandBar.SecondaryCommands>
+        <CommandBar DefaultLabelPosition="Right">
+            <AppBarButton x:Uid="LineButton" Icon="Add" Click="Line_Click" />
+            <AppBarButton x:Uid="ClearButton" Icon="Delete" Click="Clear_Click" />
+            <AppBarSeparator />
+            <AppBarButton x:Uid="ResetViewButton" Icon="Refresh" Click="ResetView_Click" />
         </CommandBar>
 
-        <local:CadViewport x:Name="Viewport"
-                           Grid.Row="1"
-                           BackgroundColor="#16191D"/>
+        <views:CadViewport x:Name="Viewport" Grid.Row="1" />
 
-        <Grid Grid.Row="2"
-              Padding="12,6"
-              Background="#20252B">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock x:Name="ModeText" />
-            <TextBlock x:Name="CoordinateText"
-                       Grid.Column="1"
-                       FontFamily="Consolas"
-                       Text="X: 0.000   Y: 0.000"/>
-        </Grid>
+        <Border Grid.Row="2" Padding="12,6" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="ModeText" FontFamily="Cascadia Mono" />
+                <TextBlock Grid.Column="1" HorizontalAlignment="Center" Text="UCAD v0.1" Opacity="0.7" />
+                <TextBlock x:Name="CoordinateText" Grid.Column="2" Text="X 0.00  Y 0.00" FontFamily="Cascadia Mono" />
+            </Grid>
+        </Border>
     </Grid>
 </Window>
