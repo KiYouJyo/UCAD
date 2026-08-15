@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.3.5 — 2026-08-15
+
+### Workspace shell
+- Rebuilt the WinUI shell around the approved Fluent CAD workspace with browser-style document tabs, a persistent category tool shelf, a compact high-frequency tool rail, an inspector boundary, command line, and status bar.
+- Added real in-memory multi-document sessions: every tab owns an independent `CadDocument`, `CadViewport`, `CommandSession`, command base point, viewport state, and previous-command state.
+- Connected LINE / PLINE / RECTANGLE / CIRCLE / ARC, Undo / Redo, Clear, and Reset View to the new shell through one command-dispatch path.
+- Added command search driven directly by `CommandRegistry` tokens.
+- Kept planned interaction/modify/layer surfaces visible but disabled so the UI does not imply unfinished Core capabilities.
+
+### UI ↔ Core foundation
+- Added `CadCommandCategory` and optional `DrawingCommandKind` metadata to command definitions, removing the UI string switch that previously identified drawing commands.
+- Added `CadDocument.Changed`, `CadDocument.Revision`, and structured document-change events so tabs, inspector state, and history controls observe Core directly.
+- Changed `CadViewport` to accept an externally owned `CadDocument` and expose zoom state, enabling independent document workspaces without duplicating the renderer.
+- Added Core tests for command metadata and observable document revisions.
+
+### Localization and release metadata
+- Expanded zh-CN, ja-JP, and en-US resources for the complete workspace shell.
+- Updated package and release metadata to 0.3.5 / 0.3.5.0.
+- Documented v0.3.5 as the transition gate before v0.4 selection, OSNAP, and Ortho begin tighter shell/Core coupling.
+
 ## 0.3.0 — 2026-08-15
 
 ### Drawing foundation
