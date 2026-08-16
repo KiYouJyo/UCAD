@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="AuthoringFailedFormat" xml:space="preserve"><value>{0} の実行に失敗しました: {1}</value></data>
+  <data name="LayerComplete" xml:space="preserve"><value>レイヤーマネージャーを閉じました。</value></data>
+  <data name="PropertiesComplete" xml:space="preserve"><value>オブジェクトのプロパティを更新しました。</value></data>
+  <data name="TextInsertionPoint" xml:space="preserve"><value>TEXT: 文字の挿入点を指定してください。</value></data>
+  <data name="TextComplete" xml:space="preserve"><value>文字を作成しました。</value></data>
+  <data name="DimFirstPoint" xml:space="preserve"><value>DIM: 1 本目の寸法補助線の起点を指定してください。</value></data>
+  <data name="DimSecondPoint" xml:space="preserve"><value>DIM: 2 本目の寸法補助線の起点を指定してください。</value></data>
+  <data name="DimLinePoint" xml:space="preserve"><value>DIM: 寸法線の位置を指定してください。</value></data>
+  <data name="DimComplete" xml:space="preserve"><value>長さ寸法を作成しました。</value></data>
+  <data name="HatchNeedsBoundary" xml:space="preserve"><value>HATCH では閉じたポリラインまたは円を 1 つ選択してください。</value></data>
+  <data name="HatchComplete" xml:space="preserve"><value>ソリッドハッチを作成しました。</value></data>
+  <data name="BlockNeedsSelection" xml:space="preserve"><value>BLOCK では先にオブジェクトを選択してください。</value></data>
+  <data name="BlockNameTitle" xml:space="preserve"><value>ブロックを作成</value></data>
+  <data name="BlockNamePrompt" xml:space="preserve"><value>ブロック名</value></data>
+  <data name="BlockBasePoint" xml:space="preserve"><value>BLOCK: 基点を指定してください。</value></data>
+  <data name="BlockCompleteFormat" xml:space="preserve"><value>ブロック「{0}」を定義しました。</value></data>
+  <data name="InsertNoBlocks" xml:space="preserve"><value>挿入できるブロック定義がありません。</value></data>
+  <data name="InsertPoint" xml:space="preserve"><value>INSERT: 挿入点を指定してください。</value></data>
+  <data name="InsertCompleteFormat" xml:space="preserve"><value>ブロック「{0}」を挿入しました。</value></data>
+  <data name="ExplodeNeedsOneBlock" xml:space="preserve"><value>EXPLODE ではブロック参照を 1 つだけ選択してください。</value></data>
+  <data name="ExplodeCompleteFormat" xml:space="preserve"><value>ブロックを {0} 個のオブジェクトに分解しました。</value></data>
+  <data name="LayerCurrent" xml:space="preserve"><value>現在のレイヤー</value></data>
+  <data name="LayerNewName" xml:space="preserve"><value>新しいレイヤー名</value></data>
+  <data name="LayerAdd" xml:space="preserve"><value>追加</value></data>
+  <data name="LayerVisible" xml:space="preserve"><value>表示</value></data>
+  <data name="LayerLocked" xml:space="preserve"><value>ロック</value></data>
+  <data name="LayerApply" xml:space="preserve"><value>適用</value></data>
+  <data name="LayerDelete" xml:space="preserve"><value>削除</value></data>
+  <data name="LayerManagerTitle" xml:space="preserve"><value>レイヤーマネージャー</value></data>
+  <data name="Close" xml:space="preserve"><value>閉じる</value></data>
+  <data name="PropertiesNeedsSelection" xml:space="preserve"><value>CHPROP では先にオブジェクトを選択してください。</value></data>
+  <data name="PropertyLayer" xml:space="preserve"><value>レイヤー</value></data>
+  <data name="PropertyColor" xml:space="preserve"><value>色（#RRGGBB）</value></data>
+  <data name="PropertyLineWeight" xml:space="preserve"><value>線の太さ</value></data>
+  <data name="PropertyLineType" xml:space="preserve"><value>線種</value></data>
+  <data name="ByLayer" xml:space="preserve"><value>ByLayer</value></data>
+  <data name="PropertiesTitleFormat" xml:space="preserve"><value>プロパティ — {0} 個選択</value></data>
+  <data name="Apply" xml:space="preserve"><value>適用</value></data>
+  <data name="Cancel" xml:space="preserve"><value>キャンセル</value></data>
+  <data name="InvalidLineWeight" xml:space="preserve"><value>線の太さは正の数で指定してください。</value></data>
+  <data name="TextContent" xml:space="preserve"><value>文字列</value></data>
+  <data name="TextHeight" xml:space="preserve"><value>文字高さ</value></data>
+  <data name="RotationDegrees" xml:space="preserve"><value>回転角（度）</value></data>
+  <data name="TextDialogTitle" xml:space="preserve"><value>文字</value></data>
+  <data name="Create" xml:space="preserve"><value>作成</value></data>
+  <data name="InsertBlock" xml:space="preserve"><value>ブロック</value></data>
+  <data name="InsertScale" xml:space="preserve"><value>尺度</value></data>
+  <data name="InsertDialogTitle" xml:space="preserve"><value>ブロックを挿入</value></data>
+  <data name="Continue" xml:space="preserve"><value>続行</value></data>
+  <data name="InspectorPropertySummaryFormat" xml:space="preserve"><value>レイヤー: {0}   色: {1}   線の太さ: {2}   線種: {3}</value></data>
+</root>
