@@ -1,7 +1,7 @@
-using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using UCAD.Core.Geometry;
 using UCAD.Core.Interaction;
 using Windows.System;
@@ -10,14 +10,41 @@ namespace UCAD.Views;
 
 public sealed partial class CadViewport
 {
+    private static readonly IntPtr ArrowCursorId = new(32512);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr SetCursor(IntPtr hCursor);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr LoadCursor(IntPtr hInstance, IntPtr lpCursorName);
+
     private void CadViewport_Loaded(object sender, RoutedEventArgs e)
     {
         Loaded -= CadViewport_Loaded;
 
-        // Keep the native arrow out of the drawing surface. The Win2D viewport draws
-        // the adjustable CAD crosshair/pickbox; the system cross is a small fallback
-        // at the hardware-pointer hotspot rather than a desktop arrow.
-        ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.Cross);
+        // The CAD cursor is rendered entirely by Win2D. Do not layer a Windows
+        // arrow/cross on top of the pickbox: that produces the double-cursor
+        // appearance seen in v0.4.1 acceptance builds. These handlers run after
+        // the normal Canvas pointer handlers and suppress the native cursor while
+        // the pointer is inside the drawing surface.
+        Canvas.PointerEntered += Canvas_HideNativeCursor;
+        Canvas.PointerMoved += Canvas_HideNativeCursor;
+        Canvas.PointerPressed += Canvas_HideNativeCursor;
+        Canvas.PointerReleased += Canvas_HideNativeCursor;
+        Canvas.PointerWheelChanged += Canvas_HideNativeCursor;
+        Canvas.PointerExited += Canvas_RestoreNativeCursor;
+    }
+
+    private static void Canvas_HideNativeCursor(object sender, PointerRoutedEventArgs e) =>
+        _ = SetCursor(IntPtr.Zero);
+
+    private static void Canvas_RestoreNativeCursor(object sender, PointerRoutedEventArgs e)
+    {
+        var arrow = LoadCursor(IntPtr.Zero, ArrowCursorId);
+        if (arrow != IntPtr.Zero)
+        {
+            _ = SetCursor(arrow);
+        }
     }
 
     private static bool ShiftSelection(PointerRoutedEventArgs e) =>
