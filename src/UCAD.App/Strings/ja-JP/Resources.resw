@@ -58,7 +58,7 @@
   <data name="ActiveCommandLabel.Text" xml:space="preserve"><value>実行中コマンド</value></data>
   <data name="UndoAvailableLabel.Text" xml:space="preserve"><value>元に戻せる</value></data>
   <data name="RedoAvailableLabel.Text" xml:space="preserve"><value>やり直せる</value></data>
-  <data name="V04FoundationHint.Text" xml:space="preserve"><value>v0.3.7 で HiDPI とワークスペースの視覚基盤を固定し、v0.4.0 では既存の CadWorkspaceSession 境界に選択・スナップ・直交を接続します。</value></data>
+  <data name="V04FoundationHint.Text" xml:space="preserve"><value>HiDPI とワークスペースの視覚基盤は整備済みです。v0.4.0 では既存の CadWorkspaceSession 境界に選択・スナップ・直交を接続します。</value></data>
   <data name="Inspector_None" xml:space="preserve"><value>—</value></data>
   <data name="Inspector_Yes" xml:space="preserve"><value>はい</value></data>
   <data name="Inspector_No" xml:space="preserve"><value>いいえ</value></data>
