@@ -199,14 +199,14 @@ public sealed partial class MainWindow
     {
         var title = GetString("Settings_Nav_Title");
         var start = GetString("Start_TabTitle");
-        var file = ShellString("File");
+        var file = LocalizationService.Current.GetShellString("File");
         App.WriteStartupEvent($"Localization probe [{expectedLanguage}]: Settings_Nav_Title='{title}' | Start_TabTitle='{start}' | ShellLive/File='{file}'");
 
         if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(start) || string.IsNullOrWhiteSpace(file))
         {
             return false;
         }
-        if (title.StartsWith("Settings_", StringComparison.Ordinal) || start == "Start_TabTitle" || file == "File")
+        if (title.StartsWith("Settings_", StringComparison.Ordinal) || start == "Start_TabTitle")
         {
             return false;
         }
