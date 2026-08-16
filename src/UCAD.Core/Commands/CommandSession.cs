@@ -18,6 +18,8 @@ public sealed class CommandSession
         _registry = registry ?? throw new ArgumentNullException(nameof(registry));
     }
 
+    public event EventHandler? Changed;
+
     public CadCommandDefinition? ActiveCommand { get; private set; }
 
     public CadCommandDefinition? PreviousCommand { get; private set; }
@@ -38,6 +40,7 @@ public sealed class CommandSession
 
         ActiveCommand = command;
         PreviousCommand = command;
+        Changed?.Invoke(this, EventArgs.Empty);
         return new CommandStartResult(CommandStartStatus.Started, command, token.Trim());
     }
 
@@ -49,10 +52,19 @@ public sealed class CommandSession
         }
 
         ActiveCommand = PreviousCommand;
+        Changed?.Invoke(this, EventArgs.Empty);
         return new CommandStartResult(CommandStartStatus.Started, PreviousCommand, PreviousCommand.Name);
     }
 
-    public void Complete() => ActiveCommand = null;
+    public void Complete()
+    {
+        if (ActiveCommand is null)
+        {
+            return;
+        }
+        ActiveCommand = null;
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
 
     public bool Cancel()
     {
@@ -62,6 +74,7 @@ public sealed class CommandSession
         }
 
         ActiveCommand = null;
+        Changed?.Invoke(this, EventArgs.Empty);
         return true;
     }
 }
