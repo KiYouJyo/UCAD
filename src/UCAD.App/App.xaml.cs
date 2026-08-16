@@ -32,6 +32,7 @@ public partial class App : Application
             mainWindow.RefreshLocalization();
             mainWindow.EnsureInteractionUiInitialized();
             mainWindow.ScheduleLocalizationSmoke();
+            mainWindow.ScheduleInteractionSmoke();
             _window = mainWindow;
             WriteStartupEvent("MainWindow constructed and localized");
             _window.Activate();
