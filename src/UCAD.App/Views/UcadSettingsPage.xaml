@@ -14,10 +14,10 @@
             Background="{StaticResource UcadNavigationBrush}"
             BorderBrush="{StaticResource UcadDividerBrush}"
             BorderThickness="0,0,1,0">
-            <Grid Margin="16,26,16,12">
+            <Grid Margin="16,26,16,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="16" />
+                    <RowDefinition Height="28" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="6" />
                     <RowDefinition Height="Auto" />
