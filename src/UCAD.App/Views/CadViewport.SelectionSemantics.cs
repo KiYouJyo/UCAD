@@ -39,9 +39,7 @@ public sealed partial class CadViewport
         var startScreen = WorldToScreen(_selectionStartWorld);
         var rectangle = CadRect.FromPoints(_selectionStartWorld, endWorld);
         var crossing = _pointerScreen.X < startScreen.X;
-        var ids = CadSelectionQuery.QueryWindow(_document.Entities, rectangle, crossing)
-            .Select(entity => entity.Id)
-            .ToArray();
+        var ids = CadSelectionQuery.QueryWindow(_document.Entities, rectangle, crossing);
 
         if (remove)
         {
