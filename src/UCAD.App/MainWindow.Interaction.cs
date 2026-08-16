@@ -82,7 +82,7 @@ public sealed partial class MainWindow
                 }
 
                 session.Interaction.ObjectSnapEnabled = true;
-                session.Interaction.ObjectSnapModes = ObjectSnapMode.Endpoint | ObjectSnapMode.Midpoint | ObjectSnapMode.Intersection;
+                session.Interaction.ObjectSnapModes = ObjectSnapMode.Endpoint | ObjectSnapMode.Midpoint | ObjectSnapMode.Center | ObjectSnapMode.Intersection;
                 var snap = ObjectSnapResolver.Resolve(
                     session.Document.Entities,
                     new CadPoint(0.1, 0.1),
@@ -91,6 +91,16 @@ public sealed partial class MainWindow
                 if (snap is null || snap.Kind != ObjectSnapKind.Endpoint || (snap.Point - new CadPoint(0, 0)).Length > 1e-8)
                 {
                     throw new InvalidOperationException("Interaction smoke endpoint OSNAP failed.");
+                }
+
+                var centerSnap = ObjectSnapResolver.Resolve(
+                    session.Document.Entities,
+                    new CadPoint(20.1, 0.1),
+                    0.5,
+                    ObjectSnapMode.Center);
+                if (centerSnap is null || centerSnap.Kind != ObjectSnapKind.Center || (centerSnap.Point - circle.Center).Length > 1e-8)
+                {
+                    throw new InvalidOperationException("Interaction smoke center OSNAP failed.");
                 }
 
                 session.Interaction.OrthoEnabled = true;
@@ -169,6 +179,17 @@ public sealed partial class MainWindow
         };
         session.CommandSession.Changed += (_, _) =>
         {
+            // ERASE is the first selection-backed edit command. Handling the registered
+            // command at the shared CommandSession boundary lets keyboard Delete, typed
+            // ERASE/E/DELETE, and command search all converge on the same implementation
+            // without creating a second command model in the shell.
+            if (session.CommandSession.ActiveCommand?.Name == "ERASE")
+            {
+                ExecuteEraseSelection(session);
+                session.CommandSession.Complete();
+                return;
+            }
+
             // MainWindow's command-dispatch stack can still update legacy Inspector rows
             // after CommandSession changes. Defer the v0.4 selection Inspector refresh so
             // it wins after that synchronous stack without coupling Core back to WinUI.
@@ -187,6 +208,21 @@ public sealed partial class MainWindow
                 RefreshInteractionUi(session);
             }
         };
+    }
+
+    private void ExecuteEraseSelection(CadWorkspaceSession session)
+    {
+        var selectedIds = session.Interaction.Selection.SelectedIds.ToArray();
+        if (selectedIds.Length == 0)
+        {
+            SetSessionStatus(session, ShellString("StatusEraseNothing"));
+            return;
+        }
+
+        var removed = session.Document.RemoveRange(selectedIds);
+        SetSessionStatus(session, removed > 0
+            ? string.Format(ShellString("StatusEraseCountFormat"), removed)
+            : ShellString("StatusEraseNothing"));
     }
 
     private void OsnapStatusButton_Click(object sender, RoutedEventArgs e)
@@ -231,6 +267,13 @@ public sealed partial class MainWindow
                 ? ShellString("StatusOrthoOnMessage")
                 : ShellString("StatusOrthoOffMessage"));
             RefreshInteractionUi(session);
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == VirtualKey.Delete && !session.CommandSession.IsActive)
+        {
+            StartToolbarCommand("ERASE");
             e.Handled = true;
             return;
         }
