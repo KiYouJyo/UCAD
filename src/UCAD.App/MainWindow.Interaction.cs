@@ -43,7 +43,15 @@ public sealed partial class MainWindow
 
     internal void ScheduleInteractionSmoke()
     {
-        if (!string.Equals(Environment.GetEnvironmentVariable("UCAD_INTERACTION_SMOKE"), "1", StringComparison.Ordinal))
+        var explicitInteractionSmoke = string.Equals(
+            Environment.GetEnvironmentVariable("UCAD_INTERACTION_SMOKE"),
+            "1",
+            StringComparison.Ordinal);
+        var startupSmoke = string.Equals(
+            Environment.GetEnvironmentVariable("UCAD_STARTUP_SMOKE"),
+            "1",
+            StringComparison.Ordinal);
+        if (!explicitInteractionSmoke && !startupSmoke)
         {
             return;
         }
