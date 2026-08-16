@@ -80,16 +80,21 @@ UCAD aims to become a lightweight Windows-native 2D CAD focused on architecture 
 
 ## v0.5 — Modify
 
-- [ ] MOVE
-- [ ] COPY
-- [ ] ROTATE
-- [ ] SCALE
-- [ ] MIRROR
-- [ ] OFFSET
-- [ ] TRIM
-- [ ] EXTEND
+- [x] MOVE
+- [x] COPY
+- [x] ROTATE
+- [x] SCALE
+- [x] MIRROR
+- [x] OFFSET
+- [x] TRIM
+- [x] EXTEND
+- [x] shared identity-preserving transform pipeline
+- [x] undoable `Replace` / `ReplaceRange` edit transactions
+- [x] command-first and preselection workflows
+- [x] OSNAP-aware Modify point input and transient previews
+- [x] dedicated real-process Modify Smoke coverage
 
-**Project gate:** UCAD should not expand into architecture/GIS convenience features until the v0.5 drawing-editing loop feels coherent and reliable.
+**Project gate:** UCAD should not expand into architecture/GIS convenience features until the v0.5 drawing-editing loop feels coherent and reliable. v0.5.0 satisfies the implementation side of this gate; real-desktop acceptance of the eight Modify commands remains required before release.
 
 ## v0.6–v1.0
 
