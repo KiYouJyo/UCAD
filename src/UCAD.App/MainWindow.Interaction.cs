@@ -271,46 +271,16 @@ public sealed partial class MainWindow
         RefreshInteractionUi(session);
     }
 
-    private void Interaction_DocumentTabsSelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        RefreshActiveInteractionUi();
-    }
-
-    private void Interaction_LayoutUpdated(object? sender, object e)
-    {
-        if (_interactionLocalizationGeneration == LocalizationService.Current.Generation)
-        {
-            return;
-        }
-        _interactionLocalizationGeneration = LocalizationService.Current.Generation;
-        RefreshActiveInteractionUi();
-    }
-
     private void Interaction_RootKeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (ActiveSession is not CadWorkspaceSession session)
-        {
-            return;
-        }
-
-        if (e.Key == VirtualKey.Escape)
-        {
-            if (session.Viewport.CancelSelectionGesture())
-            {
-                e.Handled = true;
-                return;
-            }
-            if (!session.Interaction.Selection.IsEmpty)
-            {
-                session.Interaction.Selection.Clear();
-                e.Handled = true;
-            }
-            return;
-        }
+        if (ActiveSession is not CadWorkspaceSession session) return;
 
         if (e.Key == VirtualKey.F3)
         {
             session.Interaction.ObjectSnapEnabled = !session.Interaction.ObjectSnapEnabled;
+            SetSessionStatus(session, session.Interaction.ObjectSnapEnabled
+                ? ShellString("StatusOsnapOnMessage")
+                : ShellString("StatusOsnapOffMessage"));
             RefreshInteractionUi(session);
             e.Handled = true;
             return;
@@ -319,71 +289,150 @@ public sealed partial class MainWindow
         if (e.Key == VirtualKey.F8)
         {
             session.Interaction.OrthoEnabled = !session.Interaction.OrthoEnabled;
+            SetSessionStatus(session, session.Interaction.OrthoEnabled
+                ? ShellString("StatusOrthoOnMessage")
+                : ShellString("StatusOrthoOffMessage"));
             RefreshInteractionUi(session);
             e.Handled = true;
             return;
         }
 
-        if (e.Key == VirtualKey.Delete)
+        if (e.Key == VirtualKey.Delete && !session.CommandSession.IsActive)
         {
-            if (FocusManager.GetFocusedElement(RootLayout.XamlRoot) is TextBox)
+            // Delete inside command/text input edits text; it must not erase drawing
+            // selection merely because the root listens with handledEventsToo.
+            var focused = FocusManager.GetFocusedElement(RootLayout.XamlRoot);
+            if (focused is Microsoft.UI.Xaml.Controls.TextBox)
             {
                 return;
             }
 
-            ExecuteEraseSelection(session);
+            StartToolbarCommand("ERASE");
             e.Handled = true;
+            return;
         }
+
+        if (e.Key == VirtualKey.Escape && !session.CommandSession.IsActive)
+        {
+            // First Esc cancels an in-progress two-click/window gesture. A subsequent Esc
+            // clears the completed noun/verb selection set, matching CAD expectations.
+            if (session.Viewport.CancelSelectionGesture())
+            {
+                SetSessionStatus(session, GetString("Status_Ready"));
+                e.Handled = true;
+                return;
+            }
+
+            if (!session.Interaction.Selection.IsEmpty)
+            {
+                session.Interaction.Selection.Clear();
+                SetSessionStatus(session, GetString("Status_Ready"));
+                RefreshInteractionUi(session);
+                e.Handled = true;
+            }
+        }
+    }
+
+    private void Interaction_LayoutUpdated(object? sender, object e)
+    {
+        var generation = LocalizationService.Current.Generation;
+        if (generation == _interactionLocalizationGeneration)
+        {
+            return;
+        }
+        _interactionLocalizationGeneration = generation;
+        RefreshActiveInteractionUi();
     }
 
     private void RefreshActiveInteractionUi()
     {
-        if (ActiveSession is not CadWorkspaceSession session)
+        if (ActiveSession is CadWorkspaceSession session)
         {
-            EntityCountValue.Text = "0";
-            OsnapStatusButton.IsChecked = false;
-            OrthoStatusButton.IsChecked = false;
-            NoSelectionText.Text = ShellString("NoSelection");
+            EnsureSessionInteractionSubscribed(session);
+            RefreshInteractionUi(session);
             return;
         }
 
-        EnsureSessionInteractionSubscribed(session);
-        RefreshInteractionUi(session);
+        SetStatusButtonState(OsnapStatusButton, false, enabled: false);
+        SetStatusButtonState(OrthoStatusButton, false, enabled: false);
     }
 
     private void RefreshInteractionUi(CadWorkspaceSession session)
     {
-        EntityCountValue.Text = session.Document.Entities.Count.ToString();
-        OsnapStatusButton.IsChecked = session.Interaction.ObjectSnapEnabled;
-        OrthoStatusButton.IsChecked = session.Interaction.OrthoEnabled;
+        if (!ReferenceEquals(ActiveSession, session)) return;
+
+        SetStatusButtonState(OsnapStatusButton, session.Interaction.ObjectSnapEnabled, enabled: true);
+        SetStatusButtonState(OrthoStatusButton, session.Interaction.OrthoEnabled, enabled: true);
         RefreshInspectorSelection(session);
+    }
+
+    private static void SetStatusButtonState(Microsoft.UI.Xaml.Controls.Button button, bool active, bool enabled)
+    {
+        button.IsEnabled = enabled;
+        button.Opacity = enabled ? 1.0 : 0.45;
+        button.Background = active
+            ? (Brush)Application.Current.Resources["UcadAccentSelectedBrush"]
+            : new SolidColorBrush(Microsoft.UI.Colors.Transparent);
     }
 
     private void RefreshInspectorSelection(CadWorkspaceSession session)
     {
-        var selected = session.Interaction.Selection.SelectedEntities.ToArray();
-        if (selected.Length == 0)
+        var selected = session.Interaction.Selection.SelectedEntities;
+        if (selected.Count == 0)
         {
-            NoSelectionText.Text = ShellString("NoSelection");
+            NoSelectionText.Text = ShellString("InspectorNoSelection");
+            SelectionUnavailableText.Text = ShellString("InspectorSelectionHelp");
+            DocumentSectionText.Text = ShellString("InspectorDocument");
+            EntityCountLabel.Text = ShellString("InspectorEntityCount");
+            EntityCountValue.Text = session.Document.Entities.Count.ToString();
+            ActiveCommandLabel.Text = ShellString("InspectorActiveCommand");
+            ActiveCommandValue.Text = session.CommandSession.ActiveCommand?.Name ?? GetString("Inspector_None");
+            UndoAvailableLabel.Text = ShellString("InspectorUndoAvailable");
+            UndoAvailableValue.Text = session.Document.CanUndo ? GetString("Inspector_Yes") : GetString("Inspector_No");
+            RedoAvailableLabel.Text = ShellString("InspectorRedoAvailable");
+            RedoAvailableValue.Text = session.Document.CanRedo ? GetString("Inspector_Yes") : GetString("Inspector_No");
+            V04FoundationHint.Text = ShellString("InspectorSelectionWindowHint");
             return;
         }
 
-        if (selected.Length > 1)
-        {
-            NoSelectionText.Text = string.Format(ShellString("MultipleSelectionFormat"), selected.Length);
-            return;
-        }
-
-        var entity = selected[0];
-        NoSelectionText.Text = entity switch
-        {
-            LineEntity line => string.Format(ShellString("InspectorLineFormat"), line.Id.ToString("N")[..8], line.Length),
-            PolylineEntity polyline => string.Format(ShellString("InspectorPolylineFormat"), polyline.Id.ToString("N")[..8], polyline.Points.Count, polyline.Length),
-            CircleEntity circle => string.Format(ShellString("InspectorCircleFormat"), circle.Id.ToString("N")[..8], circle.Radius),
-            ArcEntity arc => string.Format(ShellString("InspectorArcFormat"), arc.Id.ToString("N")[..8], arc.Radius, arc.SweepAngleDegrees),
-            _ => string.Format(ShellString("InspectorEntityFormat"), entity.EntityType, entity.Id.ToString("N")[..8])
-        };
+        var first = selected[0];
+        NoSelectionText.Text = selected.Count == 1
+            ? EntityTypeName(first)
+            : string.Format(ShellString("InspectorMultipleSelectionFormat"), selected.Count);
+        SelectionUnavailableText.Text = selected.Count == 1
+            ? EntityGeometrySummary(first)
+            : ShellString("InspectorMixedSelection");
+        DocumentSectionText.Text = ShellString("InspectorSelection");
+        EntityCountLabel.Text = ShellString("InspectorSelectedCount");
+        EntityCountValue.Text = selected.Count.ToString();
+        ActiveCommandLabel.Text = ShellString("InspectorEntityType");
+        ActiveCommandValue.Text = selected.Count == 1 ? EntityTypeName(first) : ShellString("InspectorMixed");
+        UndoAvailableLabel.Text = ShellString("InspectorGeometry");
+        UndoAvailableValue.Text = selected.Count == 1 ? EntityGeometrySummary(first) : "—";
+        RedoAvailableLabel.Text = ShellString("InspectorEntityId");
+        RedoAvailableValue.Text = selected.Count == 1 ? first.Id.ToString("N")[..8] : "—";
+        V04FoundationHint.Text = ShellString("InspectorSelectionWindowHint");
     }
 
-    private string ShellString(string key) => LocalizationService.Current.GetShellString(key);
+    private string EntityTypeName(ICadEntity entity) => entity switch
+    {
+        LineEntity => ShellString("EntityLine"),
+        PolylineEntity => ShellString("EntityPolyline"),
+        CircleEntity => ShellString("EntityCircle"),
+        ArcEntity => ShellString("EntityArc"),
+        _ => entity.GetType().Name
+    };
+
+    private string EntityGeometrySummary(ICadEntity entity)
+    {
+        var provider = NumericFormatProvider();
+        return entity switch
+        {
+            LineEntity line => string.Format(provider, ShellString("GeometryLineFormat"), line.Length),
+            PolylineEntity polyline => string.Format(provider, ShellString("GeometryPolylineFormat"), polyline.Points.Count, polyline.Length),
+            CircleEntity circle => string.Format(provider, ShellString("GeometryCircleFormat"), circle.Radius),
+            ArcEntity arc => string.Format(provider, ShellString("GeometryArcFormat"), arc.Radius, Math.Abs(arc.SweepAngleRadians) * 180 / Math.PI),
+            _ => "—"
+        };
+    }
 }
