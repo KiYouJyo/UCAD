@@ -9,106 +9,89 @@
 
 ## 当前定位
 
-UCAD 目标是建立一套 Windows 原生、接近 AutoCAD 操作习惯、面向建筑与规划高频二维制图任务的轻量 CAD。坚持 DXF-first、2D-first，不以复制完整 AutoCAD 为目标。
+UCAD 目标是建立一套 Windows 原生、接近 AutoCAD 操作习惯、面向建筑与规划高频二维制图任务的轻量 CAD。坚持 **2D-first / DXF-first**，不以复制完整 AutoCAD 为目标。
 
-**当前候选版本 v0.5.0 — Modify Foundation。** 本版本不继续扩张 UI，而是在 v0.4.x Selection / OSNAP / Ortho 基础上补齐第一组真正可用的修改命令：MOVE / COPY / ROTATE / SCALE / MIRROR / OFFSET / TRIM / EXTEND，并建立统一的几何变换、修改事务和实时预览输入链。
+**当前验收候选版本：v0.7.0 — CAD Authoring Foundation。** 该候选版把 v0.5 Modify、v0.6 Layers & Properties、v0.7 Annotation / Hatch / Blocks 合并为一次验收，在 v0.4.1 的选择、OSNAP、Ortho 与 CAD 光标基础上完成第一套连续的“绘制 → 选择 → 修改 → 分层 → 标注 → 复用”工作流。
 
 ## 安装
 
 正式版本从 [GitHub Releases](https://github.com/KiYouJyo/UCAD/releases/latest) 下载：
 
-- `UCAD-v<version>-x64-one-click.zip`：普通用户推荐。
-- `UCAD_<packageVersion>_x64.msixbundle`：高级用户直接侧载。
+- `UCAD-v<version>-x64-one-click.zip`：普通用户推荐；
+- `UCAD_<packageVersion>_x64.msixbundle`：高级用户直接侧载；
 - `SHA256SUMS.txt`：完整性校验。
 
-首次 one-click 安装仅在建立 `LocalMachine\TrustedPeople` 公钥信任时触发一次 UAC；MSIX 本体仍在当前用户上下文安装。
+PR 验收阶段会生成与正式发布证书一致的 release-signed acceptance package，用于合并前实机验证。
 
-## 工作区与页面
+## 工作区
 
-UCAD 明确区分三种标签内容：
+UCAD 保留三种标签内容：Drawing、Start、Settings。每个 Drawing 都有独立的 `CadDocument`、`CadInteractionState`、`CadViewport` 与 `CommandSession`，因此图形、Undo/Redo、选择、OSNAP、Ortho、图层、命令与视口状态彼此隔离。
 
-- **Drawing**：显示 Category Bar、Tool Shelf、Tool Rail、CAD Canvas、Inspector、Command Line 与 Status Bar。
-- **Start**：作为 CAD 新标签页 / Start Center。默认情况下标题栏 `+` 进入 Start，点击“新建图纸”才创建真正的 `CadWorkspaceSession`；关闭“新标签页显示开始页”后，`+` 会直接创建空白 Drawing。
-- **Settings**：作为单例设置标签；不与 CAD Tool Rail / Inspector / Command Line / Status Bar 同时出现。
+v0.4.1 的 CAD 交互继续作为基线：两点或拖拽 Window/Crossing、PICKADD 式累加选择、Shift 减选、透明 Windows 指针 + Win2D 十字准线/Pickbox、F3 OSNAP、F8 Ortho、Delete/ERASE 与实时 Inspector。
 
-每个 Drawing 都有独立的 `CadDocument`、`CadInteractionState`、`CadViewport` 与 `CommandSession`，因此多文档的图形、Undo/Redo、选择、OSNAP、Ortho、命令与视口状态彼此独立。
+## v0.5 — Modify
 
-## CAD 交互
+- **MOVE / M**：基点 → 第二点；支持 OSNAP / F8 Ortho / 实时预览；
+- **COPY / CO / CP**：生成独立新实体；
+- **ROTATE / RO**：鼠标方向或数字角度；
+- **SCALE / SC**：鼠标或数字比例；
+- **MIRROR / MI**：两点镜像轴，可保留或删除源对象；
+- **OFFSET / O**：距离 → 对象 → 方向侧；基础覆盖 Line / Polyline / Circle / Arc；
+- **TRIM / TR**：Quick Trim，其他可见图形作为边界，可连续修剪；
+- **EXTEND / EX**：向最近有效边界连续延伸。
 
-- 单击对象选择；继续单击其他对象可累加多选。
-- Shift + 单击或 Shift + 框选可从当前选择集中移除对象。
-- 空白处单击第一角后可松开鼠标，移动预览选框，再次单击提交；按住拖拽后松开的快速框选仍然保留。
-- 左→右为 **Window**：只选择完全包含的对象；右→左为 **Crossing**：包含或相交的对象都会选择。
-- 完成一个空的非 Shift 选框会清除当前选择；Esc 优先取消尚未完成的选框，再清除已完成选择。
-- 绘图区隐藏 Windows 原生指针，仅保留 Win2D 绘制的十字准线 + 中央 Pickbox；十字准线 5–100%，Pickbox 3–20 px（默认 10 px），OSNAP aperture 3–50 px（默认 10 px），均可在“设置 → 输入与交互 → CAD 光标”实时调整。
-- **F3 / 状态栏 OSNAP**：切换对象捕捉；当前基础集合为端点、中点、圆心、交点。
-- **F8 / 状态栏 ORTHO**：切换 LINE / PLINE 以及适用 Modify 点位输入的水平/垂直约束。
-- **Delete / ERASE / E / DELETE**：删除当前选择；多对象删除是一个 Undo 步骤。
-- Inspector 会读取真实的 Line / Polyline / Circle / Arc 选择，显示类型、数量、基础几何与实体 ID。
+支持“先选对象 → 命令”和“命令 → 选择 → Enter”两种 CAD 顺序。编辑使用统一的 `CadEntityTransform`、`CadOffset`、`CadTrimExtend` 与 `CadDocument.Replace/ReplaceRange`，每次提交进入统一 Undo/Redo 历史。
 
-## v0.5.0 Modify
+## v0.6 — Layers & Properties
 
-- 支持**先选对象再执行命令**，也支持**先启动命令再完成选择并按 Enter**。
-- MOVE / COPY：基点 + 第二点；画布点位支持 OSNAP，F8 Ortho 可约束位移方向。
-- ROTATE：基点后可点击指定方向，或在命令行输入角度（度）。
-- SCALE：基点后可输入正比例因子，或通过画布点位确定比例。
-- MIRROR：两点定义镜像轴，默认保留源对象，也可选择删除源对象。
-- OFFSET：输入距离 → 选择对象 → 指定偏移侧；基础支持 Line / Polyline / Circle / Arc。
-- TRIM / EXTEND：采用快速模式，当前其他实体直接作为边界，可连续选择目标，Enter 结束。
-- 变换和 OFFSET 使用瞬时预览；几何算法位于 Core，不依赖 WinUI 事件代码。
-- 实际修改默认保留实体 ID，COPY / 保留源的 MIRROR / OFFSET 等新对象获得新 ID。
-- MOVE / ROTATE / SCALE / 删除源的 MIRROR 使用 `ReplaceRange`，TRIM / EXTEND 使用 `Replace`，从而保持一次操作对应一次 Undo 事务。
+- 文档级图层表，内置并保护 `0` 图层；
+- 当前图层决定新建对象的默认归属；
+- 创建、重命名、删除、切换当前图层；
+- 图层可见性、锁定、颜色、线宽、线型元数据；
+- 对象可覆盖图层、颜色、线宽、线型，颜色/线宽支持 **ByLayer**；
+- 隐藏图层不绘制、不参与 OSNAP；隐藏/锁定图层不参与选择与 Modify 拾取；
+- `LAYER / LA` 打开图层管理器；`CHPROP / CH` 修改当前选择属性；
+- 图层表、当前图层与对象属性也纳入文档 Undo/Redo。
+
+## v0.7 — Annotation, Hatch & Blocks
+
+- **TEXT / T**：单行文字，插入点、高度、旋转角；
+- **DIM / DLI / DIMLINEAR**：基础对齐线性标注；
+- **HATCH / H**：为已选择的一条闭合 Polyline 或 Circle 创建 Solid 填充；
+- **BLOCK / B**：把当前选择定义为可复用图块并指定基点；
+- **INSERT / I**：选择图块、比例、旋转角并指定插入点；
+- **EXPLODE / X**：分解一个 Block Reference，并作为一次 Undoable Replace 事务。
+
+Text / Dimension / Hatch / Block Reference 已进入统一渲染、选择几何、Grip、OSNAP/相交查询与 Modify transform 基础管线。
 
 ## 当前命令
 
-| 命令 | 别名 | 功能 |
-| --- | --- | --- |
-| `LINE` | `L` | 连续直线 |
-| `PLINE` | `PL` | 多段线 |
-| `RECTANGLE` | `REC` | 两角点矩形 |
-| `CIRCLE` | `C` | 圆心/半径圆 |
-| `ARC` | `A` | 三点圆弧 |
-| `MOVE` | `M` | 移动选择对象 |
-| `COPY` | `CO`, `CP` | 复制选择对象 |
-| `ROTATE` | `RO` | 绕基点旋转 |
-| `SCALE` | `SC` | 绕基点缩放 |
-| `MIRROR` | `MI` | 两点轴镜像 |
-| `OFFSET` | `O` | 按距离与侧点偏移 |
-| `TRIM` | `TR` | 快速修剪 |
-| `EXTEND` | `EX` | 快速延伸 |
-| `ERASE` | `E`, `DELETE` | 删除当前选择 |
-| `UNDO` | `U` | 撤销 |
-| `REDO` | — | 重做 |
-| `CLEAR` | — | 清空图形 |
-| `RESETVIEW` | `RV` | 重置视图 |
+| 类别 | 命令 |
+| --- | --- |
+| Draw | `LINE (L)`, `PLINE (PL)`, `RECTANGLE (REC)`, `CIRCLE (C)`, `ARC (A)`, `HATCH (H)` |
+| Modify | `MOVE (M)`, `COPY (CO/CP)`, `ROTATE (RO)`, `SCALE (SC)`, `MIRROR (MI)`, `OFFSET (O)`, `TRIM (TR)`, `EXTEND (EX)`, `EXPLODE (X)` |
+| Annotate | `TEXT (T)`, `DIM (DLI/DIMLINEAR)` |
+| Layers / Properties | `LAYER (LA)`, `CHPROP (CH)` |
+| Blocks | `BLOCK (B)`, `INSERT (I)` |
+| Edit / View | `ERASE (E/DELETE)`, `UNDO (U)`, `REDO`, `CLEAR`, `RESETVIEW (RV)` |
 
-所有命令入口统一路由到 `CommandRegistry → CommandSession → CAD Core`。Modify 分类已由占位状态转为真实能力；Annotate / Layer / Block / Measure 等尚无底层能力的分类继续保持不可用。
+所有命令仍统一经过 `CommandRegistry → CommandSession → CadWorkspaceSession / CadDocument`，不建立第二套命令、选择或历史系统。
 
-## Settings 与显示基线
+## 三语与显示基线
 
-- WinUI 3 / Windows App SDK 原生窗口，`PerMonitorV2` 高 DPI awareness；
-- Figma 1440×900 Frame 继续作为视觉 SSOT，但当前功能里程碑不以像素级 UI 精校作为发布门槛；
-- App Theme 与 CAD Canvas Theme 独立生效；
-- 栅格显示/强度、光标中心缩放、中键平移、滚轮方向、选择预览和坐标格式进入运行时逻辑；
-- “默认对象捕捉 / 默认捕捉类型 / 默认正交”会初始化之后新建的 Drawing；现有 Drawing 的 F3/F8 状态不会被默认设置强制覆盖；
-- 尚无底层能力的 Restore Session、手动 UI Scale、自动更新、最近文件清理等不会显示成“已实现”；
-- 设置集中由 `SettingsService` / `AppSettings` 管理，并保存到 `%LOCALAPPDATA%\UCAD\settings.json`。
+应用使用简体中文（zh-CN）、日本語（ja-JP）、English（en-US）三语资源。显式 MRT Core `ResourceContext` 支持**无需重启**切换当前 Window、Start、Settings、Drawing shell 与新增 authoring dialogs/prompts；现有图形、选择、Undo/Redo、图层与视口状态不会被重建。
 
-## 三语支持
+WinUI 3 / Windows App SDK 保持 `PerMonitorV2`；Figma 1440×900 Frame 与关键 Design Tokens 继续作为 shell 视觉 SSOT，但 v0.5–v0.7 的发布门槛优先保证 CAD 功能与交互正确性，不重新开启像素级 UI 大改。
 
-应用与仓库使用简体中文（zh-CN）、日本語（ja-JP）、English（en-US）三语资源。独立 MRT Core `ResourceContext` 支持**无需重启**切换语言，并立即刷新当前 Window、Start、Settings、文档标签、菜单、Inspector、命令区、Modify 阶段提示与状态栏；现有图形、选择会话、Undo/Redo 与视口状态不会因为语言切换被重建。
+## 验证
 
-## 仓库结构
+必需 CI 包括 Core tests、app-build、startup-smoke、Interaction Smoke、Localization Smoke、Modify Smoke、Authoring Smoke、MSIX / one-click package validation、版本 SSOT、PerMonitorV2、透明 CAD cursor 与三语资源 parity。
 
-```text
-src/UCAD.Core/          几何、实体、文档历史、命令、交互与 Modify 核心
-src/UCAD.App/           WinUI 3 / Win2D Shell、页面、交互、渲染与 MSIX
-tests/                  自动化测试
-packaging/              一键安装与发布校验
-release/                发布 SSOT 元数据
-docs/                   架构与三语 Release Notes
-.github/workflows/       CI 与发布工作流
-```
+其中 Modify Smoke 在一个真实 UCAD 进程内依次执行八条 v0.5 修改命令；Authoring Smoke 在真实进程内验证 Layers + Properties + Text + Dimension + Hatch + Block + Insert + Explode。
+
+## 后续
+
+v0.8 起继续推进 DXF-first import/export、print/PDF、建筑辅助、规划地块/指标、GIS exchange 与大型图纸性能回归。1.x 明确不以 3D/BIM、渲染、点云、完整 DWG/AutoCAD 插件兼容为目标。
 
 ## 开发
 
@@ -118,17 +101,12 @@ dotnet build src/UCAD.App/UCAD.App.csproj -c Debug -p:Platform=x64 -r win-x64
 dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release
 ```
 
-CI 强制覆盖 Core tests、app-build、真实 startup-smoke、MSIX/package validation、三语资源契约、版本 SSOT、PerMonitorV2、Unicode 占位图标扫描与冻结的 Figma 关键 Design Tokens。Interaction Smoke 在真实 UCAD 内验证 Selection、ERASE、OSNAP、Ortho 与 Inspector；Localization Smoke 在同一进程依次切换 zh-CN → ja-JP → en-US；**Modify Smoke** 则在同一真实进程依次执行 MOVE + COPY + ROTATE + SCALE + MIRROR + OFFSET + TRIM + EXTEND。
-
-像素级 Figma 对照保留在手动 `UI Fidelity Screenshots` 工作流中，不阻塞功能开发或发布。
-
 ## 文档
 
 - [路线图](ROADMAP.md)
 - [架构说明](docs/ARCHITECTURE.md)
 - [发布流程](docs/RELEASE-PROCESS.md)
-- [打包说明](packaging/README.md)
-- [v0.5.0 发布说明](docs/RELEASE-NOTES-v0.5.0.md)
+- [v0.7.0 发布说明](docs/RELEASE-NOTES-v0.7.0.md)
 
 ## 许可证
 
