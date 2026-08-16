@@ -57,7 +57,7 @@ public sealed partial class MainWindow
         if (session.Document.GetEntityProperties(boundary.Id).LayerName != "Smoke")
             throw new InvalidOperationException("Authoring smoke current-layer inheritance failed.");
         session.Document.SetEntityProperties([boundary.Id], properties => properties with { ColorHex = "#FFD040", LineWeight = 0.70 });
-        var boundaryProperties = session.Document.GetEntityProperties(boundary.Id);
+        CadEntityProperties boundaryProperties = session.Document.GetEntityProperties(boundary.Id);
         if (boundaryProperties.ColorHex != "#FFD040" || Math.Abs(boundaryProperties.LineWeight!.Value - 0.70) > 1e-9)
             throw new InvalidOperationException("Authoring smoke entity property edit failed.");
 
