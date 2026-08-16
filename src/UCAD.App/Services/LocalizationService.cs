@@ -1,33 +1,32 @@
-using Microsoft.Windows.Globalization;
-using MrtResourceLoader = Microsoft.Windows.ApplicationModel.Resources.ResourceLoader;
+using System.Globalization;
+using Microsoft.Windows.ApplicationModel.Resources;
 
 namespace UCAD.Services;
 
 /// <summary>
-/// Owns UCAD's runtime language context. ResourceLoader instances capture a resource
-/// context, so they must be recreated after PrimaryLanguageOverride changes.
+/// Owns UCAD's runtime language context. Language selection is expressed through an
+/// explicit MRT Core ResourceContext instead of mutating the process-global language
+/// override. Existing WinUI elements are then refreshed in place by MainWindow.
 /// </summary>
 public sealed class LocalizationService
 {
     private const string DefaultMapName = "Resources";
     private const string V039MapName = "UcadV039";
     private const string LiveReloadNoteKey = "Settings_Language_ReloadNote";
-    private static readonly HashSet<string> SupportedLanguages = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "zh-CN",
-        "ja-JP",
-        "en-US"
-    };
+    private static readonly string[] SupportedLanguages = ["zh-CN", "ja-JP", "en-US"];
 
-    private readonly Dictionary<string, MrtResourceLoader> _loaders = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, ResourceMap?> _maps = new(StringComparer.OrdinalIgnoreCase);
+    private ResourceManager? _resourceManager;
+    private ResourceContext? _resourceContext;
 
     private LocalizationService()
     {
+        CurrentLanguageTag = ResolveSystemLanguage();
     }
 
     public static LocalizationService Current { get; } = new();
 
-    public string AppliedLanguageOverride { get; private set; } = string.Empty;
+    public string CurrentLanguageTag { get; private set; }
 
     public int Generation { get; private set; }
 
@@ -37,29 +36,9 @@ public sealed class LocalizationService
         {
             var settings = SettingsService.Current.Settings;
             return string.Equals(
-                AppliedLanguageOverride,
-                ResolveOverride(settings.DisplayLanguage, settings.FollowSystemLanguage),
+                CurrentLanguageTag,
+                ResolveLanguage(settings.DisplayLanguage, settings.FollowSystemLanguage),
                 StringComparison.OrdinalIgnoreCase);
-        }
-    }
-
-    public string CurrentLanguageTag
-    {
-        get
-        {
-            if (!string.IsNullOrWhiteSpace(AppliedLanguageOverride))
-            {
-                return AppliedLanguageOverride;
-            }
-
-            try
-            {
-                return ApplicationLanguages.Languages.FirstOrDefault() ?? "zh-CN";
-            }
-            catch
-            {
-                return "zh-CN";
-            }
         }
     }
 
@@ -71,33 +50,34 @@ public sealed class LocalizationService
 
     public bool ApplyLanguagePreference(string? displayLanguage, bool followSystemLanguage, bool writeLog = true)
     {
-        var language = ResolveOverride(displayLanguage, followSystemLanguage);
+        var language = ResolveLanguage(displayLanguage, followSystemLanguage);
 
         try
         {
-            ApplicationLanguages.PrimaryLanguageOverride = language;
+            EnsureResourceInfrastructure();
+            var context = _resourceManager!.CreateResourceContext();
+            context.QualifierValues[KnownResourceQualifierName.Language] = language;
+            _resourceContext = context;
+            CurrentLanguageTag = language;
+            _maps.Clear();
+            Generation++;
+
+            if (writeLog)
+            {
+                App.WriteStartupEvent(followSystemLanguage
+                    ? $"Display language applied live from system preference: {language}"
+                    : $"Display language applied live: {language}");
+            }
+            return true;
         }
-        catch (InvalidOperationException)
+        catch (Exception ex)
         {
             if (writeLog)
             {
-                App.WriteStartupEvent("Display language override unavailable in unpackaged runtime; keeping the current Windows resource context");
+                App.WriteStartupFailure($"ApplyLanguage:{language}", ex);
             }
             return false;
         }
-
-        AppliedLanguageOverride = language;
-        _loaders.Clear();
-        Generation++;
-
-        if (writeLog)
-        {
-            App.WriteStartupEvent(string.IsNullOrEmpty(language)
-                ? "Display language applied live: system preference"
-                : $"Display language applied live: {language}");
-        }
-
-        return true;
     }
 
     public string GetString(string key)
@@ -130,13 +110,20 @@ public sealed class LocalizationService
 
         try
         {
-            if (!_loaders.TryGetValue(mapName, out var loader))
+            EnsureResourceInfrastructure();
+            EnsureContext();
+
+            var map = GetMap(mapName);
+            var candidate = map?.TryGetValue(key, _resourceContext!);
+            if (candidate is not null)
             {
-                loader = CreateLoader(mapName);
-                _loaders[mapName] = loader;
+                return candidate.ValueAsString ?? string.Empty;
             }
 
-            return loader.GetString(key) ?? string.Empty;
+            // Be tolerant of PRI layouts where the named .resw map is addressable as
+            // a path from the main map rather than as a directly returned subtree.
+            candidate = _resourceManager!.MainResourceMap.TryGetValue($"{mapName}/{key}", _resourceContext!);
+            return candidate?.ValueAsString ?? string.Empty;
         }
         catch (Exception ex)
         {
@@ -145,24 +132,90 @@ public sealed class LocalizationService
         }
     }
 
-    private static MrtResourceLoader CreateLoader(string mapName)
+    private void EnsureResourceInfrastructure()
     {
-        if (string.Equals(mapName, DefaultMapName, StringComparison.OrdinalIgnoreCase))
-        {
-            return new MrtResourceLoader();
-        }
-
-        return new MrtResourceLoader(MrtResourceLoader.GetDefaultResourceFilePath(), mapName);
+        _resourceManager ??= new ResourceManager();
     }
 
-    private static string ResolveOverride(string? displayLanguage, bool followSystemLanguage)
+    private void EnsureContext()
     {
-        if (followSystemLanguage || string.IsNullOrWhiteSpace(displayLanguage) ||
-            string.Equals(displayLanguage, "System", StringComparison.OrdinalIgnoreCase))
+        if (_resourceContext is not null)
         {
-            return string.Empty;
+            return;
         }
 
-        return SupportedLanguages.Contains(displayLanguage) ? displayLanguage : string.Empty;
+        var context = _resourceManager!.CreateResourceContext();
+        context.QualifierValues[KnownResourceQualifierName.Language] = CurrentLanguageTag;
+        _resourceContext = context;
+    }
+
+    private ResourceMap? GetMap(string mapName)
+    {
+        if (_maps.TryGetValue(mapName, out var cached))
+        {
+            return cached;
+        }
+
+        var map = _resourceManager!.MainResourceMap.TryGetSubtree(mapName);
+        _maps[mapName] = map;
+        return map;
+    }
+
+    private static string ResolveLanguage(string? displayLanguage, bool followSystemLanguage)
+    {
+        if (!followSystemLanguage && !string.IsNullOrWhiteSpace(displayLanguage) &&
+            !string.Equals(displayLanguage, "System", StringComparison.OrdinalIgnoreCase))
+        {
+            var explicitLanguage = NormalizeSupportedLanguage(displayLanguage);
+            if (explicitLanguage is not null)
+            {
+                return explicitLanguage;
+            }
+        }
+
+        return ResolveSystemLanguage();
+    }
+
+    private static string ResolveSystemLanguage()
+    {
+        try
+        {
+            foreach (var language in Windows.Globalization.ApplicationLanguages.Languages)
+            {
+                var supported = NormalizeSupportedLanguage(language);
+                if (supported is not null)
+                {
+                    return supported;
+                }
+            }
+        }
+        catch
+        {
+            // Fall through to CurrentUICulture for unpackaged/test hosts.
+        }
+
+        var culture = NormalizeSupportedLanguage(CultureInfo.CurrentUICulture.Name);
+        return culture ?? "en-US";
+    }
+
+    private static string? NormalizeSupportedLanguage(string? language)
+    {
+        if (string.IsNullOrWhiteSpace(language))
+        {
+            return null;
+        }
+
+        foreach (var supported in SupportedLanguages)
+        {
+            if (string.Equals(language, supported, StringComparison.OrdinalIgnoreCase))
+            {
+                return supported;
+            }
+        }
+
+        if (language.StartsWith("zh", StringComparison.OrdinalIgnoreCase)) return "zh-CN";
+        if (language.StartsWith("ja", StringComparison.OrdinalIgnoreCase)) return "ja-JP";
+        if (language.StartsWith("en", StringComparison.OrdinalIgnoreCase)) return "en-US";
+        return null;
     }
 }
