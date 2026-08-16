@@ -61,6 +61,20 @@ jobs:
           "INSTALLED_EXE=$exe" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           Write-Output "Loose-registered packaged UCAD at $($package.InstallLocation)"
 
+      - name: Set desktop to Figma 1440x900 viewport
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Import-Module ServerCore -ErrorAction Stop
+          Set-DisplayResolution -Width 1440 -Height 900 -Force
+          Start-Sleep -Seconds 2
+          Add-Type -AssemblyName System.Windows.Forms
+          $bounds = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+          Write-Output "Primary desktop: $($bounds.Width)x$($bounds.Height)"
+          if ($bounds.Width -lt 1440 -or $bounds.Height -lt 900) {
+            throw "Figma fidelity capture requires a real 1440x900 desktop; runner exposed $($bounds.Width)x$($bounds.Height)."
+          }
+
       - name: Capture Drawing, Start, and Settings screens
         shell: pwsh
         run: |
