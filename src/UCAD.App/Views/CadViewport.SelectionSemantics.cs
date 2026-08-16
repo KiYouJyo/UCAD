@@ -1,62 +1,28 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 using System.Numerics;
-using System.Runtime.InteropServices;
 using UCAD.Core.Geometry;
 using UCAD.Core.Interaction;
+using UCAD.Interop;
 using Windows.System;
 
 namespace UCAD.Views;
 
 public sealed partial class CadViewport
 {
-    private static readonly IntPtr ArrowCursorId = new(32512);
-    private bool _nativeCursorEventHooksInitialized;
-
-    [DllImport("user32.dll")]
-    private static extern IntPtr SetCursor(IntPtr hCursor);
-
-    [DllImport("user32.dll")]
-    private static extern IntPtr LoadCursor(IntPtr hInstance, IntPtr lpCursorName);
-
     private void CadViewport_Loaded(object sender, RoutedEventArgs e)
     {
-        if (!_nativeCursorEventHooksInitialized)
+        // ProtectedCursor is the Windows App SDK cursor path for XAML elements.
+        // Give WinUI a real but fully transparent InputCursor, then let Win2D draw
+        // the visible CAD crosshair/pickbox. This avoids the race where SetCursor(NULL)
+        // is immediately overwritten again by WinUI/DefWindowProc on mouse movement.
+        try
         {
-            _nativeCursorEventHooksInitialized = true;
-            Canvas.PointerEntered += Canvas_HideNativeCursor;
-            Canvas.PointerMoved += Canvas_HideNativeCursor;
-            Canvas.PointerPressed += Canvas_HideNativeCursor;
-            Canvas.PointerReleased += Canvas_HideNativeCursor;
-            Canvas.PointerWheelChanged += Canvas_HideNativeCursor;
-            Canvas.PointerExited += Canvas_RestoreNativeCursor;
-            Unloaded += CadViewport_Unloaded;
+            ProtectedCursor = TransparentInputCursor.GetOrCreate();
         }
-
-        // Pointer-event SetCursor(NULL) is retained as a fallback, but the HWND
-        // WM_SETCURSOR subclass is the authoritative suppression path. Without the
-        // subclass, DefWindowProc/WinUI can restore the native cursor on every move.
-        InstallNativeCursorSuppression();
-    }
-
-    private void CadViewport_Unloaded(object sender, RoutedEventArgs e)
-    {
-        RemoveNativeCursorSuppression();
-        RestoreNativeArrowCursor();
-    }
-
-    private static void Canvas_HideNativeCursor(object sender, PointerRoutedEventArgs e) =>
-        _ = SetCursor(IntPtr.Zero);
-
-    private static void Canvas_RestoreNativeCursor(object sender, PointerRoutedEventArgs e) =>
-        RestoreNativeArrowCursor();
-
-    private static void RestoreNativeArrowCursor()
-    {
-        var arrow = LoadCursor(IntPtr.Zero, ArrowCursorId);
-        if (arrow != IntPtr.Zero)
+        catch (Exception ex)
         {
-            _ = SetCursor(arrow);
+            App.WriteStartupFailure("CadViewport.TransparentCursor", ex);
         }
     }
 
