@@ -45,6 +45,16 @@ public sealed class CommandRegistry
         registry.Register(new CadCommandDefinition("RECTANGLE", CadCommandCategory.Draw, DrawingCommandKind.Rectangle, "REC"));
         registry.Register(new CadCommandDefinition("CIRCLE", CadCommandCategory.Draw, DrawingCommandKind.Circle, "C"));
         registry.Register(new CadCommandDefinition("ARC", CadCommandCategory.Draw, DrawingCommandKind.Arc, "A"));
+
+        registry.Register(new CadCommandDefinition("MOVE", CadCommandCategory.Modify, "M"));
+        registry.Register(new CadCommandDefinition("COPY", CadCommandCategory.Modify, "CO", "CP"));
+        registry.Register(new CadCommandDefinition("ROTATE", CadCommandCategory.Modify, "RO"));
+        registry.Register(new CadCommandDefinition("SCALE", CadCommandCategory.Modify, "SC"));
+        registry.Register(new CadCommandDefinition("MIRROR", CadCommandCategory.Modify, "MI"));
+        registry.Register(new CadCommandDefinition("OFFSET", CadCommandCategory.Modify, "O"));
+        registry.Register(new CadCommandDefinition("TRIM", CadCommandCategory.Modify, "TR"));
+        registry.Register(new CadCommandDefinition("EXTEND", CadCommandCategory.Modify, "EX"));
+
         registry.Register(new CadCommandDefinition("UNDO", CadCommandCategory.Edit, "U"));
         registry.Register(new CadCommandDefinition("REDO", CadCommandCategory.Edit));
         registry.Register(new CadCommandDefinition("ERASE", CadCommandCategory.Edit, "E", "DELETE"));
