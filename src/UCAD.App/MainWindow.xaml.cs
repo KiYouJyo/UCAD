@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.Windows.ApplicationModel.Resources;
+using System.Globalization;
 using UCAD.Core;
 using UCAD.Core.Commands;
 using UCAD.Core.Geometry;
@@ -50,6 +51,7 @@ public sealed partial class MainWindow : Window
             .ToArray();
 
         RootLayout.Loaded += RootLayout_Loaded;
+        RootLayout.ActualThemeChanged += RootLayout_ActualThemeChanged;
         _settingsService.SettingsChanged += SettingsService_SettingsChanged;
         ApplyAppTheme();
         UpdateCategoryVisuals();
@@ -139,6 +141,89 @@ public sealed partial class MainWindow : Window
             "Dark" => ElementTheme.Dark,
             _ => ElementTheme.Default
         };
+        ApplyShellPalette(IsLightShellTheme());
+    }
+
+    private bool IsLightShellTheme() => _settingsService.Settings.AppTheme switch
+    {
+        "Light" => true,
+        "Dark" => false,
+        _ => RootLayout.ActualTheme == ElementTheme.Light
+    };
+
+    private void RootLayout_ActualThemeChanged(FrameworkElement sender, object args)
+    {
+        if (string.Equals(_settingsService.Settings.AppTheme, "System", StringComparison.Ordinal))
+        {
+            ApplyShellPalette(sender.ActualTheme == ElementTheme.Light);
+            UpdateCategoryVisuals();
+        }
+    }
+
+    private static void ApplyShellPalette(bool light)
+    {
+        if (light)
+        {
+            SetBrushColor("UcadAppBackgroundBrush", 255, 243, 243, 243);
+            SetBrushColor("UcadTitleBarBrush", 255, 249, 249, 249);
+            SetBrushColor("UcadCategoryBarBrush", 255, 245, 245, 245);
+            SetBrushColor("UcadToolShelfBrush", 255, 250, 250, 250);
+            SetBrushColor("UcadNavigationBrush", 255, 248, 248, 248);
+            SetBrushColor("UcadCardBrush", 255, 255, 255, 255);
+            SetBrushColor("UcadAboutCardBrush", 255, 255, 255, 255);
+            SetBrushColor("UcadPanelBrush", 255, 250, 250, 250);
+            SetBrushColor("UcadOverlayBrush", 255, 243, 243, 243);
+            SetBrushColor("UcadStatusBarBrush", 255, 245, 245, 245);
+            SetBrushColor("UcadControlFillBrush", 255, 255, 255, 255);
+            SetBrushColor("UcadControlFillSubtleBrush", 255, 247, 247, 247);
+            SetBrushColor("UcadControlFillStrongBrush", 255, 238, 238, 238);
+            SetBrushColor("UcadTextPrimaryBrush", 255, 28, 28, 30);
+            SetBrushColor("UcadTextSecondaryBrush", 255, 88, 88, 94);
+            SetBrushColor("UcadTextTertiaryBrush", 255, 112, 112, 118);
+            SetBrushColor("UcadTextDisabledBrush", 255, 158, 158, 164);
+            SetBrushColor("UcadDividerBrush", 255, 218, 218, 222);
+            SetBrushColor("UcadCardBorderBrush", 153, 198, 198, 204);
+            SetBrushColor("UcadStartActionBorderBrush", 191, 190, 190, 198);
+            SetBrushColor("UcadStartTemplateBorderBrush", 128, 190, 190, 198);
+            SetBrushColor("UcadAboutCardBorderBrush", 255, 204, 204, 210);
+            SetBrushColor("UcadControlBorderBrush", 255, 196, 196, 202);
+            SetBrushColor("UcadDividerSoftBrush", 255, 226, 226, 230);
+        }
+        else
+        {
+            SetBrushColor("UcadAppBackgroundBrush", 255, 24, 24, 26);
+            SetBrushColor("UcadTitleBarBrush", 255, 32, 32, 34);
+            SetBrushColor("UcadCategoryBarBrush", 255, 37, 37, 40);
+            SetBrushColor("UcadToolShelfBrush", 255, 29, 29, 32);
+            SetBrushColor("UcadNavigationBrush", 255, 29, 29, 32);
+            SetBrushColor("UcadCardBrush", 255, 34, 34, 37);
+            SetBrushColor("UcadAboutCardBrush", 255, 32, 32, 35);
+            SetBrushColor("UcadPanelBrush", 255, 31, 31, 34);
+            SetBrushColor("UcadOverlayBrush", 255, 24, 24, 26);
+            SetBrushColor("UcadStatusBarBrush", 255, 34, 34, 37);
+            SetBrushColor("UcadControlFillBrush", 255, 46, 46, 51);
+            SetBrushColor("UcadControlFillSubtleBrush", 255, 40, 40, 44);
+            SetBrushColor("UcadControlFillStrongBrush", 255, 37, 37, 40);
+            SetBrushColor("UcadTextPrimaryBrush", 255, 237, 237, 242);
+            SetBrushColor("UcadTextSecondaryBrush", 255, 158, 158, 171);
+            SetBrushColor("UcadTextTertiaryBrush", 255, 126, 129, 137);
+            SetBrushColor("UcadTextDisabledBrush", 255, 104, 104, 114);
+            SetBrushColor("UcadDividerBrush", 255, 64, 64, 71);
+            SetBrushColor("UcadCardBorderBrush", 153, 64, 64, 71);
+            SetBrushColor("UcadStartActionBorderBrush", 191, 64, 64, 71);
+            SetBrushColor("UcadStartTemplateBorderBrush", 128, 64, 64, 71);
+            SetBrushColor("UcadAboutCardBorderBrush", 255, 64, 64, 74);
+            SetBrushColor("UcadControlBorderBrush", 255, 64, 64, 74);
+            SetBrushColor("UcadDividerSoftBrush", 255, 46, 50, 54);
+        }
+    }
+
+    private static void SetBrushColor(string key, byte alpha, byte red, byte green, byte blue)
+    {
+        if (Application.Current.Resources[key] is SolidColorBrush brush)
+        {
+            brush.Color = Microsoft.UI.ColorHelper.FromArgb(alpha, red, green, blue);
+        }
     }
 
     private void SettingsService_SettingsChanged(object? sender, EventArgs e)
@@ -147,6 +232,10 @@ public sealed partial class MainWindow : Window
         foreach (var session in _sessions.Values)
         {
             session.Viewport.ApplySettings(_settingsService.Settings);
+        }
+        if (_activeSession is not null)
+        {
+            UpdateCoordinateText(_activeSession);
         }
     }
 
@@ -358,7 +447,23 @@ public sealed partial class MainWindow : Window
             "0.000" => "0.000",
             _ => "0.00"
         };
-        CoordinateText.Text = $"X {session.PointerWorldPosition.X.ToString(format)}   Y {session.PointerWorldPosition.Y.ToString(format)}";
+        var provider = NumericFormatProvider();
+        CoordinateText.Text = $"X {session.PointerWorldPosition.X.ToString(format, provider)}   Y {session.PointerWorldPosition.Y.ToString(format, provider)}";
+    }
+
+    private IFormatProvider NumericFormatProvider()
+    {
+        var source = string.Equals(_settingsService.Settings.NumberFormat, "Invariant", StringComparison.Ordinal)
+            ? CultureInfo.InvariantCulture.NumberFormat
+            : CultureInfo.CurrentCulture.NumberFormat;
+        var format = (NumberFormatInfo)source.Clone();
+        format.NumberDecimalSeparator = _settingsService.Settings.AngleDecimalFormat switch
+        {
+            "Dot" => ".",
+            "Comma" => ",",
+            _ => format.NumberDecimalSeparator
+        };
+        return format;
     }
 
     private void UpdateZoomText(CadWorkspaceSession session) =>
