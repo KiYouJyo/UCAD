@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.4.1 — 2026-08-16
+
+### CAD Selection & Cursor Interaction Refinement
+- Added AutoCAD-style two-point Window/Crossing selection: blank first click arms the selection rectangle, pointer movement previews it without holding the button, and the second click commits it.
+- Retained press-drag-release Window/Crossing as an alternate fast gesture using the same direction semantics.
+- Kept PICKADD-style additive selection and added Shift + point/window removal from the current selection set.
+- Completing an empty non-Shift selection window clears the current selection set; Esc cancels an unfinished window before clearing a completed selection set.
+- Replaced the drawing-surface native arrow/cross overlay with a clean Win2D CAD pointer: the Windows cursor is suppressed while inside the canvas, leaving only the adjustable crosshair and central pickbox.
+- Increased the fresh-install pickbox default from 6 px to 10 px and kept the visible pickbox adjustable from 3–20 px with the same screen-space basis used by point hit testing.
+- Added persisted CAD pointer settings for crosshair size, pickbox size, and OSNAP aperture, applied live to existing Drawing sessions.
+- Preserved v0.4.0 document-scoped SelectionSet / OSNAP / Ortho / Inspector / ERASE foundations and v0.3.10 restart-free trilingual switching.
+
+### Validation
+- Added batch selection-removal coverage to Core tests.
+- Added v0.4.1 contracts for two-click selection, Shift removal, native cursor suppression, adjustable pointer dimensions, version SSOT, PerMonitorV2, frozen Figma tokens, and localization parity.
+- Interaction Smoke and Localization Smoke run on active `codex/**` development branches as well as PR/main validation.
+- Same-repository PR acceptance packages are re-signed with the normal release certificate before manual mouse-feel acceptance.
+
 ## 0.4.0 — 2026-08-16
 
 ### Selection / OSNAP / Ortho Interaction Foundation
@@ -151,9 +169,4 @@
 ### Foundation
 - Established WinUI 3 / Win2D application and independent `UCAD.Core` geometry/document layer.
 - Added grid, crosshair, coordinate transforms, zoom, pan, and two-point Line drawing.
-
-### Packaging and release
-- Converted GitHub distribution to signed x64 MSIXBundle.
-- Added one-time UAC certificate trust setup and normal-user MSIX installation flow.
-- Added SHA-256 release manifests and release-asset validation.
-- Added `release/release.json` as release metadata SSOT.
+- Added core unit tests, CI, GitHub Actions release automation, and signed x64 MSIXBundle distribution.

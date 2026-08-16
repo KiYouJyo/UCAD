@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "product": {
     "name": "UCAD",
-    "version": "0.4.0",
-    "packageVersion": "0.4.0.0",
-    "releaseTitle": "Selection / OSNAP / Ortho Interaction Foundation",
+    "version": "0.4.1",
+    "packageVersion": "0.4.1.0",
+    "releaseTitle": "CAD Selection & Cursor Interaction Refinement",
     "packageIdentityName": "F1BD5F25-4ED6-4037-B9FE-BB7D4B326E25",
     "publisher": "CN=AppPublisher",
     "applicationId": "App"

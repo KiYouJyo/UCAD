@@ -28,6 +28,13 @@ public sealed class AppSettings
     public bool SelectionPreview { get; set; } = true;
     public bool CommandSuggestions { get; set; } = true;
 
+    // CAD pointer/selection defaults intentionally mirror familiar AutoCAD-style concepts:
+    // CURSORSIZE is a drawing-area percentage; PICKBOX and APERTURE are screen-space sizes.
+    public int CadPointerSettingsRevision { get; set; }
+    public int CrosshairSizePercent { get; set; } = 100;
+    public int PickboxSize { get; set; } = 10;
+    public int ObjectSnapAperture { get; set; } = 10;
+
     public bool AutoSave { get; set; } = true;
     public int AutoSaveIntervalMinutes { get; set; } = 10;
     public bool BackupOnSave { get; set; } = true;

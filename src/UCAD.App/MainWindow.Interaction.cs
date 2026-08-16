@@ -5,6 +5,7 @@ using UCAD.Core.Commands;
 using UCAD.Core.Entities;
 using UCAD.Core.Geometry;
 using UCAD.Core.Interaction;
+using UCAD.Interop;
 using UCAD.Services;
 using UCAD.Workspace;
 using Windows.System;
@@ -28,7 +29,7 @@ public sealed partial class MainWindow
         _interactionUiInitialized = true;
         ApplyRegisteredCapabilityState();
 
-        // v0.4.0 activates only the drafting aids that have real interaction logic.
+        // v0.4.x activates only the drafting aids that have real interaction logic.
         // SNAP (grid snap), POLAR and OTRACK remain reserved rather than becoming no-op buttons.
         OsnapStatusButton.IsHitTestVisible = true;
         OrthoStatusButton.IsHitTestVisible = true;
@@ -70,6 +71,11 @@ public sealed partial class MainWindow
                 var session = ActiveSession ?? throw new InvalidOperationException("Interaction smoke could not create a Drawing workspace.");
                 EnsureSessionInteractionSubscribed(session);
 
+                // Exercise the exact Windows App SDK interop path used by CadViewport.
+                // If the transparent HCURSOR cannot be projected into InputCursor,
+                // the smoke must fail instead of shipping a visible system arrow.
+                _ = TransparentInputCursor.GetOrCreate();
+
                 var line = new LineEntity(new CadPoint(0, 0), new CadPoint(10, 0));
                 var circle = new CircleEntity(new CadPoint(20, 0), 5);
                 session.Document.Add(line);
@@ -81,6 +87,13 @@ public sealed partial class MainWindow
                 {
                     throw new InvalidOperationException("Interaction smoke additive selection failed.");
                 }
+
+                session.Interaction.Selection.Remove(line.Id);
+                if (session.Interaction.Selection.Count != 1 || session.Interaction.Selection.Contains(line.Id))
+                {
+                    throw new InvalidOperationException("Interaction smoke Shift-style removal failed.");
+                }
+                session.Interaction.Selection.Add(line.Id);
 
                 session.Interaction.ObjectSnapEnabled = true;
                 session.Interaction.ObjectSnapModes = ObjectSnapMode.Endpoint | ObjectSnapMode.Midpoint | ObjectSnapMode.Center | ObjectSnapMode.Intersection;
@@ -135,7 +148,7 @@ public sealed partial class MainWindow
                     throw new InvalidOperationException("Interaction smoke ERASE one-step Undo failed.");
                 }
 
-                App.WriteStartupEvent("Interaction smoke: Selection + ERASE + OSNAP + ORTHO + Inspector initialized");
+                App.WriteStartupEvent("Interaction smoke: Selection + ERASE + OSNAP + ORTHO + Inspector + transparent CAD cursor initialized");
             }
             catch (Exception ex)
             {
@@ -299,12 +312,24 @@ public sealed partial class MainWindow
             return;
         }
 
-        if (e.Key == VirtualKey.Escape && !session.CommandSession.IsActive && !session.Interaction.Selection.IsEmpty)
+        if (e.Key == VirtualKey.Escape && !session.CommandSession.IsActive)
         {
-            session.Interaction.Selection.Clear();
-            SetSessionStatus(session, GetString("Status_Ready"));
-            RefreshInteractionUi(session);
-            e.Handled = true;
+            // First Esc cancels an in-progress two-click/window gesture. A subsequent Esc
+            // clears the completed noun/verb selection set, matching CAD expectations.
+            if (session.Viewport.CancelSelectionGesture())
+            {
+                SetSessionStatus(session, GetString("Status_Ready"));
+                e.Handled = true;
+                return;
+            }
+
+            if (!session.Interaction.Selection.IsEmpty)
+            {
+                session.Interaction.Selection.Clear();
+                SetSessionStatus(session, GetString("Status_Ready"));
+                RefreshInteractionUi(session);
+                e.Handled = true;
+            }
         }
     }
 

@@ -60,14 +60,21 @@ public sealed class SelectionSet
         return changed;
     }
 
-    public bool Remove(Guid id)
+    public bool Remove(Guid id) => Remove([id]);
+
+    public bool Remove(IEnumerable<Guid> ids)
     {
-        if (!_selectedIds.Remove(id))
+        ArgumentNullException.ThrowIfNull(ids);
+        var changed = false;
+        foreach (var id in ids.Distinct())
         {
-            return false;
+            changed |= _selectedIds.Remove(id);
         }
-        RaiseChanged();
-        return true;
+        if (changed)
+        {
+            RaiseChanged();
+        }
+        return changed;
     }
 
     public bool Toggle(Guid id)

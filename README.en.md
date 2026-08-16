@@ -11,7 +11,7 @@ Lightweight 2D CAD for urban planning and architectural design.
 
 UCAD aims to be a Windows-native lightweight 2D CAD with familiar AutoCAD-style interaction and a deliberately bounded architecture/planning feature set. The project is DXF-first and 2D-first.
 
-**Current candidate: v0.4.0 — Selection / OSNAP / Ortho Interaction Foundation.** Pixel-level UI tuning is intentionally paused for this milestone. v0.4.0 completes the first CAD interaction loop: point selection, Window/Crossing selection, additive multi-selection, ERASE, Endpoint/Midpoint/Center/Intersection OSNAP, Ortho, and a selection-backed Inspector.
+**Current candidate: v0.4.1 — CAD Selection & Cursor Interaction Refinement.** Pixel-level UI tuning remains paused. This milestone refines v0.4.0 with two-point Window/Crossing selection, retained drag selection, Shift removal, and a clean Win2D CAD cursor without a second Windows cross layered over the pickbox.
 
 ## Installation
 
@@ -25,13 +25,13 @@ Download production builds from [GitHub Releases](https://github.com/KiYouJyo/UC
 
 Each Drawing owns an independent `CadDocument`, `CadInteractionState`, `CadViewport`, and `CommandSession`, so geometry, history, selection, OSNAP, Ortho, command, and viewport state are isolated per tab.
 
-## v0.4.0 interaction
+## v0.4.1 interaction
 
-- Click an entity to select it; continue clicking to build an additive multi-selection.
-- Blank click or Esc clears selection.
-- Left-to-right drag is **Window** selection (fully contained objects only).
-- Right-to-left drag is **Crossing** selection (contained or intersecting objects).
-- Selection preview, selected highlighting, and grips are viewport presentation of Core-owned `SelectionSet` state.
+- Click entities to build an additive selection; Shift + pick/window removes from the current set.
+- Click empty space for the first Window/Crossing corner, release, move to preview, and click again to commit. Press-drag-release selection remains available as a fast alternative.
+- Left-to-right is **Window** (fully contained only); right-to-left is **Crossing** (contained or intersecting).
+- An empty completed non-Shift window clears the selection set. Esc cancels an unfinished window before clearing completed selection.
+- The drawing canvas suppresses the native Windows pointer and renders only the Win2D CAD crosshair + central pickbox. Crosshair size is 5–100%, pickbox size is 3–20 px (10 px default), and OSNAP aperture is 3–50 px (10 px default), all live-adjustable under Settings → Input & Interaction → CAD cursor.
 - **F3 / OSNAP status** toggles Endpoint / Midpoint / Center / Intersection object snap.
 - **F8 / ORTHO status** toggles horizontal/vertical constraint for LINE / PLINE mouse input.
 - **Delete / ERASE / E / DELETE** erases the current selection as one undoable mutation.
@@ -52,11 +52,11 @@ Each Drawing owns an independent `CadDocument`, `CadInteractionState`, `CadViewp
 | `CLEAR` | — | clear drawing |
 | `RESETVIEW` | `RV` | reset view |
 
-All working command entry points converge on `CommandRegistry → CommandSession → CAD Core`. Tool-category availability now derives from registered Core capabilities. MOVE / COPY / ROTATE / OFFSET / TRIM and other Modify commands remain v0.5.x work.
+All working command entry points converge on `CommandRegistry → CommandSession → CAD Core`. Tool-category availability derives from registered Core capabilities. MOVE / COPY / ROTATE / OFFSET / TRIM and other Modify commands remain v0.5.x work.
 
 ## Settings, display, and localization
 
-UCAD remains `PerMonitorV2`, with Figma critical design tokens protected by CI even though pixel-level UI comparison is not a v0.4.0 release gate. App Theme and CAD Canvas Theme remain independent. Selection preview and existing viewport preferences are runtime settings.
+UCAD remains `PerMonitorV2`, with Figma critical design tokens protected by CI even though pixel-level UI comparison is not a v0.4.x release gate. App Theme and CAD Canvas Theme remain independent. Selection preview and viewport preferences are runtime settings.
 
 Drafting defaults — object snap, snap set, and ortho — initialize newly created Drawing sessions; existing Drawing sessions keep their current F3/F8 state. Settings persist through `SettingsService` / `AppSettings` at `%LOCALAPPDATA%\UCAD\settings.json`.
 
@@ -70,14 +70,14 @@ dotnet build src/UCAD.App/UCAD.App.csproj -c Debug -p:Platform=x64 -r win-x64
 dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release
 ```
 
-Required CI covers Core tests, app build, real startup smoke, MSIX/package validation, localization parity, version SSOT, PerMonitorV2, icon/Figma-token contracts, and v0.4 interaction contracts. Startup smoke now creates a real Drawing in the running app and validates Selection + OSNAP + Center Snap + Ortho + Inspector + capability-derived category state. Localization Smoke still switches zh-CN → ja-JP → en-US inside one running process.
+Required CI covers Core tests, app build, real startup smoke, MSIX/package validation, localization parity, version SSOT, PerMonitorV2, icon/Figma-token contracts, and v0.4 interaction contracts. Interaction Smoke validates Selection + ERASE + OSNAP + Ortho + Inspector in a running UCAD process. Localization Smoke still switches zh-CN → ja-JP → en-US inside one running process.
 
 ## Documentation
 
 - [Roadmap](ROADMAP.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Release process](docs/RELEASE-PROCESS.md)
-- [v0.4.0 Release Notes](docs/RELEASE-NOTES-v0.4.0.en.md)
+- [v0.4.1 Release Notes](docs/RELEASE-NOTES-v0.4.1.en.md)
 
 ## License
 

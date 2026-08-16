@@ -11,7 +11,7 @@
 
 UCAD 目标是建立一套 Windows 原生、接近 AutoCAD 操作习惯、面向建筑与规划高频二维制图任务的轻量 CAD。坚持 DXF-first、2D-first，不以复制完整 AutoCAD 为目标。
 
-**当前候选版本 v0.4.0 — Selection / OSNAP / Ortho Interaction Foundation。** 本版本暂停像素级 UI 精调，优先完成第一条 CAD 基础交互闭环：选择、窗口/交叉框选、多选、ERASE、端点/中点/圆心/交点 OSNAP、Ortho，以及由真实选择状态驱动的 Inspector。
+**当前候选版本 v0.4.1 — CAD Selection & Cursor Interaction Refinement。** 本版本继续暂停像素级 UI 精调，重点把 v0.4.0 的 Selection / OSNAP / Ortho 基础交互调整得更接近传统 CAD：空白单击后可用第二点完成 Window/Crossing 框选，同时保留拖拽框选；Shift 可减选；绘图区只显示 UCAD 自绘的 CAD 十字准线与可调 Pickbox，不再叠加 Windows 小十字。
 
 ## 安装
 
@@ -33,13 +33,14 @@ UCAD 明确区分三种标签内容：
 
 每个 Drawing 都有独立的 `CadDocument`、`CadInteractionState`、`CadViewport` 与 `CommandSession`，因此多文档的图形、Undo/Redo、选择、OSNAP、Ortho、命令与视口状态彼此独立。
 
-## v0.4.0 交互
+## v0.4.1 交互
 
 - 单击对象选择；继续单击其他对象可累加多选。
-- 空白单击或 Esc 清除选择。
-- 左→右拖动为 **Window**：只选择完全包含的对象。
-- 右→左拖动为 **Crossing**：包含或相交的对象都会选择。
-- 选择预览、已选高亮与 grip 由 Viewport 呈现，选择所有权位于 Core/Workspace 的 `SelectionSet`。
+- Shift + 单击或 Shift + 框选可从当前选择集中移除对象。
+- 空白处单击第一角后可松开鼠标，移动预览选框，再次单击提交；按住拖拽后松开的快速框选仍然保留。
+- 左→右为 **Window**：只选择完全包含的对象；右→左为 **Crossing**：包含或相交的对象都会选择。
+- 完成一个空的非 Shift 选框会清除当前选择；Esc 优先取消尚未完成的选框，再清除已完成选择。
+- 绘图区隐藏 Windows 原生指针，仅保留 Win2D 绘制的十字准线 + 中央 Pickbox；十字准线 5–100%，Pickbox 3–20 px（默认 10 px），OSNAP aperture 3–50 px（默认 10 px），均可在“设置 → 输入与交互 → CAD 光标”实时调整。
 - **F3 / 状态栏 OSNAP**：切换对象捕捉；当前基础集合为端点、中点、圆心、交点。
 - **F8 / 状态栏 ORTHO**：切换 LINE / PLINE 鼠标输入的水平/垂直约束。
 - **Delete / ERASE / E / DELETE**：删除当前选择；多对象删除是一个 Undo 步骤。
@@ -65,7 +66,7 @@ UCAD 明确区分三种标签内容：
 ## Settings 与显示基线
 
 - WinUI 3 / Windows App SDK 原生窗口，`PerMonitorV2` 高 DPI awareness；
-- Figma 1440×900 Frame 继续作为视觉 SSOT，但 v0.4.0 不以像素级 UI 精校作为发布门槛；
+- Figma 1440×900 Frame 继续作为视觉 SSOT，但 v0.4.x 不以像素级 UI 精校作为发布门槛；
 - App Theme 与 CAD Canvas Theme 独立生效；
 - 栅格显示/强度、光标中心缩放、中键平移、滚轮方向、选择预览和坐标格式进入运行时逻辑；
 - “默认对象捕捉 / 默认捕捉类型 / 默认正交”会初始化之后新建的 Drawing；现有 Drawing 的 F3/F8 状态不会被默认设置强制覆盖；
@@ -96,9 +97,9 @@ dotnet build src/UCAD.App/UCAD.App.csproj -c Debug -p:Platform=x64 -r win-x64
 dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release
 ```
 
-CI 强制覆盖 Core tests、app-build、真实 startup-smoke、MSIX/package validation、三语资源契约、版本 SSOT、PerMonitorV2、Unicode 占位图标扫描与冻结的 Figma 关键 Design Tokens。v0.4.0 的 startup-smoke 会在真实运行的 UCAD 内建立 Drawing 并验证 Selection、OSNAP、Center Snap、Ortho、Inspector 与 capability-derived category state；Localization Smoke 继续在同一进程依次切换 zh-CN → ja-JP → en-US。
+CI 强制覆盖 Core tests、app-build、真实 startup-smoke、MSIX/package validation、三语资源契约、版本 SSOT、PerMonitorV2、Unicode 占位图标扫描与冻结的 Figma 关键 Design Tokens。Interaction Smoke 会在真实运行的 UCAD 内验证 Selection、ERASE、OSNAP、Ortho 与 Inspector；Localization Smoke 继续在同一进程依次切换 zh-CN → ja-JP → en-US。
 
-像素级 Figma 对照保留在手动 `UI Fidelity Screenshots` 工作流中，不阻塞 v0.4.0 功能开发或发布。
+像素级 Figma 对照保留在手动 `UI Fidelity Screenshots` 工作流中，不阻塞 v0.4.x 功能开发或发布。
 
 ## 文档
 
@@ -106,7 +107,7 @@ CI 强制覆盖 Core tests、app-build、真实 startup-smoke、MSIX/package val
 - [架构说明](docs/ARCHITECTURE.md)
 - [发布流程](docs/RELEASE-PROCESS.md)
 - [打包说明](packaging/README.md)
-- [v0.4.0 发布说明](docs/RELEASE-NOTES-v0.4.0.md)
+- [v0.4.1 发布说明](docs/RELEASE-NOTES-v0.4.1.md)
 
 ## 许可证
 

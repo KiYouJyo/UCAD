@@ -111,15 +111,46 @@ jobs:
           $stage = Join-Path $env:RUNNER_TEMP 'one-click'
           $root = & ./packaging/New-GitHubOneClickInstallerPackage.ps1 -SignedBundlePath $env:BUNDLE_PATH -PublicCertificatePath $env:CERTIFICATE_PATH -OutputDirectory $stage -DisplayVersion $release.product.version -PackageVersion $release.product.packageVersion -PackageIdentityName $release.product.packageIdentityName -Publisher $release.product.publisher -CertificateThumbprint $env:CERTIFICATE_THUMBPRINT
           & ./packaging/Test-GitHubOneClickInstallerPackage.ps1 -ReleaseDirectory $root
+      - name: Re-sign same-repo PR acceptance build with release certificate
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        shell: pwsh
+        env:
+          RELEASE_CERTIFICATE_BASE64: ${{ secrets.GH_RELEASE_CERTIFICATE_BASE64 }}
+          RELEASE_CERTIFICATE_PASSWORD: ${{ secrets.GH_RELEASE_CERTIFICATE_PASSWORD }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:RELEASE_CERTIFICATE_BASE64) -or [string]::IsNullOrWhiteSpace($env:RELEASE_CERTIFICATE_PASSWORD)) {
+            throw 'Release signing secrets are required for same-repository PR acceptance builds.'
+          }
+          $release = Get-Content release/release.json -Raw | ConvertFrom-Json
+          $pfx = Join-Path $env:RUNNER_TEMP 'ucad-pr-acceptance-release.pfx'
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:RELEASE_CERTIFICATE_BASE64))
+          $securePassword = ConvertTo-SecureString $env:RELEASE_CERTIFICATE_PASSWORD -AsPlainText -Force
+          $certificate = Import-PfxCertificate -FilePath $pfx -CertStoreLocation Cert:\CurrentUser\My -Password $securePassword
+          if (-not $certificate.HasPrivateKey) { throw 'Release certificate has no private key.' }
+          if ($certificate.Subject -cne $release.product.publisher) { throw "Release certificate subject mismatch: $($certificate.Subject)" }
+          $kitsRoot = [Environment]::GetEnvironmentVariable('ProgramFiles(x86)')
+          $signtool = Get-ChildItem (Join-Path $kitsRoot 'Windows Kits\10\bin') -Recurse -Filter signtool.exe | Where-Object FullName -match '\\x64\\signtool.exe$' | Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $signtool) { throw 'x64 signtool.exe not found.' }
+          & $signtool.FullName sign /fd SHA256 /sha1 $certificate.Thumbprint /tr http://timestamp.digicert.com /td SHA256 $env:BUNDLE_PATH
+          if ($LASTEXITCODE -ne 0) { throw "release signtool failed: $LASTEXITCODE" }
+          $signature = Get-AuthenticodeSignature -FilePath $env:BUNDLE_PATH
+          if (-not $signature.SignerCertificate) { throw 'Re-signed PR acceptance bundle has no signer certificate.' }
+          if ($signature.SignerCertificate.Thumbprint -cne $certificate.Thumbprint) { throw 'PR acceptance signer thumbprint mismatch.' }
+          if ($signature.Status -ne 'Valid' -and $signature.Status -ne 'UnknownError') { throw "Unexpected PR acceptance signature status: $($signature.Status) / $($signature.StatusMessage)" }
+          $cer = Join-Path $env:RUNNER_TEMP 'ucad-pr-acceptance-release.cer'
+          Export-Certificate -Cert $certificate -FilePath $cer | Out-Null
+          "CERTIFICATE_PATH=$cer" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "CERTIFICATE_THUMBPRINT=$($certificate.Thumbprint)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Output "PR acceptance signer: $($certificate.Subject) / $($certificate.Thumbprint)"
       - name: Build self-contained PR acceptance package
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         shell: pwsh
         run: |
           $release = Get-Content release/release.json -Raw | ConvertFrom-Json
           $root = Join-Path $env:RUNNER_TEMP "UCAD-v$($release.product.version)-PR-acceptance"
           New-Item -ItemType Directory -Force -Path $root | Out-Null
           $bundleName = "UCAD_$($release.product.packageVersion)_x64.msixbundle"
-          $certificateName = "UCAD-v$($release.product.version)-acceptance.cer"
+          $certificateName = "UCAD-v$($release.product.version)-release.cer"
           Copy-Item -LiteralPath $env:BUNDLE_PATH -Destination (Join-Path $root $bundleName) -Force
           Copy-Item -LiteralPath $env:CERTIFICATE_PATH -Destination (Join-Path $root $certificateName) -Force
           $metadata = [ordered]@{
@@ -131,6 +162,7 @@ jobs:
             bundleFileName = $bundleName
             certificateFileName = $certificateName
             certificateThumbprint = $env:CERTIFICATE_THUMBPRINT
+            signingProfile = 'release-certificate'
           }
           $metadata | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $root 'AcceptanceMetadata.json') -Encoding UTF8
           $installer = @'
@@ -159,7 +191,7 @@ jobs:
           if (-not $installed) { throw 'UCAD acceptance package was not found after installation.' }
           if ([version]$installed.Version -ne [version]$metadata.packageVersion) { throw "Installed version mismatch: $($installed.Version)" }
           Start-Process explorer.exe "shell:AppsFolder\$($installed.PackageFamilyName)!$($metadata.applicationId)"
-          Write-Host "UCAD $($metadata.packageVersion) acceptance build installed and launched."
+          Write-Host "UCAD $($metadata.packageVersion) release-signed acceptance build installed and launched."
           '@
           Set-Content -LiteralPath (Join-Path $root 'Install-Acceptance.ps1') -Value $installer -Encoding UTF8
           $commandFile = "Install-UCAD-v$($release.product.version)-Acceptance.cmd"
@@ -167,16 +199,17 @@ jobs:
           Set-Content -LiteralPath (Join-Path $root $commandFile) -Value $cmd -Encoding ASCII
           @(
             "UCAD v$($release.product.version) PR acceptance build",
+            'This build is signed with the same configured UCAD release certificate used by GitHub Releases.',
             "1. Double-click $commandFile.",
-            '2. Accept the one-time UAC prompt. The script trusts only the included temporary CI certificate.',
-            "3. The package updates the existing UCAD identity to $($release.product.packageVersion) and launches it.",
-            '4. This certificate/build is for acceptance only. The final GitHub Release will be rebuilt with the normal release certificate.',
-            '5. If UCAD still does not open, send %LOCALAPPDATA%\UCAD\Logs\startup.log.'
+            '2. If this release certificate is already trusted from a previous UCAD installation, no new certificate trust is needed.',
+            '3. Otherwise accept the one-time UAC prompt so the included release public certificate can be added to LocalMachine\\TrustedPeople.',
+            "4. The package updates the existing UCAD identity to $($release.product.packageVersion) and launches it.",
+            '5. If UCAD still does not open, send %LOCALAPPDATA%\\UCAD\\Logs\\startup.log.'
           ) | Set-Content -LiteralPath (Join-Path $root 'README-ACCEPTANCE.txt') -Encoding UTF8
           "ACCEPTANCE_PACKAGE_PATH=$root" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
-          "ACCEPTANCE_ARTIFACT_NAME=UCAD-v$($release.product.version)-x64-PR-acceptance" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "ACCEPTANCE_ARTIFACT_NAME=UCAD-v$($release.product.version)-x64-PR-acceptance-release-signed" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Upload PR acceptance package
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/upload-artifact@v6
         with:
           name: ${{ env.ACCEPTANCE_ARTIFACT_NAME }}
