@@ -75,10 +75,17 @@ public sealed partial class MainWindow
         });
     }
 
+    private string ShellString(string key)
+    {
+        var value = LocalizationService.Current.GetShellString(key);
+        return string.IsNullOrWhiteSpace(value) ? key : value;
+    }
+
     /// <summary>
     /// Re-resolves every visible localized surface against the current MRT context.
-    /// This intentionally keeps the Window, document tabs, CadDocument instances,
-    /// undo stacks and viewport state alive while the display language changes.
+    /// The legacy x:Uid property resources remain available for initial XAML loading,
+    /// while hot refresh uses plain IDs from ShellLive.resw so imperative lookup does
+    /// not depend on XAML property-resource semantics.
     /// </summary>
     internal void RefreshLocalization()
     {
@@ -90,69 +97,69 @@ public sealed partial class MainWindow
 
         Title = GetString("AppWindowTitle");
 
-        FileMenuButton.Content = GetString("FileMenuButton.Content");
-        EditMenuButton.Content = GetString("EditMenuButton.Content");
-        ViewMenuButton.Content = GetString("ViewMenuButton.Content");
-        NewDrawingMenuItem.Text = GetString("NewDrawingMenuItem.Text");
-        CloseDrawingMenuItem.Text = GetString("CloseDrawingMenuItem.Text");
-        UndoMenuItem.Text = GetString("UndoMenuItem.Text");
-        RedoMenuItem.Text = GetString("RedoMenuItem.Text");
-        ClearMenuItem.Text = GetString("ClearMenuItem.Text");
-        ResetViewMenuItem.Text = GetString("ResetViewMenuItem.Text");
+        FileMenuButton.Content = ShellString("File");
+        EditMenuButton.Content = ShellString("Edit");
+        ViewMenuButton.Content = ShellString("View");
+        NewDrawingMenuItem.Text = ShellString("NewDrawing");
+        CloseDrawingMenuItem.Text = ShellString("CloseDrawing");
+        UndoMenuItem.Text = ShellString("Undo");
+        RedoMenuItem.Text = ShellString("Redo");
+        ClearMenuItem.Text = ShellString("Clear");
+        ResetViewMenuItem.Text = ShellString("ResetView");
 
-        DrawCategoryButton.Content = GetString("DrawCategoryButton.Content");
-        ModifyCategoryButton.Content = GetString("ModifyCategoryButton.Content");
-        AnnotateCategoryButton.Content = GetString("AnnotateCategoryButton.Content");
-        LayersCategoryButton.Content = GetString("LayersCategoryButton.Content");
-        BlocksCategoryButton.Content = GetString("BlocksCategoryButton.Content");
-        MeasureCategoryButton.Content = GetString("MeasureCategoryButton.Content");
-        ViewCategoryButton.Content = GetString("ViewCategoryButton.Content");
-        CommandSearch.PlaceholderText = GetString("CommandSearch.PlaceholderText");
+        DrawCategoryButton.Content = ShellString("CategoryDraw");
+        ModifyCategoryButton.Content = ShellString("CategoryModify");
+        AnnotateCategoryButton.Content = ShellString("CategoryAnnotate");
+        LayersCategoryButton.Content = ShellString("CategoryLayers");
+        BlocksCategoryButton.Content = ShellString("CategoryBlocks");
+        MeasureCategoryButton.Content = ShellString("CategoryMeasure");
+        ViewCategoryButton.Content = ShellString("CategoryView");
+        CommandSearch.PlaceholderText = ShellString("CommandSearchPlaceholder");
         ToolTipService.SetToolTip(SettingsButton, GetString("Settings_TabTitle"));
 
-        LineToolLabel.Text = GetString("LineToolLabel.Text");
-        PolylineToolLabel.Text = GetString("PolylineToolLabel.Text");
-        RectangleToolLabel.Text = GetString("RectangleToolLabel.Text");
-        CircleToolLabel.Text = GetString("CircleToolLabel.Text");
-        ArcToolLabel.Text = GetString("ArcToolLabel.Text");
-        HatchToolLabel.Text = GetString("HatchToolLabel.Text");
-        BoundaryToolLabel.Text = GetString("BoundaryToolLabel.Text");
-        RayToolLabel.Text = GetString("RayToolLabel.Text");
-        ConstructionToolLabel.Text = GetString("ConstructionToolLabel.Text");
-        ResetViewToolLabel.Text = GetString("ResetViewToolLabel.Text");
+        LineToolLabel.Text = ShellString("ToolLine");
+        PolylineToolLabel.Text = ShellString("ToolPolyline");
+        RectangleToolLabel.Text = ShellString("ToolRectangle");
+        CircleToolLabel.Text = ShellString("ToolCircle");
+        ArcToolLabel.Text = ShellString("ToolArc");
+        HatchToolLabel.Text = ShellString("ToolHatch");
+        BoundaryToolLabel.Text = ShellString("ToolBoundary");
+        RayToolLabel.Text = ShellString("ToolRay");
+        ConstructionToolLabel.Text = ShellString("ToolConstruction");
+        ResetViewToolLabel.Text = ShellString("ResetView");
         UpdateToolShelfHint();
         if (UnavailableToolShelf.Visibility == Visibility.Visible)
         {
             UnavailableToolShelfText.Text = GetString("ToolShelfUnavailable");
         }
 
-        RectangleMoreItem.Text = GetString("RectangleMoreItem.Text");
-        CircleMoreItem.Text = GetString("CircleMoreItem.Text");
-        ArcMoreItem.Text = GetString("ArcMoreItem.Text");
-        UndoMoreItem.Text = GetString("UndoMoreItem.Text");
-        RedoMoreItem.Text = GetString("RedoMoreItem.Text");
-        ClearMoreItem.Text = GetString("ClearMoreItem.Text");
-        ResetViewMoreItem.Text = GetString("ResetViewMoreItem.Text");
+        RectangleMoreItem.Text = ShellString("ToolRectangle");
+        CircleMoreItem.Text = ShellString("ToolCircle");
+        ArcMoreItem.Text = ShellString("ToolArc");
+        UndoMoreItem.Text = ShellString("Undo");
+        RedoMoreItem.Text = ShellString("Redo");
+        ClearMoreItem.Text = ShellString("Clear");
+        ResetViewMoreItem.Text = ShellString("ResetView");
 
-        PropertiesTabButton.Content = GetString("PropertiesTabButton.Content");
-        LayersTabButton.Content = GetString("LayersTabButton.Content");
-        NoSelectionText.Text = GetString("NoSelectionText.Text");
-        SelectionUnavailableText.Text = GetString("SelectionUnavailableText.Text");
-        DocumentSectionText.Text = GetString("DocumentSectionText.Text");
-        EntityCountLabel.Text = GetString("EntityCountLabel.Text");
-        ActiveCommandLabel.Text = GetString("ActiveCommandLabel.Text");
-        UndoAvailableLabel.Text = GetString("UndoAvailableLabel.Text");
-        RedoAvailableLabel.Text = GetString("RedoAvailableLabel.Text");
-        V04FoundationHint.Text = GetString("V04FoundationHint.Text");
+        PropertiesTabButton.Content = ShellString("InspectorProperties");
+        LayersTabButton.Content = ShellString("InspectorLayers");
+        NoSelectionText.Text = ShellString("InspectorNoSelection");
+        SelectionUnavailableText.Text = ShellString("InspectorSelectionUnavailable");
+        DocumentSectionText.Text = ShellString("InspectorDocument");
+        EntityCountLabel.Text = ShellString("InspectorEntityCount");
+        ActiveCommandLabel.Text = ShellString("InspectorActiveCommand");
+        UndoAvailableLabel.Text = ShellString("InspectorUndoAvailable");
+        RedoAvailableLabel.Text = ShellString("InspectorRedoAvailable");
+        V04FoundationHint.Text = ShellString("InspectorFoundationHint");
 
-        CommandPrompt.Text = GetString("CommandPrompt.Text");
-        CommandInput.PlaceholderText = GetString("CommandInput.PlaceholderText");
-        SnapStatusButton.Content = GetString("SnapStatusButton.Content");
-        GridStatusButton.Content = GetString("GridStatusButton.Content");
-        OrthoStatusButton.Content = GetString("OrthoStatusButton.Content");
-        PolarStatusButton.Content = GetString("PolarStatusButton.Content");
-        OsnapStatusButton.Content = GetString("OsnapStatusButton.Content");
-        OtrackStatusButton.Content = GetString("OtrackStatusButton.Content");
+        CommandPrompt.Text = ShellString("CommandPrompt");
+        CommandInput.PlaceholderText = ShellString("CommandInputPlaceholder");
+        SnapStatusButton.Content = ShellString("StatusSnap");
+        GridStatusButton.Content = ShellString("StatusGrid");
+        OrthoStatusButton.Content = ShellString("StatusOrtho");
+        PolarStatusButton.Content = ShellString("StatusPolar");
+        OsnapStatusButton.Content = ShellString("StatusOsnap");
+        OtrackStatusButton.Content = ShellString("StatusOtrack");
 
         if (_startTab is not null)
         {
@@ -192,14 +199,14 @@ public sealed partial class MainWindow
     {
         var title = GetString("Settings_Nav_Title");
         var start = GetString("Start_TabTitle");
-        var file = GetString("FileMenuButton.Content");
-        App.WriteStartupEvent($"Localization probe [{expectedLanguage}]: Settings_Nav_Title='{title}' | Start_TabTitle='{start}' | FileMenuButton.Content='{file}'");
+        var file = ShellString("File");
+        App.WriteStartupEvent($"Localization probe [{expectedLanguage}]: Settings_Nav_Title='{title}' | Start_TabTitle='{start}' | ShellLive/File='{file}'");
 
         if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(start) || string.IsNullOrWhiteSpace(file))
         {
             return false;
         }
-        if (title.StartsWith("Settings_", StringComparison.Ordinal) || start == "Start_TabTitle" || file == "FileMenuButton.Content")
+        if (title.StartsWith("Settings_", StringComparison.Ordinal) || start == "Start_TabTitle" || file == "File")
         {
             return false;
         }
