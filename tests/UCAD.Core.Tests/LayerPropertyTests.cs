@@ -77,7 +77,7 @@ public sealed class LayerPropertyTests
         document.Add(source);
         document.SetEntitiesColor([source.Id], "#FFFF00");
 
-        var first = new LineEntity(new CadPoint(0, 0), new CadPoint(4, 0), source.Id);
+        var first = new LineEntity(new CadPoint(0, 0), new CadPoint(4, 0));
         var second = new LineEntity(new CadPoint(6, 0), new CadPoint(10, 0));
         Assert.True(document.Replace(source.Id, [first, second]));
 
