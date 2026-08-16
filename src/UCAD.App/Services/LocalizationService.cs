@@ -13,6 +13,7 @@ public sealed class LocalizationService
     private const string DefaultMapName = "Resources";
     private const string V039MapName = "UcadV039";
     private const string ShellLiveMapName = "ShellLive";
+    private const string AuthoringLiveMapName = "AuthoringLive";
     private const string LiveReloadNoteKey = "Settings_Language_ReloadNote";
     private const string DraftingInteractionNoteKey = "Settings_Drafting_PendingNote";
     private const string CoreSnapOptionKey = "Settings_Option_SnapCore";
@@ -28,9 +29,7 @@ public sealed class LocalizationService
     }
 
     public static LocalizationService Current { get; } = new();
-
     public string CurrentLanguageTag { get; private set; }
-
     public int Generation { get; private set; }
 
     public bool IsSettingsLanguageApplied
@@ -54,7 +53,6 @@ public sealed class LocalizationService
     public bool ApplyLanguagePreference(string? displayLanguage, bool followSystemLanguage, bool writeLog = true)
     {
         var language = ResolveLanguage(displayLanguage, followSystemLanguage);
-
         try
         {
             EnsureResourceInfrastructure();
@@ -64,7 +62,6 @@ public sealed class LocalizationService
             CurrentLanguageTag = language;
             _maps.Clear();
             Generation++;
-
             if (writeLog)
             {
                 App.WriteStartupEvent(followSystemLanguage
@@ -75,10 +72,7 @@ public sealed class LocalizationService
         }
         catch (Exception ex)
         {
-            if (writeLog)
-            {
-                App.WriteStartupFailure($"ApplyLanguage:{language}", ex);
-            }
+            if (writeLog) App.WriteStartupFailure($"ApplyLanguage:{language}", ex);
             return false;
         }
     }
@@ -91,9 +85,6 @@ public sealed class LocalizationService
 
     public string GetShellString(string key)
     {
-        // ERASE landed in v0.4.0 after the frozen v0.3.10 ShellLive map. Keep these two
-        // transient status strings centralized here until the next resource-map expansion,
-        // while still honoring the same live ResourceContext language selection.
         if (string.Equals(key, "StatusEraseNothing", StringComparison.Ordinal))
         {
             return CurrentLanguageTag switch
@@ -113,7 +104,10 @@ public sealed class LocalizationService
             };
         }
 
-        return GetStringFromMap(key, ShellLiveMapName);
+        var shell = GetStringFromMap(key, ShellLiveMapName);
+        // v0.6/v0.7 authoring text lives in a separate plain-ID map so the frozen
+        // shell map remains stable while still sharing the same live ResourceContext.
+        return string.IsNullOrWhiteSpace(shell) ? GetStringFromMap(key, AuthoringLiveMapName) : shell;
     }
 
     public string GetV039String(string key)
@@ -127,9 +121,6 @@ public sealed class LocalizationService
                 _ => "显示语言会立即应用到当前窗口、Start、Settings 与现有图纸标签，无需重启 UCAD。"
             };
         }
-
-        // The key predates v0.4.0 and is kept for Settings layout compatibility.
-        // Its runtime message now reflects the real drafting interaction implementation.
         if (string.Equals(key, DraftingInteractionNoteKey, StringComparison.Ordinal))
         {
             return CurrentLanguageTag switch
@@ -139,9 +130,6 @@ public sealed class LocalizationService
                 _ => "v0.4.0 已将对象捕捉与正交接入真实绘图输入；此处默认值用于新图纸，绘图时也可通过 F3 / F8 随时切换。"
             };
         }
-
-        // v0.4.0 promotes Center to the complete foundational OSNAP set. Keep the
-        // historic resource ID so saved Settings values and the Figma contract remain stable.
         if (string.Equals(key, CoreSnapOptionKey, StringComparison.Ordinal))
         {
             return CurrentLanguageTag switch
@@ -151,31 +139,19 @@ public sealed class LocalizationService
                 _ => "端点 / 中点 / 圆心 / 交点"
             };
         }
-
         return GetStringFromMap(key, V039MapName);
     }
 
     public string GetStringFromMap(string key, string mapName)
     {
-        if (string.IsNullOrWhiteSpace(key))
-        {
-            return string.Empty;
-        }
-
+        if (string.IsNullOrWhiteSpace(key)) return string.Empty;
         try
         {
             EnsureResourceInfrastructure();
             EnsureContext();
-
             var map = GetMap(mapName);
             var candidate = map?.TryGetValue(key, _resourceContext!);
-            if (candidate is not null)
-            {
-                return candidate.ValueAsString ?? string.Empty;
-            }
-
-            // Be tolerant of PRI layouts where the named .resw map is addressable as
-            // a path from the main map rather than as a directly returned subtree.
+            if (candidate is not null) return candidate.ValueAsString ?? string.Empty;
             candidate = _resourceManager!.MainResourceMap.TryGetValue($"{mapName}/{key}", _resourceContext!);
             return candidate?.ValueAsString ?? string.Empty;
         }
@@ -186,18 +162,11 @@ public sealed class LocalizationService
         }
     }
 
-    private void EnsureResourceInfrastructure()
-    {
-        _resourceManager ??= new ResourceManager();
-    }
+    private void EnsureResourceInfrastructure() => _resourceManager ??= new ResourceManager();
 
     private void EnsureContext()
     {
-        if (_resourceContext is not null)
-        {
-            return;
-        }
-
+        if (_resourceContext is not null) return;
         var context = _resourceManager!.CreateResourceContext();
         context.QualifierValues[KnownResourceQualifierName.Language] = CurrentLanguageTag;
         _resourceContext = context;
@@ -205,11 +174,7 @@ public sealed class LocalizationService
 
     private ResourceMap? GetMap(string mapName)
     {
-        if (_maps.TryGetValue(mapName, out var cached))
-        {
-            return cached;
-        }
-
+        if (_maps.TryGetValue(mapName, out var cached)) return cached;
         var map = _resourceManager!.MainResourceMap.TryGetSubtree(mapName);
         _maps[mapName] = map;
         return map;
@@ -221,12 +186,8 @@ public sealed class LocalizationService
             !string.Equals(displayLanguage, "System", StringComparison.OrdinalIgnoreCase))
         {
             var explicitLanguage = NormalizeSupportedLanguage(displayLanguage);
-            if (explicitLanguage is not null)
-            {
-                return explicitLanguage;
-            }
+            if (explicitLanguage is not null) return explicitLanguage;
         }
-
         return ResolveSystemLanguage();
     }
 
@@ -237,36 +198,22 @@ public sealed class LocalizationService
             foreach (var language in Windows.Globalization.ApplicationLanguages.Languages)
             {
                 var supported = NormalizeSupportedLanguage(language);
-                if (supported is not null)
-                {
-                    return supported;
-                }
+                if (supported is not null) return supported;
             }
         }
         catch
         {
             // Fall through to CurrentUICulture for unpackaged/test hosts.
         }
-
         var culture = NormalizeSupportedLanguage(CultureInfo.CurrentUICulture.Name);
         return culture ?? "en-US";
     }
 
     private static string? NormalizeSupportedLanguage(string? language)
     {
-        if (string.IsNullOrWhiteSpace(language))
-        {
-            return null;
-        }
-
+        if (string.IsNullOrWhiteSpace(language)) return null;
         foreach (var supported in SupportedLanguages)
-        {
-            if (string.Equals(language, supported, StringComparison.OrdinalIgnoreCase))
-            {
-                return supported;
-            }
-        }
-
+            if (string.Equals(language, supported, StringComparison.OrdinalIgnoreCase)) return supported;
         if (language.StartsWith("zh", StringComparison.OrdinalIgnoreCase)) return "zh-CN";
         if (language.StartsWith("ja", StringComparison.OrdinalIgnoreCase)) return "ja-JP";
         if (language.StartsWith("en", StringComparison.OrdinalIgnoreCase)) return "en-US";
