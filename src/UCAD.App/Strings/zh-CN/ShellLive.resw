@@ -40,6 +40,24 @@
   <data name="InspectorUndoAvailable" xml:space="preserve"><value>可撤销</value></data>
   <data name="InspectorRedoAvailable" xml:space="preserve"><value>可重做</value></data>
   <data name="InspectorFoundationHint" xml:space="preserve"><value>高 DPI 与工作区视觉基础已经就绪；v0.4.0 将在现有 CadWorkspaceSession 边界上接入选择、捕捉与正交。</value></data>
+  <data name="InspectorSelectionHelp" xml:space="preserve"><value>单击对象进行选择，或拖动鼠标进行框选。</value></data>
+  <data name="InspectorSelectionWindowHint" xml:space="preserve"><value>从左向右为窗口选择（完全包含），从右向左为交叉选择（相交即选）；Esc 清除选择。F3 切换对象捕捉，F8 切换正交。</value></data>
+  <data name="InspectorMultipleSelectionFormat" xml:space="preserve"><value>已选择 {0} 个对象</value></data>
+  <data name="InspectorMixedSelection" xml:space="preserve"><value>当前选择包含多种实体类型。</value></data>
+  <data name="InspectorSelection" xml:space="preserve"><value>选择</value></data>
+  <data name="InspectorSelectedCount" xml:space="preserve"><value>已选择</value></data>
+  <data name="InspectorEntityType" xml:space="preserve"><value>类型</value></data>
+  <data name="InspectorMixed" xml:space="preserve"><value>混合</value></data>
+  <data name="InspectorGeometry" xml:space="preserve"><value>几何</value></data>
+  <data name="InspectorEntityId" xml:space="preserve"><value>实体 ID</value></data>
+  <data name="EntityLine" xml:space="preserve"><value>直线</value></data>
+  <data name="EntityPolyline" xml:space="preserve"><value>多段线</value></data>
+  <data name="EntityCircle" xml:space="preserve"><value>圆</value></data>
+  <data name="EntityArc" xml:space="preserve"><value>圆弧</value></data>
+  <data name="GeometryLineFormat" xml:space="preserve"><value>长度 {0:0.##}</value></data>
+  <data name="GeometryPolylineFormat" xml:space="preserve"><value>顶点 {0}，长度 {1:0.##}</value></data>
+  <data name="GeometryCircleFormat" xml:space="preserve"><value>半径 {0:0.##}</value></data>
+  <data name="GeometryArcFormat" xml:space="preserve"><value>半径 {0:0.##}，圆心角 {1:0.##}°</value></data>
   <data name="CommandPrompt" xml:space="preserve"><value>命令:</value></data>
   <data name="CommandInputPlaceholder" xml:space="preserve"><value>输入命令、坐标或距离</value></data>
   <data name="StatusSnap" xml:space="preserve"><value>捕捉</value></data>
@@ -48,4 +66,8 @@
   <data name="StatusPolar" xml:space="preserve"><value>极轴</value></data>
   <data name="StatusOsnap" xml:space="preserve"><value>对象捕捉</value></data>
   <data name="StatusOtrack" xml:space="preserve"><value>对象追踪</value></data>
+  <data name="StatusOsnapOnMessage" xml:space="preserve"><value>对象捕捉已开启（F3）</value></data>
+  <data name="StatusOsnapOffMessage" xml:space="preserve"><value>对象捕捉已关闭（F3）</value></data>
+  <data name="StatusOrthoOnMessage" xml:space="preserve"><value>正交模式已开启（F8）</value></data>
+  <data name="StatusOrthoOffMessage" xml:space="preserve"><value>正交模式已关闭（F8）</value></data>
 </root>

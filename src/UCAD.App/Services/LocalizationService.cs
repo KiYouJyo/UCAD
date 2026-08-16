@@ -14,6 +14,8 @@ public sealed class LocalizationService
     private const string V039MapName = "UcadV039";
     private const string ShellLiveMapName = "ShellLive";
     private const string LiveReloadNoteKey = "Settings_Language_ReloadNote";
+    private const string DraftingInteractionNoteKey = "Settings_Drafting_PendingNote";
+    private const string CoreSnapOptionKey = "Settings_Option_SnapCore";
     private static readonly string[] SupportedLanguages = ["zh-CN", "ja-JP", "en-US"];
 
     private readonly Dictionary<string, ResourceMap?> _maps = new(StringComparer.OrdinalIgnoreCase);
@@ -87,7 +89,32 @@ public sealed class LocalizationService
         return string.IsNullOrWhiteSpace(value) ? GetV039String(key) : value;
     }
 
-    public string GetShellString(string key) => GetStringFromMap(key, ShellLiveMapName);
+    public string GetShellString(string key)
+    {
+        // ERASE landed in v0.4.0 after the frozen v0.3.10 ShellLive map. Keep these two
+        // transient status strings centralized here until the next resource-map expansion,
+        // while still honoring the same live ResourceContext language selection.
+        if (string.Equals(key, "StatusEraseNothing", StringComparison.Ordinal))
+        {
+            return CurrentLanguageTag switch
+            {
+                "ja-JP" => "消去する選択オブジェクトがありません。",
+                "en-US" => "No selected objects to erase.",
+                _ => "没有可删除的已选对象。"
+            };
+        }
+        if (string.Equals(key, "StatusEraseCountFormat", StringComparison.Ordinal))
+        {
+            return CurrentLanguageTag switch
+            {
+                "ja-JP" => "{0} 個のオブジェクトを消去しました。",
+                "en-US" => "Erased {0} object(s).",
+                _ => "已删除 {0} 个对象。"
+            };
+        }
+
+        return GetStringFromMap(key, ShellLiveMapName);
+    }
 
     public string GetV039String(string key)
     {
@@ -98,6 +125,30 @@ public sealed class LocalizationService
                 "ja-JP" => "表示言語は現在のウィンドウ、Start、Settings、既存の図面タブへすぐに反映されます。UCAD の再起動は不要です。",
                 "en-US" => "Display-language changes apply immediately to the current window, Start, Settings, and existing drawing tabs. No UCAD restart is required.",
                 _ => "显示语言会立即应用到当前窗口、Start、Settings 与现有图纸标签，无需重启 UCAD。"
+            };
+        }
+
+        // The key predates v0.4.0 and is kept for Settings layout compatibility.
+        // Its runtime message now reflects the real drafting interaction implementation.
+        if (string.Equals(key, DraftingInteractionNoteKey, StringComparison.Ordinal))
+        {
+            return CurrentLanguageTag switch
+            {
+                "ja-JP" => "v0.4.0 では OSNAP と直交が実際の作図入力へ接続されています。ここで設定した既定値は新しい図面に適用され、作図中は F3 / F8 でも切り替えられます。",
+                "en-US" => "In v0.4.0, OSNAP and Ortho are connected to real drawing input. These defaults apply to new drawings and can be toggled during drafting with F3 / F8.",
+                _ => "v0.4.0 已将对象捕捉与正交接入真实绘图输入；此处默认值用于新图纸，绘图时也可通过 F3 / F8 随时切换。"
+            };
+        }
+
+        // v0.4.0 promotes Center to the complete foundational OSNAP set. Keep the
+        // historic resource ID so saved Settings values and the Figma contract remain stable.
+        if (string.Equals(key, CoreSnapOptionKey, StringComparison.Ordinal))
+        {
+            return CurrentLanguageTag switch
+            {
+                "ja-JP" => "端点 / 中点 / 中心 / 交点",
+                "en-US" => "Endpoint / Midpoint / Center / Intersection",
+                _ => "端点 / 中点 / 圆心 / 交点"
             };
         }
 

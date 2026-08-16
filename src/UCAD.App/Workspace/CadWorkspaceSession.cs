@@ -1,6 +1,8 @@
 using UCAD.Core;
 using UCAD.Core.Commands;
 using UCAD.Core.Geometry;
+using UCAD.Core.Interaction;
+using UCAD.Services;
 using UCAD.Views;
 
 namespace UCAD.Workspace;
@@ -13,7 +15,9 @@ public sealed class CadWorkspaceSession
         Ordinal = ordinal;
         DisplayName = displayName;
         Document = new CadDocument();
-        Viewport = new CadViewport(Document);
+        Interaction = new CadInteractionState(Document);
+        ApplyDraftingDefaults(SettingsService.Current.Settings);
+        Viewport = new CadViewport(Document, Interaction);
         CommandSession = new CommandSession(registry);
     }
 
@@ -22,6 +26,8 @@ public sealed class CadWorkspaceSession
     public string DisplayName { get; private set; }
 
     public CadDocument Document { get; }
+
+    public CadInteractionState Interaction { get; }
 
     public CadViewport Viewport { get; }
 
@@ -43,5 +49,16 @@ public sealed class CadWorkspaceSession
         {
             DisplayName = displayName;
         }
+    }
+
+    private void ApplyDraftingDefaults(AppSettings settings)
+    {
+        Interaction.ObjectSnapEnabled = settings.DefaultObjectSnap;
+        Interaction.ObjectSnapModes = settings.DefaultSnapTypes switch
+        {
+            "EndpointMidpoint" => ObjectSnapMode.Endpoint | ObjectSnapMode.Midpoint,
+            _ => ObjectSnapMode.Endpoint | ObjectSnapMode.Midpoint | ObjectSnapMode.Center | ObjectSnapMode.Intersection
+        };
+        Interaction.OrthoEnabled = settings.DefaultOrtho;
     }
 }

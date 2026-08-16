@@ -50,19 +50,21 @@ UCAD aims to become a lightweight Windows-native 2D CAD focused on architecture 
 - [x] future command surfaces visible but disabled until their Core capability exists
 - [x] zh-CN / ja-JP / en-US shell localization
 
-**Transition gate:** v0.3.5 freezes the primary information architecture. v0.4 should connect interaction capabilities to these existing shell surfaces rather than redesigning the workspace.
+**Transition gate:** v0.3.5 freezes the primary information architecture. v0.4 connects interaction capabilities to these existing shell surfaces rather than redesigning the workspace.
 
 ## v0.4 — Interaction
 
-- [ ] click selection
-- [ ] window selection
-- [ ] crossing selection
-- [ ] multi-selection
-- [ ] delete
-- [ ] endpoint / midpoint / center / intersection OSNAP
-- [ ] ortho mode
-- [ ] selection-backed inspector properties
-- [ ] enable the corresponding existing status/tool surfaces from Core capability state
+- [x] click selection
+- [x] window selection
+- [x] crossing selection
+- [x] multi-selection
+- [x] delete / ERASE as one undoable multi-entity mutation
+- [x] endpoint / midpoint / center / intersection OSNAP
+- [x] ortho mode
+- [x] selection-backed inspector properties
+- [x] enable the corresponding existing status/tool surfaces from Core capability state
+
+**Interaction gate:** v0.4 freezes document-scoped selection and drafting-aid ownership. Pixel-level UI tuning is intentionally not part of this milestone. Modify commands should reuse `SelectionSet`, `CadEntityGeometry`, `CadInteractionState`, and the existing `CommandRegistry → CommandSession` path instead of creating parallel selection/edit models.
 
 ## v0.5 — Modify
 

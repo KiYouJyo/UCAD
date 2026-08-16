@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.4.0 — 2026-08-16
+
+### Selection / OSNAP / Ortho Interaction Foundation
+- Added document-scoped `SelectionSet` / `CadInteractionState` ownership so selection, object snap, and ortho are independent per Drawing tab and are not stored as ad-hoc XAML state.
+- Added click selection, additive multi-selection, preselection highlighting, grips, left-to-right Window selection, and right-to-left Crossing selection for Line / Polyline / Circle / Arc entities.
+- Added UI-independent `CadRect`, bounds, hit-distance, rectangle intersection, grip-point, and line/circle/arc intersection geometry queries in Core.
+- Added Endpoint / Midpoint / Center / Intersection OSNAP with a screen-pixel aperture converted to world units; connected snap points and transient markers to real mouse drafting input.
+- Added Ortho constraint for LINE / PLINE mouse drafting, with F8 and status-bar toggling. F3 and status-bar OSNAP toggling are also per-workspace and immediate.
+- Made Drafting Settings defaults initialize real OSNAP / snap-mode / Ortho state for newly created Drawing sessions.
+- Added selection-backed Inspector reporting for entity type, selection count, basic geometry, and entity ID; made command-session lifecycle observable so Inspector stays synchronized.
+- Added `ERASE` (`E`, `DELETE`) through the shared `CommandRegistry → CommandSession` path. Keyboard Delete uses the same command implementation, and multi-entity erase is a single undoable document mutation.
+- Derived tool-category enabled state from actual `CommandRegistry` capabilities so unfinished Modify / Annotate / Layer / Block / Measure categories do not imply implemented Core behavior.
+- Preserved v0.3.10 restart-free zh-CN / ja-JP / en-US localization and added v0.4 interaction status/Inspector wording.
+
+### Validation
+- Expanded Core tests for SelectionSet, point/curve hit testing, Window/Crossing selection, four foundational OSNAP modes, line-circle/circle-circle intersections, Ortho, multi-entity ERASE one-step Undo, and observable CommandSession lifecycle.
+- Expanded real startup smoke to create a Drawing in the running application and validate Selection + ERASE + Endpoint/Center OSNAP + Ortho + Inspector + capability-derived category state.
+- Kept app-build, MSIX / one-click package validation, localization parity, version SSOT, `PerMonitorV2`, Unicode placeholder checks, and frozen Figma-critical design tokens as required CI.
+- Pixel-level UI tuning remains manual/non-gating for this milestone.
+
 ## 0.3.10 — 2026-08-16
 
 ### Live trilingual localization hotfix

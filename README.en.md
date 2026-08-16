@@ -11,47 +11,56 @@ Lightweight 2D CAD for urban planning and architectural design.
 
 UCAD aims to be a Windows-native lightweight 2D CAD with familiar AutoCAD-style interaction and a deliberately bounded architecture/planning feature set. The project is DXF-first and 2D-first.
 
-**Current candidate: v0.3.10 — Live Trilingual Localization Hotfix.** This release fixes the v0.3.9 regressions where Start / Settings could display resource identifiers and changing display language required a restart. An explicit MRT Core `ResourceContext` now switches Simplified Chinese, Japanese, and English inside the running process while preserving the v0.3.9 UI foundation and current CAD Core behavior.
+**Current candidate: v0.4.0 — Selection / OSNAP / Ortho Interaction Foundation.** Pixel-level UI tuning is intentionally paused for this milestone. v0.4.0 completes the first CAD interaction loop: point selection, Window/Crossing selection, additive multi-selection, ERASE, Endpoint/Midpoint/Center/Intersection OSNAP, Ortho, and a selection-backed Inspector.
 
 ## Installation
 
-Download production builds from [GitHub Releases](https://github.com/KiYouJyo/UCAD/releases/latest):
-
-- `UCAD-v<version>-x64-one-click.zip`: recommended.
-- `UCAD_<packageVersion>_x64.msixbundle`: direct sideload package.
-- `SHA256SUMS.txt`: integrity manifest.
+Download production builds from [GitHub Releases](https://github.com/KiYouJyo/UCAD/releases/latest): `UCAD-v<version>-x64-one-click.zip`, `UCAD_<packageVersion>_x64.msixbundle`, and `SHA256SUMS.txt`.
 
 ## Workspace pages
 
-UCAD has three explicit tab-content types:
-
 - **Drawing**: Category Bar, Tool Shelf, Tool Rail, CAD Canvas, Inspector, Command Line, and Status Bar.
-- **Start**: the CAD new-tab / Start Center. By default the title-bar `+` opens Start and a real `CadWorkspaceSession` is created only after New Drawing is chosen. If “show Start on new tab” is disabled, `+` creates a blank Drawing directly.
-- **Settings**: a single reusable settings tab, without the CAD Tool Rail, Inspector, Command Line, or Status Bar.
+- **Start**: the CAD new-tab / Start Center. By default `+` opens Start; a real `CadWorkspaceSession` is created by New Drawing. If “show Start on new tab” is disabled, `+` creates a blank Drawing directly.
+- **Settings**: one reusable settings tab without CAD-only rails/panels.
 
-Start includes New/Open entry points, an honest empty Recent state, Blank / Architecture / Urban Planning template information architecture, and Learn UCAD. Unsupported file I/O, recent-file storage, and template features are disabled or explicitly reported as unavailable rather than fabricated.
+Each Drawing owns an independent `CadDocument`, `CadInteractionState`, `CadViewport`, and `CommandSession`, so geometry, history, selection, OSNAP, Ortho, command, and viewport state are isolated per tab.
+
+## v0.4.0 interaction
+
+- Click an entity to select it; continue clicking to build an additive multi-selection.
+- Blank click or Esc clears selection.
+- Left-to-right drag is **Window** selection (fully contained objects only).
+- Right-to-left drag is **Crossing** selection (contained or intersecting objects).
+- Selection preview, selected highlighting, and grips are viewport presentation of Core-owned `SelectionSet` state.
+- **F3 / OSNAP status** toggles Endpoint / Midpoint / Center / Intersection object snap.
+- **F8 / ORTHO status** toggles horizontal/vertical constraint for LINE / PLINE mouse input.
+- **Delete / ERASE / E / DELETE** erases the current selection as one undoable mutation.
+- Inspector reads real selected Line / Polyline / Circle / Arc entities and reports type, count, basic geometry, and entity ID.
 
 ## Commands
 
-Each Drawing tab is an independent in-memory CAD session with its own geometry, Undo/Redo history, command state, and viewport state. Available commands are `LINE/L`, `PLINE/PL`, `RECTANGLE/REC`, `CIRCLE/C`, `ARC/A`, `UNDO/U`, `REDO`, `CLEAR`, and `RESETVIEW/RV`.
+| Command | Alias | Purpose |
+| --- | --- | --- |
+| `LINE` | `L` | continuous line |
+| `PLINE` | `PL` | polyline |
+| `RECTANGLE` | `REC` | two-corner rectangle |
+| `CIRCLE` | `C` | center/radius circle |
+| `ARC` | `A` | three-point arc |
+| `ERASE` | `E`, `DELETE` | erase current selection |
+| `UNDO` | `U` | undo |
+| `REDO` | — | redo |
+| `CLEAR` | — | clear drawing |
+| `RESETVIEW` | `RV` | reset view |
 
-All working UI entry points route through `CommandRegistry → CommandSession → CAD Core`. Selection, MOVE/COPY/OFFSET/TRIM, layers, OSNAP, ORTHO, and related planned capabilities retain UI slots but are not exposed as working commands until the matching Core capability exists.
+All working command entry points converge on `CommandRegistry → CommandSession → CAD Core`. Tool-category availability now derives from registered Core capabilities. MOVE / COPY / ROTATE / OFFSET / TRIM and other Modify commands remain v0.5.x work.
 
-## Settings and display baseline
+## Settings, display, and localization
 
-- Native WinUI 3 / Windows App SDK window with `PerMonitorV2` high-DPI awareness;
-- 1440×900 Figma frames remain the UI visual SSOT;
-- 44 title bar, 44 category bar, 64 tool shelf, 52 Tool Rail, 304 Inspector, 34 command line, and 30 status bar DIP;
-- 228-DIP Settings navigation, 54-DIP content offset, 940×72 cards, and 35 / 12 / 8 / 30 DIP vertical rhythm;
-- **App Theme and CAD Canvas Theme work independently**: App Theme changes the shell/control palette while Canvas Theme separately changes entity, preview, grid, and crosshair colors; canvas background remains independent;
-- grid visibility/opacity, cursor-centered zoom, middle-button pan, reverse wheel zoom, coordinate precision, and decimal formatting are wired to runtime behavior;
-- unsupported Restore Session, manual UI Scale, automatic update checking, and recent-history clearing are not presented as implemented behavior;
-- Fluent / WinUI icons for common actions and UCAD-style `PathIcon` geometry for CAD-specific symbols;
-- centralized `SettingsService` / `AppSettings` persistence at `%LOCALAPPDATA%\UCAD\settings.json`.
+UCAD remains `PerMonitorV2`, with Figma critical design tokens protected by CI even though pixel-level UI comparison is not a v0.4.0 release gate. App Theme and CAD Canvas Theme remain independent. Selection preview and existing viewport preferences are runtime settings.
 
-## Localization
+Drafting defaults — object snap, snap set, and ortho — initialize newly created Drawing sessions; existing Drawing sessions keep their current F3/F8 state. Settings persist through `SettingsService` / `AppSettings` at `%LOCALAPPDATA%\UCAD\settings.json`.
 
-The application and repository use Simplified Chinese (zh-CN), Japanese (ja-JP), and English (en-US). v0.3.10 selects strings through an explicit MRT Core `ResourceContext`. After disabling Follow System Language in Settings, choosing any supported language **immediately relocalizes the current UCAD process without a restart**, including Window chrome content, Start, Settings, document tabs, menus, Inspector, command area, and status bar. Existing `CadWorkspaceSession` instances are not recreated, so geometry, Undo/Redo history, and viewport state remain intact.
+Simplified Chinese, Japanese, and English continue to switch **without restarting UCAD** through the explicit MRT Core `ResourceContext`; the current window, Start, Settings, document tabs, menus, Inspector, command area, and status bar refresh in place without rebuilding existing drawing sessions.
 
 ## Development
 
@@ -61,16 +70,14 @@ dotnet build src/UCAD.App/UCAD.App.csproj -c Debug -p:Platform=x64 -r win-x64
 dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release
 ```
 
-Required CI covers Core tests, app build, real startup smoke, MSIX/package validation, localization parity, version SSOT, PerMonitorV2, Unicode-placeholder scanning, Figma dimension/color-token contracts, and Start/Settings/Canvas behavior contracts. v0.3.10 also has a Localization Smoke that switches zh-CN → ja-JP → en-US inside one running process and validates real translated strings.
-
-Pixel-level Figma comparison remains available as the manual `UI Fidelity Screenshots` workflow. It runs only when the runner exposes a real 1440×900 interactive desktop, so an unsuitable hosted desktop never blocks functional development or release.
+Required CI covers Core tests, app build, real startup smoke, MSIX/package validation, localization parity, version SSOT, PerMonitorV2, icon/Figma-token contracts, and v0.4 interaction contracts. Startup smoke now creates a real Drawing in the running app and validates Selection + OSNAP + Center Snap + Ortho + Inspector + capability-derived category state. Localization Smoke still switches zh-CN → ja-JP → en-US inside one running process.
 
 ## Documentation
 
 - [Roadmap](ROADMAP.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Release process](docs/RELEASE-PROCESS.md)
-- [v0.3.10 Release Notes](docs/RELEASE-NOTES-v0.3.10.en.md)
+- [v0.4.0 Release Notes](docs/RELEASE-NOTES-v0.4.0.en.md)
 
 ## License
 

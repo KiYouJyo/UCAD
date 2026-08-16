@@ -2,7 +2,8 @@
     x:Class="UCAD.Views.CadViewport"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:canvas="using:Microsoft.Graphics.Canvas.UI.Xaml">
+    xmlns:canvas="using:Microsoft.Graphics.Canvas.UI.Xaml"
+    Loaded="CadViewport_Loaded">
 
     <Grid Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
         <canvas:CanvasControl
@@ -11,6 +12,8 @@
             PointerMoved="Canvas_PointerMoved"
             PointerPressed="Canvas_PointerPressed"
             PointerReleased="Canvas_PointerReleased"
+            PointerCaptureLost="Canvas_PointerCaptureLost"
+            PointerExited="Canvas_PointerExited"
             PointerWheelChanged="Canvas_PointerWheelChanged" />
     </Grid>
 </UserControl>

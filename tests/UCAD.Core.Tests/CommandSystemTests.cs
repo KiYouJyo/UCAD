@@ -19,6 +19,20 @@ public sealed class CommandSystemTests
     }
 
     [Fact]
+    public void RegistryExposesEraseThroughCadStyleTokens()
+    {
+        var registry = CommandRegistry.CreateDefault();
+
+        Assert.True(registry.TryResolve("ERASE", out var canonical));
+        Assert.True(registry.TryResolve("E", out var alias));
+        Assert.True(registry.TryResolve("DELETE", out var deleteToken));
+        Assert.NotNull(canonical);
+        Assert.Same(canonical, alias);
+        Assert.Same(canonical, deleteToken);
+        Assert.Equal(CadCommandCategory.Edit, canonical!.Category);
+    }
+
+    [Fact]
     public void RegistryRejectsDuplicateTokens()
     {
         var registry = new CommandRegistry();
@@ -49,6 +63,21 @@ public sealed class CommandSystemTests
         Assert.True(session.Cancel());
         Assert.False(session.IsActive);
         Assert.False(session.Cancel());
+    }
+
+    [Fact]
+    public void SessionPublishesObservableLifecycleChanges()
+    {
+        var session = new CommandSession(CommandRegistry.CreateDefault());
+        var changes = 0;
+        session.Changed += (_, _) => changes++;
+
+        session.Start("LINE");
+        session.Complete();
+        session.Start("CIRCLE");
+        session.Cancel();
+
+        Assert.Equal(4, changes);
     }
 
     [Fact]

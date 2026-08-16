@@ -40,6 +40,24 @@
   <data name="InspectorUndoAvailable" xml:space="preserve"><value>Undo available</value></data>
   <data name="InspectorRedoAvailable" xml:space="preserve"><value>Redo available</value></data>
   <data name="InspectorFoundationHint" xml:space="preserve"><value>The workspace and HiDPI foundation is in place; v0.4.0 will add selection, snapping, and ortho on the existing CadWorkspaceSession boundary.</value></data>
+  <data name="InspectorSelectionHelp" xml:space="preserve"><value>Click an entity to select it, or drag a selection window.</value></data>
+  <data name="InspectorSelectionWindowHint" xml:space="preserve"><value>Left-to-right selects enclosed objects; right-to-left selects crossing objects. Esc clears selection. F3 toggles OSNAP; F8 toggles ORTHO.</value></data>
+  <data name="InspectorMultipleSelectionFormat" xml:space="preserve"><value>{0} objects selected</value></data>
+  <data name="InspectorMixedSelection" xml:space="preserve"><value>Multiple entity types are selected.</value></data>
+  <data name="InspectorSelection" xml:space="preserve"><value>SELECTION</value></data>
+  <data name="InspectorSelectedCount" xml:space="preserve"><value>Selected</value></data>
+  <data name="InspectorEntityType" xml:space="preserve"><value>Type</value></data>
+  <data name="InspectorMixed" xml:space="preserve"><value>Mixed</value></data>
+  <data name="InspectorGeometry" xml:space="preserve"><value>Geometry</value></data>
+  <data name="InspectorEntityId" xml:space="preserve"><value>Entity ID</value></data>
+  <data name="EntityLine" xml:space="preserve"><value>Line</value></data>
+  <data name="EntityPolyline" xml:space="preserve"><value>Polyline</value></data>
+  <data name="EntityCircle" xml:space="preserve"><value>Circle</value></data>
+  <data name="EntityArc" xml:space="preserve"><value>Arc</value></data>
+  <data name="GeometryLineFormat" xml:space="preserve"><value>Length {0:0.##}</value></data>
+  <data name="GeometryPolylineFormat" xml:space="preserve"><value>Vertices {0}, length {1:0.##}</value></data>
+  <data name="GeometryCircleFormat" xml:space="preserve"><value>Radius {0:0.##}</value></data>
+  <data name="GeometryArcFormat" xml:space="preserve"><value>Radius {0:0.##}, sweep {1:0.##}°</value></data>
   <data name="CommandPrompt" xml:space="preserve"><value>Command:</value></data>
   <data name="CommandInputPlaceholder" xml:space="preserve"><value>Enter command, coordinate, or distance</value></data>
   <data name="StatusSnap" xml:space="preserve"><value>SNAP</value></data>
@@ -48,4 +66,8 @@
   <data name="StatusPolar" xml:space="preserve"><value>POLAR</value></data>
   <data name="StatusOsnap" xml:space="preserve"><value>OSNAP</value></data>
   <data name="StatusOtrack" xml:space="preserve"><value>OTRACK</value></data>
+  <data name="StatusOsnapOnMessage" xml:space="preserve"><value>Object snap on (F3)</value></data>
+  <data name="StatusOsnapOffMessage" xml:space="preserve"><value>Object snap off (F3)</value></data>
+  <data name="StatusOrthoOnMessage" xml:space="preserve"><value>Ortho mode on (F8)</value></data>
+  <data name="StatusOrthoOffMessage" xml:space="preserve"><value>Ortho mode off (F8)</value></data>
 </root>
