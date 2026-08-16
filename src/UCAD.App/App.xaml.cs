@@ -19,6 +19,7 @@ public partial class App : Application
         InitializeComponent();
         UnhandledException += App_UnhandledException;
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+        SettingsService.Current.SettingsChanged += SettingsService_SettingsChanged;
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
@@ -27,7 +28,9 @@ public partial class App : Application
         {
             WriteStartupEvent("OnLaunched begin");
             LocalizationService.Current.ApplyFromSettings();
-            _window = new MainWindow();
+            var mainWindow = new MainWindow();
+            mainWindow.ScheduleLocalizationSmoke();
+            _window = mainWindow;
             WriteStartupEvent("MainWindow constructed");
             _window.Activate();
             WriteStartupEvent("MainWindow activated");
@@ -36,6 +39,23 @@ public partial class App : Application
         {
             WriteStartupFailure("OnLaunched", ex);
             throw;
+        }
+    }
+
+    private void SettingsService_SettingsChanged(object? sender, EventArgs e)
+    {
+        var localization = LocalizationService.Current;
+        if (localization.IsSettingsLanguageApplied)
+        {
+            return;
+        }
+
+        if (_window is MainWindow mainWindow)
+        {
+            // Settings controls persist during their own SelectionChanged/Toggled event.
+            // Enqueue the visual rebuild so that callback can return before the current
+            // Settings section is reconstructed in the new language.
+            mainWindow.ApplyLiveLocalizationFromSettings();
         }
     }
 
