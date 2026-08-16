@@ -10,7 +10,7 @@
     <SolidColorBrush x:Key="UcadCategoryBarBrush" Color="#252528" />
     <SolidColorBrush x:Key="UcadToolShelfBrush" Color="#1D1D20" />
     <SolidColorBrush x:Key="UcadNavigationBrush" Color="#1D1D20" />
-    <SolidColorBrush x:Key="UcadCardBrush" Color="#202023" />
+    <SolidColorBrush x:Key="UcadCardBrush" Color="#222225" />
     <SolidColorBrush x:Key="UcadPanelBrush" Color="#1F1F22" />
     <SolidColorBrush x:Key="UcadOverlayBrush" Color="#18181A" />
     <SolidColorBrush x:Key="UcadStatusBarBrush" Color="#222225" />
@@ -34,9 +34,9 @@
     <SolidColorBrush x:Key="UcadCategorySelectedBrush" Color="#1C4257" />
     <SolidColorBrush x:Key="UcadAccentBrightBrush" Color="#4DADF5" />
 
-    <!-- Strokes -->
+    <!-- Strokes. Figma card stroke is #404047 at 60% opacity. -->
     <SolidColorBrush x:Key="UcadDividerBrush" Color="#404047" />
-    <SolidColorBrush x:Key="UcadCardBorderBrush" Color="#40404A" />
+    <SolidColorBrush x:Key="UcadCardBorderBrush" Color="#99404047" />
     <SolidColorBrush x:Key="UcadControlBorderBrush" Color="#40404A" />
     <SolidColorBrush x:Key="UcadDividerSoftBrush" Color="#2E3236" />
 
@@ -68,7 +68,7 @@
     <x:Double x:Key="UcadSettingsSectionSpacing">30</x:Double>
     <CornerRadius x:Key="UcadRadiusSmall">4</CornerRadius>
     <CornerRadius x:Key="UcadRadiusMedium">5</CornerRadius>
-    <CornerRadius x:Key="UcadRadiusCard">6</CornerRadius>
+    <CornerRadius x:Key="UcadRadiusCard">7</CornerRadius>
 
     <Style x:Key="UcadShellMenuButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="Transparent" />
