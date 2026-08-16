@@ -26,6 +26,11 @@ public sealed partial class CadViewport : UserControl
     private Vector2 _lastPanPointer;
     private DrawingCommandKind? _drawingCommand;
     private Color _canvasBackground = ColorHelper.FromArgb(255, 14, 16, 18);
+    private Color _geometryColor = ColorHelper.FromArgb(255, 237, 237, 242);
+    private Color _transientColor = ColorHelper.FromArgb(255, 77, 173, 245);
+    private Color _gridBaseColor = ColorHelper.FromArgb(255, 90, 94, 101);
+    private Color _originColor = ColorHelper.FromArgb(180, 70, 70, 70);
+    private Color _crosshairColor = ColorHelper.FromArgb(110, 180, 180, 180);
     private bool _showGrid = true;
     private byte _gridAlpha = 56;
     private bool _zoomAroundCursor = true;
@@ -52,9 +57,31 @@ public sealed partial class CadViewport : UserControl
     public void ApplySettings(AppSettings settings)
     {
         ArgumentNullException.ThrowIfNull(settings);
+        var lightCanvas = string.Equals(settings.CanvasTheme, "Light", StringComparison.OrdinalIgnoreCase);
+        var fallbackBackground = lightCanvas
+            ? ColorHelper.FromArgb(255, 255, 255, 255)
+            : ColorHelper.FromArgb(255, 14, 16, 18);
         _canvasBackground = TryParseColor(settings.CanvasBackground, out var color)
             ? color
-            : ColorHelper.FromArgb(255, 14, 16, 18);
+            : fallbackBackground;
+
+        if (lightCanvas)
+        {
+            _geometryColor = ColorHelper.FromArgb(255, 31, 34, 38);
+            _transientColor = ColorHelper.FromArgb(255, 0, 95, 184);
+            _gridBaseColor = ColorHelper.FromArgb(255, 112, 116, 122);
+            _originColor = ColorHelper.FromArgb(180, 105, 105, 110);
+            _crosshairColor = ColorHelper.FromArgb(120, 75, 78, 82);
+        }
+        else
+        {
+            _geometryColor = ColorHelper.FromArgb(255, 237, 237, 242);
+            _transientColor = ColorHelper.FromArgb(255, 77, 173, 245);
+            _gridBaseColor = ColorHelper.FromArgb(255, 90, 94, 101);
+            _originColor = ColorHelper.FromArgb(180, 70, 70, 70);
+            _crosshairColor = ColorHelper.FromArgb(110, 180, 180, 180);
+        }
+
         _showGrid = settings.ShowGrid;
         _gridAlpha = (byte)Math.Clamp((int)Math.Round(settings.GridOpacity / 100.0 * 255), 0, 255);
         _zoomAroundCursor = settings.ZoomAroundCursor;
@@ -226,7 +253,7 @@ public sealed partial class CadViewport : UserControl
         var ds = args.DrawingSession;
         ds.Clear(_canvasBackground);
         if (_showGrid) DrawGrid(ds, sender.ActualWidth, sender.ActualHeight);
-        foreach (var entity in _document.Entities) DrawEntity(ds, entity, Colors.White, 1.2f);
+        foreach (var entity in _document.Entities) DrawEntity(ds, entity, _geometryColor, 1.2f);
         DrawTransientGeometry(ds);
         DrawCrosshair(ds, sender.ActualWidth, sender.ActualHeight);
     }
@@ -249,31 +276,31 @@ public sealed partial class CadViewport : UserControl
         switch (kind)
         {
             case DrawingCommandKind.Line when _inputPoints.Count > 0:
-                ds.DrawLine(WorldToScreen(_inputPoints[^1]), _pointerScreen, Colors.DeepSkyBlue, 1.0f);
+                ds.DrawLine(WorldToScreen(_inputPoints[^1]), _pointerScreen, _transientColor, 1.0f);
                 break;
             case DrawingCommandKind.Polyline when _inputPoints.Count > 0:
-                DrawPointChain(ds, _inputPoints, false, Colors.DeepSkyBlue, 1.0f);
-                ds.DrawLine(WorldToScreen(_inputPoints[^1]), _pointerScreen, Colors.DeepSkyBlue, 1.0f);
+                DrawPointChain(ds, _inputPoints, false, _transientColor, 1.0f);
+                ds.DrawLine(WorldToScreen(_inputPoints[^1]), _pointerScreen, _transientColor, 1.0f);
                 break;
             case DrawingCommandKind.Rectangle when _inputPoints.Count == 1:
                 var first = _inputPoints[0];
                 var corners = new[] { first, new CadPoint(pointer.X, first.Y), pointer, new CadPoint(first.X, pointer.Y) };
-                DrawPointChain(ds, corners, true, Colors.DeepSkyBlue, 1.0f);
+                DrawPointChain(ds, corners, true, _transientColor, 1.0f);
                 break;
             case DrawingCommandKind.Circle when _inputPoints.Count == 1:
                 var radius = (pointer - _inputPoints[0]).Length;
-                if (radius > GeometryEpsilon) ds.DrawCircle(WorldToScreen(_inputPoints[0]), (float)(radius * _zoom), Colors.DeepSkyBlue, 1.0f);
+                if (radius > GeometryEpsilon) ds.DrawCircle(WorldToScreen(_inputPoints[0]), (float)(radius * _zoom), _transientColor, 1.0f);
                 break;
             case DrawingCommandKind.Arc when _inputPoints.Count == 1:
-                ds.DrawLine(WorldToScreen(_inputPoints[0]), _pointerScreen, Colors.DeepSkyBlue, 1.0f);
+                ds.DrawLine(WorldToScreen(_inputPoints[0]), _pointerScreen, _transientColor, 1.0f);
                 break;
             case DrawingCommandKind.Arc when _inputPoints.Count == 2:
                 if (ArcEntity.TryCreateFromThreePoints(_inputPoints[0], _inputPoints[1], pointer, out var previewArc) && previewArc is not null)
-                    DrawPointChain(ds, previewArc.SamplePoints(), false, Colors.DeepSkyBlue, 1.0f);
+                    DrawPointChain(ds, previewArc.SamplePoints(), false, _transientColor, 1.0f);
                 else
                 {
-                    DrawPointChain(ds, _inputPoints, false, Colors.DeepSkyBlue, 1.0f);
-                    ds.DrawLine(WorldToScreen(_inputPoints[^1]), _pointerScreen, Colors.DeepSkyBlue, 1.0f);
+                    DrawPointChain(ds, _inputPoints, false, _transientColor, 1.0f);
+                    ds.DrawLine(WorldToScreen(_inputPoints[^1]), _pointerScreen, _transientColor, 1.0f);
                 }
                 break;
         }
@@ -296,7 +323,7 @@ public sealed partial class CadViewport : UserControl
         var endX = Math.Ceiling(bottomRight.X / worldSpacing) * worldSpacing;
         var startY = Math.Floor(bottomRight.Y / worldSpacing) * worldSpacing;
         var endY = Math.Ceiling(topLeft.Y / worldSpacing) * worldSpacing;
-        var gridColor = ColorHelper.FromArgb(_gridAlpha, 90, 94, 101);
+        var gridColor = ColorHelper.FromArgb(_gridAlpha, _gridBaseColor.R, _gridBaseColor.G, _gridBaseColor.B);
         for (var x = startX; x <= endX; x += worldSpacing)
         {
             var sx = WorldToScreen(new CadPoint(x, 0)).X;
@@ -308,14 +335,14 @@ public sealed partial class CadViewport : UserControl
             ds.DrawLine(0, sy, (float)width, sy, gridColor, 1);
         }
         var origin = WorldToScreen(new CadPoint(0, 0));
-        ds.DrawLine(0, origin.Y, (float)width, origin.Y, ColorHelper.FromArgb(180, 70, 70, 70), 1);
-        ds.DrawLine(origin.X, 0, origin.X, (float)height, ColorHelper.FromArgb(180, 70, 70, 70), 1);
+        ds.DrawLine(0, origin.Y, (float)width, origin.Y, _originColor, 1);
+        ds.DrawLine(origin.X, 0, origin.X, (float)height, _originColor, 1);
     }
 
     private void DrawCrosshair(CanvasDrawingSession ds, double width, double height)
     {
-        ds.DrawLine(0, _pointerScreen.Y, (float)width, _pointerScreen.Y, ColorHelper.FromArgb(110, 180, 180, 180), 0.7f);
-        ds.DrawLine(_pointerScreen.X, 0, _pointerScreen.X, (float)height, ColorHelper.FromArgb(110, 180, 180, 180), 0.7f);
+        ds.DrawLine(0, _pointerScreen.Y, (float)width, _pointerScreen.Y, _crosshairColor, 0.7f);
+        ds.DrawLine(_pointerScreen.X, 0, _pointerScreen.X, (float)height, _crosshairColor, 0.7f);
     }
 
     private Vector2 WorldToScreen(CadPoint point) => new((float)(point.X * _zoom) + _pan.X, (float)(-point.Y * _zoom) + _pan.Y);
