@@ -11,47 +11,56 @@
 
 UCAD は Windows ネイティブで AutoCAD に近い操作感を持ち、建築・都市計画の高頻度な 2D 作図へ範囲を絞った軽量 CAD を目指します。DXF-first / 2D-first が基本方針です。
 
-**現在の候補バージョンは v0.3.10 — Live Trilingual Localization Hotfix。** v0.3.9 で Start / Settings にリソースキーが表示される問題と、表示言語の変更に再起動が必要だった問題を修正します。明示的な MRT Core `ResourceContext` により、簡体字中国語・日本語・English を同一プロセス内で即時切り替えし、v0.3.9 の UI Foundation と既存 CAD Core の挙動は維持します。
+**現在の候補バージョンは v0.4.0 — Selection / OSNAP / Ortho Interaction Foundation。** このマイルストーンではピクセル単位の UI 微調整を止め、クリック/Window/Crossing 選択、追加複数選択、ERASE、Endpoint/Midpoint/Center/Intersection OSNAP、Ortho、選択連動 Inspector という最初の CAD 操作ループを完成させます。
 
 ## インストール
 
-正式ビルドは [GitHub Releases](https://github.com/KiYouJyo/UCAD/releases/latest) から取得できます。
-
-- `UCAD-v<version>-x64-one-click.zip`：推奨。
-- `UCAD_<packageVersion>_x64.msixbundle`：直接サイドロード用。
-- `SHA256SUMS.txt`：整合性確認用。
+正式ビルドは [GitHub Releases](https://github.com/KiYouJyo/UCAD/releases/latest) から取得できます。`UCAD-v<version>-x64-one-click.zip`、`UCAD_<packageVersion>_x64.msixbundle`、`SHA256SUMS.txt` を配布します。
 
 ## ワークスペースページ
 
-UCAD は 3 種類のタブ内容を明確に区別します。
-
 - **Drawing**：Category Bar、Tool Shelf、Tool Rail、CAD Canvas、Inspector、Command Line、Status Bar。
-- **Start**：CAD の新規タブ / Start Center。既定ではタイトルバーの `+` が Start を開き、「新規図面」を選んだ時だけ実際の `CadWorkspaceSession` を作成します。「新しいタブに Start を表示」を無効にすると、`+` は空白 Drawing を直接作成します。
-- **Settings**：単一の設定タブ。CAD Tool Rail / Inspector / Command Line / Status Bar と同時には表示しません。
+- **Start**：CAD の新規タブ / Start Center。既定では `+` が Start を開き、「新規図面」で実際の `CadWorkspaceSession` を作成します。
+- **Settings**：単一の設定タブ。CAD 専用の Rail / Inspector / Command Line / Status Bar と重ねて表示しません。
 
-Start には新規/開く、最近使用した項目の空状態、Blank / Architecture / Urban Planning テンプレートの情報構造、Learn UCAD を用意します。未実装のファイル I/O、最近使用したファイル、テンプレート機能は、利用可能に見せかけず無効化または未対応として明示します。
+各 Drawing は独立した `CadDocument`、`CadInteractionState`、`CadViewport`、`CommandSession` を所有し、図形、履歴、選択、OSNAP、Ortho、コマンド、ビュー状態をタブごとに分離します。
+
+## v0.4.0 の操作
+
+- オブジェクトをクリックして選択し、別オブジェクトを続けてクリックすると追加選択できます。
+- 空白クリックまたは Esc で選択解除。
+- 左→右ドラッグは **Window**：完全に含まれるオブジェクトだけを選択。
+- 右→左ドラッグは **Crossing**：含まれる、または交差するオブジェクトを選択。
+- プリセレクション、選択ハイライト、grip は Core/Workspace の `SelectionSet` を Viewport が表示するだけで、別の選択モデルを持ちません。
+- **F3 / OSNAP**：端点・中点・中心・交点のオブジェクトスナップを切り替え。
+- **F8 / ORTHO**：LINE / PLINE のマウス入力を水平/垂直に拘束。
+- **Delete / ERASE / E / DELETE**：現在の選択を 1 回の Undo 単位として消去。
+- Inspector は実際の Line / Polyline / Circle / Arc を読み取り、種類、数、基本ジオメトリ、Entity ID を表示します。
 
 ## コマンド
 
-各 Drawing タブは独立したインメモリ CAD セッションで、図形、Undo/Redo、コマンド状態、ビュー状態を個別に保持します。利用可能なコマンドは `LINE/L`、`PLINE/PL`、`RECTANGLE/REC`、`CIRCLE/C`、`ARC/A`、`UNDO/U`、`REDO`、`CLEAR`、`RESETVIEW/RV` です。
+| コマンド | エイリアス | 機能 |
+| --- | --- | --- |
+| `LINE` | `L` | 連続線分 |
+| `PLINE` | `PL` | ポリライン |
+| `RECTANGLE` | `REC` | 2 点長方形 |
+| `CIRCLE` | `C` | 中心/半径の円 |
+| `ARC` | `A` | 3 点円弧 |
+| `ERASE` | `E`, `DELETE` | 現在の選択を消去 |
+| `UNDO` | `U` | 元に戻す |
+| `REDO` | — | やり直し |
+| `CLEAR` | — | 図面を全消去 |
+| `RESETVIEW` | `RV` | ビューをリセット |
 
-実動する UI 入口は `CommandRegistry → CommandSession → CAD Core` に統一されます。Selection、MOVE/COPY/OFFSET/TRIM、Layers、OSNAP、ORTHO などは UI 上の位置を確保していますが、対応する Core が完成するまでは実動コマンドとして扱いません。
+実動コマンドは `CommandRegistry → CommandSession → CAD Core` に統一されます。カテゴリの有効状態も登録済み Core 能力から導出されます。MOVE / COPY / ROTATE / OFFSET / TRIM などの Modify コマンドは v0.5.x の対象です。
 
-## Settings・表示基準
+## Settings・表示・3 言語
 
-- WinUI 3 / Windows App SDK のネイティブウィンドウと `PerMonitorV2` 高 DPI awareness；
-- 1440×900 Figma Frame を UI のビジュアル SSOT とする；
-- タイトルバー 44、カテゴリバー 44、ツール棚 64、Tool Rail 52、Inspector 304、コマンドライン 34、ステータスバー 30 DIP；
-- Settings ナビ 228 DIP、コンテンツ開始 54 DIP、カード 940×72 DIP、35 / 12 / 8 / 30 DIP の縦リズム；
-- **App Theme と CAD Canvas Theme は独立して実動**。App Theme は Shell/コントロールの明暗を切り替え、Canvas Theme は図形・プレビュー・グリッド・クロスヘアの配色を別に制御。Canvas 背景も独立して設定可能；
-- グリッド表示/強度、カーソル中心ズーム、中ボタンパン、ホイール反転、座標精度、小数形式は実行時ロジックに接続済み；
-- 未実装の Restore Session、手動 UI Scale、自動更新チェック、最近履歴の消去は「実装済み」として扱わない；
-- 一般操作は Fluent / WinUI アイコン、CAD 固有形状は UCAD スタイルの `PathIcon`；
-- `SettingsService` / `AppSettings` により `%LOCALAPPDATA%\UCAD\settings.json` へ集中保存。
+UCAD は `PerMonitorV2` を維持し、Figma の主要 Design Token は CI で回帰防止しますが、v0.4.0 のリリース条件にピクセル単位の UI 比較は含めません。App Theme と CAD Canvas Theme は引き続き独立し、選択プレビューなど既存の Viewport 設定も実行時に反映されます。
 
-## 3 言語対応
+Settings の既定 OSNAP / スナップ種類 / Ortho は新しく作成する Drawing の `CadInteractionState` を初期化します。既存 Drawing の F3/F8 状態は既定値変更で上書きされません。設定は `%LOCALAPPDATA%\UCAD\settings.json` に保存されます。
 
-アプリとリポジトリは簡体字中国語（zh-CN）、日本語（ja-JP）、英語（en-US）の三言語構成です。v0.3.10 は独立した MRT Core `ResourceContext` で言語を選択します。Settings で「システム言語に従う」を無効にして言語を選ぶと、**UCAD を再起動せず**現在の Window、Start、Settings、ドキュメントタブ、メニュー、Inspector、コマンド領域、ステータスバーを即時再ローカライズします。既存の `CadWorkspaceSession` は再生成されないため、図形・Undo/Redo・ビュー状態は保持されます。
+簡体字中国語・日本語・English は明示的な MRT Core `ResourceContext` により**再起動なし**で切り替わります。Window、Start、Settings、ドキュメントタブ、メニュー、Inspector、コマンド領域、ステータスバーをその場で更新し、既存の図形・選択セッション・Undo/Redo・ビュー状態は再生成しません。
 
 ## 開発
 
@@ -61,16 +70,14 @@ dotnet build src/UCAD.App/UCAD.App.csproj -c Debug -p:Platform=x64 -r win-x64
 dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release
 ```
 
-必須 CI は Core tests、app-build、実際の起動 smoke、MSIX/package validation、3 言語リソース一致、バージョン SSOT、PerMonitorV2、Unicode 仮アイコン検査、Figma の主要寸法/色 Token、Start/Settings/Canvas の動作契約を検証します。v0.3.10 ではさらに Localization Smoke が同一プロセス内で zh-CN → ja-JP → en-US を順番に切り替え、実際の翻訳文字列を検証します。
-
-ピクセル単位の Figma 比較は手動の `UI Fidelity Screenshots` ワークフローとして残します。ランナーが実際の 1440×900 インタラクティブデスクトップを提供する場合のみ実行し、不適切なホスト画面が機能開発やリリースをブロックしないようにしています。
+必須 CI は Core tests、app-build、実際の startup-smoke、MSIX/package validation、三言語リソース、version SSOT、PerMonitorV2、アイコン/Figma Token、v0.4 interaction contract を検証します。startup-smoke は実行中 UCAD で Drawing を作成し、Selection + OSNAP + Center Snap + Ortho + Inspector + capability-derived category state を確認します。Localization Smoke は同一プロセスで zh-CN → ja-JP → en-US の切り替えを継続検証します。
 
 ## ドキュメント
 
 - [Roadmap](ROADMAP.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Release process](docs/RELEASE-PROCESS.md)
-- [v0.3.10 Release Notes](docs/RELEASE-NOTES-v0.3.10.ja.md)
+- [v0.4.0 Release Notes](docs/RELEASE-NOTES-v0.4.0.ja.md)
 
 ## ライセンス
 
