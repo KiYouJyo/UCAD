@@ -54,9 +54,36 @@ if ($project -match '<Version>|<AssemblyVersion>|<FileVersion>|<InformationalVer
 foreach ($view in @('src/UCAD.App/Views/StartPage.xaml','src/UCAD.App/Views/UcadSettingsPage.xaml','src/UCAD.App/Views/UcadSettingsPage.xaml.cs','src/UCAD.App/Controls/SettingCard.xaml')) {
   if (-not (Test-Path $view)) { throw "Missing UI foundation file: $view" }
 }
+
+$mainCode = Get-Content src/UCAD.App/MainWindow.xaml.cs -Raw
+foreach ($functionalContract in @(
+  '_settingsService.Settings.ShowStartOnNewTab',
+  'CreateNewWorkspace();',
+  'DocumentTabWidth',
+  'SettingsService_SettingsChanged'
+)) {
+  if (-not $mainCode.Contains($functionalContract)) { throw "Missing shell behavior contract: $functionalContract" }
+}
+if ($mainCode -notmatch 'ShowStartOnNewTab[\s\S]{0,500}CreateStartTab\(\)[\s\S]{0,500}CreateNewWorkspace\(\)') {
+  throw 'The + button must route to Start or a blank Drawing according to ShowStartOnNewTab.'
+}
+
+$viewportCode = Get-Content src/UCAD.App/Views/CadViewport.xaml.cs -Raw
+foreach ($functionalContract in @('settings.CanvasTheme','_geometryColor','_transientColor','_gridBaseColor','_crosshairColor')) {
+  if (-not $viewportCode.Contains($functionalContract)) { throw "Canvas theme is not wired to the runtime drawing palette: $functionalContract" }
+}
+
+$startCode = Get-Content src/UCAD.App/Views/StartPage.xaml -Raw
+if ($startCode -notmatch 'x:Name="RecentShowAllButton"[^>]*IsEnabled="False"') {
+  throw 'Recent Show All must remain disabled until real recent-file storage exists.'
+}
+
 $settingsCode = Get-Content src/UCAD.App/Views/UcadSettingsPage.xaml.cs -Raw
 foreach ($section in @('BuildGeneral','BuildAppearance','BuildDrafting','BuildInput','BuildFiles','BuildLanguage','BuildAbout')) {
   if ($settingsCode -notmatch [regex]::Escape($section)) { throw "Missing Settings section: $section" }
+}
+foreach ($functionalContract in @('disabledValues: new HashSet<string>(StringComparer.Ordinal) { "RestoreSession" }','enabled: false','displayLanguage.IsEnabled = !value','TokenDouble("UcadSettingsCardWidth")')) {
+  if (-not $settingsCode.Contains($functionalContract)) { throw "Missing Settings behavior contract: $functionalContract" }
 }
 
 $locales = @('zh-CN','ja-JP','en-US')
@@ -91,4 +118,4 @@ foreach ($required in @('Start_TabTitle','Settings_TabTitle','Settings_General_T
   if ($required -notin $v039Baseline) { throw "Missing required localized UI key: $required" }
 }
 
-Write-Output "Validated UI fidelity, PMv2, version SSOT, icon rules, stale-version hygiene, exact Figma surface/toggle tokens, and $($v039Baseline.Count) v0.3.9 keys in zh-CN/ja-JP/en-US."
+Write-Output "Validated UI/behavior contracts, PMv2, version SSOT, icon rules, Figma tokens, honest feature availability, and $($v039Baseline.Count) v0.3.9 keys in zh-CN/ja-JP/en-US."
