@@ -81,11 +81,10 @@ foreach ($functionalContract in @('disabledValues: new HashSet<string>(StringCom
   if (-not $settingsCode.Contains($functionalContract)) { throw "Missing Settings behavior contract: $functionalContract" }
 }
 
-# v0.3.10 must use a real named-resource map loader and rebuild already-loaded UI.
 $localizationCode = Get-Content src/UCAD.App/Services/LocalizationService.cs -Raw
 foreach ($contract in @(
-  'ResourceLoader.GetDefaultResourceFilePath()',
-  'new ResourceLoader(ResourceLoader.GetDefaultResourceFilePath(), mapName)',
+  'MrtResourceLoader.GetDefaultResourceFilePath()',
+  'new MrtResourceLoader(MrtResourceLoader.GetDefaultResourceFilePath(), mapName)',
   'ApplicationLanguages.PrimaryLanguageOverride',
   '_loaders.Clear()',
   'IsSettingsLanguageApplied',
@@ -93,7 +92,7 @@ foreach ($contract in @(
 )) {
   if (-not $localizationCode.Contains($contract)) { throw "Missing live localization contract: $contract" }
 }
-if ($localizationCode -match 'new ResourceLoader\("UcadV039"\)') {
+if ($localizationCode -match 'new MrtResourceLoader\("UcadV039"\)') {
   throw 'Do not use the single-argument ResourceLoader constructor for the UcadV039 named map.'
 }
 
@@ -148,7 +147,6 @@ foreach ($required in @('Start_TabTitle','Settings_TabTitle','Settings_General_T
   if ($required -notin $v039Baseline) { throw "Missing required localized UI key: $required" }
 }
 
-# Representative values must be actual translations, never identifiers echoed as UI.
 $representatives = @{
   'zh-CN' = @{ Start_TabTitle='开始'; Settings_Nav_Title='设置' }
   'ja-JP' = @{ Start_TabTitle='スタート'; Settings_Nav_Title='設定' }
