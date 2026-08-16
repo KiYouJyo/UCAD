@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.4.1 — 2026-08-16
+
+### CAD Selection & Cursor Interaction Refinement
+- Added AutoCAD-style two-point selection windows: click empty space to define the first corner, move with the button released, and click again to commit the opposite corner.
+- Retained press-drag-release selection as an alternate gesture, with the same left-to-right Window and right-to-left Crossing semantics.
+- Changed ordinary object and window picks to PICKADD-style additive selection and added Shift-click / Shift-window removal from the current selection set.
+- Added layered Esc behavior so an unfinished two-point window is cancelled before a later Esc clears the completed selection set; completing an empty non-Shift window also clears the selection.
+- Replaced the ordinary arrow over the CAD canvas with a cross hotspot plus a Win2D-rendered CAD crosshair and central square pickbox.
+- Added live settings for crosshair size (5–100% of the drawing area), pickbox size (3–20 px), and OSNAP aperture (3–50 px). Existing Drawing viewports update without restart.
+- Unified visible pickbox size and point-selection tolerance so the on-screen target better matches the actual selection aperture.
+- Preserved the v0.4.0 Selection / ERASE / OSNAP / Ortho / Inspector architecture and v0.3.10 restart-free zh-CN / ja-JP / en-US localization.
+
+### Validation
+- Added Core coverage for batch Shift-style selection removal with a single selection-change notification.
+- Extended interaction/runtime contracts for two-click Window/Crossing selection, additive/removal semantics, Esc cancellation, CAD cursor rendering, and adjustable cursor/aperture settings.
+- Generalized Interaction Smoke and Localization Smoke to run on active `codex/**` development branches in addition to `main` / pull requests.
+- Kept Core tests, app-build, startup-smoke, MSIX / one-click package validation, version SSOT, `PerMonitorV2`, localization parity, and frozen Figma-critical tokens as required CI.
+- Real mouse feel remains a manual PR-acceptance item before release: two-click vs drag selection, Window/Crossing direction, Shift removal, Esc layering, and cursor/pickbox sizing must be checked on Windows.
+
 ## 0.4.0 — 2026-08-16
 
 ### Selection / OSNAP / Ortho Interaction Foundation
@@ -104,7 +123,7 @@
 - Added real in-memory multi-document sessions: every tab owns an independent `CadDocument`, `CadViewport`, `CommandSession`, command base point, viewport state, and previous-command state.
 - Connected LINE / PLINE / RECTANGLE / CIRCLE / ARC, Undo / Redo, Clear, and Reset View to the new shell through one command-dispatch path.
 - Added command search driven directly by `CommandRegistry` tokens.
-- Kept planned interaction/modify/layer surfaces visible but disabled so the UI does not imply unfinished Core capabilities.
+- Kept planned interaction/modify/layer surfaces visible but disabled so the UI does not imply unfinished CAD Core actions.
 
 ### UI ↔ Core foundation
 - Added `CadCommandCategory` and optional `DrawingCommandKind` metadata to command definitions, removing the UI string switch that previously identified drawing commands.
