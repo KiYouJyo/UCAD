@@ -57,7 +57,7 @@ public sealed class CadWorkspaceSession
         Interaction.ObjectSnapModes = settings.DefaultSnapTypes switch
         {
             "EndpointMidpoint" => ObjectSnapMode.Endpoint | ObjectSnapMode.Midpoint,
-            _ => ObjectSnapMode.Endpoint | ObjectSnapMode.Midpoint | ObjectSnapMode.Intersection
+            _ => ObjectSnapMode.Endpoint | ObjectSnapMode.Midpoint | ObjectSnapMode.Center | ObjectSnapMode.Intersection
         };
         Interaction.OrthoEnabled = settings.DefaultOrtho;
     }
