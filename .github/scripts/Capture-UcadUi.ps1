@@ -21,7 +21,7 @@ $settingsRoot = Join-Path $env:LOCALAPPDATA 'UCAD'
 $settingsPath = Join-Path $settingsRoot 'settings.json'
 New-Item -ItemType Directory -Force -Path $settingsRoot | Out-Null
 
-function Write-CaptureSettings([string]$startup) {
+function Write-CaptureSettings([string]$startup, [string]$language) {
   $settings = [ordered]@{
     StartupBehavior = $startup
     ShowStartOnNewTab = $true
@@ -50,7 +50,7 @@ function Write-CaptureSettings([string]$startup) {
     BackupOnSave = $true
     ShowRecentFiles = $true
     RecentFileCount = 20
-    DisplayLanguage = 'zh-CN'
+    DisplayLanguage = $language
     FollowSystemLanguage = $false
     NumberFormat = 'System'
     UnitDisplay = 'Metric'
@@ -79,8 +79,8 @@ function Capture-Screen([string]$path) {
   }
 }
 
-function Start-Ucad([string]$startup) {
-  Write-CaptureSettings $startup
+function Start-Ucad([string]$startup, [string]$language) {
+  Write-CaptureSettings $startup $language
   Remove-Item Env:UCAD_STARTUP_SMOKE -ErrorAction SilentlyContinue
   $process = Start-Process -FilePath $ExePath -WorkingDirectory (Split-Path $ExePath) -PassThru
   $deadline = [DateTime]::UtcNow.AddSeconds(20)
@@ -101,10 +101,10 @@ function Stop-Ucad($process) {
   Start-Sleep -Milliseconds 500
 }
 
-function Capture-View([string]$name, [string]$startup, [Nullable[int]]$settingsNavY) {
+function Capture-View([string]$name, [string]$startup, [Nullable[int]]$settingsNavY, [string]$language = 'zh-CN') {
   $process = $null
   try {
-    $process = Start-Ucad $startup
+    $process = Start-Ucad $startup $language
     if ($settingsNavY.HasValue) {
       # Figma Settings frames are entered from a drawing tab. The shared category-bar
       # gear is 36 px wide immediately to the right of the 172 px command search.
@@ -118,19 +118,26 @@ function Capture-View([string]$name, [string]$startup, [Nullable[int]]$settingsN
   }
 }
 
-Capture-View 'drawing' 'BlankDrawing' $null
-Capture-View 'start' 'StartPage' $null
-Capture-View 'settings-general' 'BlankDrawing' 0
-Capture-View 'settings-appearance' 'BlankDrawing' 212
-Capture-View 'settings-input' 'BlankDrawing' 296
-Capture-View 'settings-about' 'BlankDrawing' 870
+# Required zh-CN fidelity set.
+Capture-View 'drawing' 'BlankDrawing' $null 'zh-CN'
+Capture-View 'start' 'StartPage' $null 'zh-CN'
+Capture-View 'settings-general' 'BlankDrawing' 0 'zh-CN'
+Capture-View 'settings-appearance' 'BlankDrawing' 212 'zh-CN'
+Capture-View 'settings-input' 'BlankDrawing' 296 'zh-CN'
+Capture-View 'settings-about' 'BlankDrawing' 870 'zh-CN'
+
+# Localization layout smoke: real packaged runtime, same 1440x900 viewport.
+Capture-View 'start-ja' 'StartPage' $null 'ja-JP'
+Capture-View 'settings-general-ja' 'BlankDrawing' 0 'ja-JP'
+Capture-View 'start-en' 'StartPage' $null 'en-US'
+Capture-View 'settings-general-en' 'BlankDrawing' 0 'en-US'
 
 $files = Get-ChildItem $OutputDirectory -Filter '*.png'
-if ($files.Count -ne 6) { throw "Expected 6 screenshots, produced $($files.Count)." }
+if ($files.Count -ne 10) { throw "Expected 10 screenshots, produced $($files.Count)." }
 foreach ($file in $files) {
   $image = [System.Drawing.Image]::FromFile($file.FullName)
   try {
     if ($image.Width -ne 1440 -or $image.Height -ne 900) { throw "Unexpected screenshot size for $($file.Name): $($image.Width)x$($image.Height)" }
   } finally { $image.Dispose() }
 }
-Write-Output "Captured six 1440x900 UCAD fidelity screenshots to $OutputDirectory."
+Write-Output "Captured ten 1440x900 UCAD fidelity/localization screenshots to $OutputDirectory."
