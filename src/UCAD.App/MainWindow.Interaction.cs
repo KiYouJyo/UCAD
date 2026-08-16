@@ -68,6 +68,7 @@ public sealed partial class MainWindow
             {
                 CreateNewWorkspace();
                 var session = ActiveSession ?? throw new InvalidOperationException("Interaction smoke could not create a Drawing workspace.");
+                EnsureSessionInteractionSubscribed(session);
 
                 var line = new LineEntity(new CadPoint(0, 0), new CadPoint(10, 0));
                 var circle = new CircleEntity(new CadPoint(20, 0), 5);
@@ -122,7 +123,19 @@ public sealed partial class MainWindow
                     throw new InvalidOperationException("Interaction smoke Inspector binding failed.");
                 }
 
-                App.WriteStartupEvent("Interaction smoke: Selection + OSNAP + ORTHO + Inspector initialized");
+                var eraseResult = session.CommandSession.Start("ERASE");
+                if (eraseResult.Status != CommandStartStatus.Started ||
+                    session.Document.Entities.Count != 0 ||
+                    !session.Interaction.Selection.IsEmpty)
+                {
+                    throw new InvalidOperationException("Interaction smoke ERASE command path failed.");
+                }
+                if (!session.Document.Undo() || session.Document.Entities.Count != 2)
+                {
+                    throw new InvalidOperationException("Interaction smoke ERASE one-step Undo failed.");
+                }
+
+                App.WriteStartupEvent("Interaction smoke: Selection + ERASE + OSNAP + ORTHO + Inspector initialized");
             }
             catch (Exception ex)
             {
@@ -273,6 +286,14 @@ public sealed partial class MainWindow
 
         if (e.Key == VirtualKey.Delete && !session.CommandSession.IsActive)
         {
+            // Delete inside command/text input edits text; it must not erase drawing
+            // selection merely because the root listens with handledEventsToo.
+            var focused = FocusManager.GetFocusedElement(RootLayout.XamlRoot);
+            if (focused is Microsoft.UI.Xaml.Controls.TextBox)
+            {
+                return;
+            }
+
             StartToolbarCommand("ERASE");
             e.Handled = true;
             return;
