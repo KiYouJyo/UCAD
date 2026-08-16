@@ -58,6 +58,10 @@ public sealed partial class MainWindow : Window
 
     private CadWorkspaceSession? ActiveSession => _activeSession;
 
+    private double DocumentTabWidth => (double)Application.Current.Resources["UcadDocumentTabWidth"];
+
+    private double DocumentTabHeight => (double)Application.Current.Resources["UcadDocumentTabHeight"];
+
     private ToggleButton[] CategoryButtons =>
     [
         DrawCategoryButton,
@@ -81,13 +85,20 @@ public sealed partial class MainWindow : Window
         App.WriteStartupEvent("RootLayout loaded; creating initial page");
         try
         {
-            if (string.Equals(_settingsService.Settings.StartupBehavior, "BlankDrawing", StringComparison.Ordinal))
+            switch (_settingsService.Settings.StartupBehavior)
             {
-                CreateNewWorkspace();
-            }
-            else
-            {
-                CreateStartTab();
+                case "BlankDrawing":
+                    CreateNewWorkspace();
+                    break;
+                case "RestoreSession":
+                    // Session serialization does not exist yet. Never fabricate a restored
+                    // document; fall back to the real Start page and leave a diagnostic trail.
+                    App.WriteStartupEvent("RestoreSession requested but session persistence is not available; opening Start instead");
+                    CreateStartTab();
+                    break;
+                default:
+                    CreateStartTab();
+                    break;
             }
 
             if (string.Equals(Environment.GetEnvironmentVariable("UCAD_STARTUP_SMOKE"), "1", StringComparison.Ordinal))
@@ -188,8 +199,8 @@ public sealed partial class MainWindow : Window
         {
             Header = title,
             IsClosable = true,
-            Width = 190,
-            Height = 34
+            Width = DocumentTabWidth,
+            Height = DocumentTabHeight
         };
         _tabKinds[tab] = kind;
         return tab;
@@ -233,8 +244,8 @@ public sealed partial class MainWindow : Window
             Tag = session,
             Header = displayName,
             IsClosable = true,
-            Width = 190,
-            Height = 34
+            Width = DocumentTabWidth,
+            Height = DocumentTabHeight
         };
         _sessions[tab] = session;
         _tabKinds[tab] = WorkspacePageKind.Drawing;
@@ -278,7 +289,7 @@ public sealed partial class MainWindow : Window
 
     private void UpdateTabStripWidth()
     {
-        var desired = 36 + (DocumentTabs.TabItems.Count * 194);
+        var desired = 36 + (DocumentTabs.TabItems.Count * (DocumentTabWidth + 4));
         DocumentTabs.Width = Math.Clamp(desired, 230, 920);
     }
 
@@ -338,8 +349,17 @@ public sealed partial class MainWindow : Window
         ModeText.Text = session.StatusText;
     }
 
-    private void UpdateCoordinateText(CadWorkspaceSession session) =>
-        CoordinateText.Text = $"X {session.PointerWorldPosition.X:0.00}   Y {session.PointerWorldPosition.Y:0.00}";
+    private void UpdateCoordinateText(CadWorkspaceSession session)
+    {
+        var format = _settingsService.Settings.Precision switch
+        {
+            "0" => "0",
+            "0.0" => "0.0",
+            "0.000" => "0.000",
+            _ => "0.00"
+        };
+        CoordinateText.Text = $"X {session.PointerWorldPosition.X.ToString(format)}   Y {session.PointerWorldPosition.Y.ToString(format)}";
+    }
 
     private void UpdateZoomText(CadWorkspaceSession session) =>
         ZoomText.Text = $"{session.Viewport.Zoom * 100:0}%";
@@ -362,7 +382,17 @@ public sealed partial class MainWindow : Window
 
     private void SettingsButton_Click(object sender, RoutedEventArgs e) => CreateSettingsTab();
 
-    private void DocumentTabs_AddTabButtonClick(TabView sender, object args) => CreateStartTab();
+    private void DocumentTabs_AddTabButtonClick(TabView sender, object args)
+    {
+        if (_settingsService.Settings.ShowStartOnNewTab)
+        {
+            CreateStartTab();
+        }
+        else
+        {
+            CreateNewWorkspace();
+        }
+    }
 
     private void DocumentTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
