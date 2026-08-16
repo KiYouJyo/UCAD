@@ -10,7 +10,7 @@ public sealed partial class CadViewport
     private const uint WmSetCursor = 0x0020;
     private static long _nextCursorSubclassId;
 
-    private readonly SubclassProc _cursorSubclassProc;
+    private SubclassProc? _cursorSubclassProc;
     private IntPtr _cursorSubclassHwnd;
     private UIntPtr _cursorSubclassId;
     private bool _cursorSubclassInstalled;
@@ -56,13 +56,6 @@ public sealed partial class CadViewport
         public int Y;
     }
 
-    private void InitializeNativeCursorSubclassDelegate()
-    {
-        // Kept as a separate method so constructor setup remains explicit in the
-        // generated WinUI control lifecycle. The delegate field itself prevents the
-        // native callback from being collected while the HWND subclass is installed.
-    }
-
     private void InstallNativeCursorSuppression()
     {
         if (_cursorSubclassInstalled || XamlRoot is null)
@@ -76,6 +69,7 @@ public sealed partial class CadViewport
             return;
         }
 
+        _cursorSubclassProc ??= NativeCursorSubclassProc;
         if (_cursorSubclassId == UIntPtr.Zero)
         {
             _cursorSubclassId = new UIntPtr((ulong)Interlocked.Increment(ref _nextCursorSubclassId));
@@ -92,7 +86,9 @@ public sealed partial class CadViewport
 
     private void RemoveNativeCursorSuppression()
     {
-        if (!_cursorSubclassInstalled || _cursorSubclassHwnd == IntPtr.Zero)
+        if (!_cursorSubclassInstalled ||
+            _cursorSubclassHwnd == IntPtr.Zero ||
+            _cursorSubclassProc is null)
         {
             return;
         }
