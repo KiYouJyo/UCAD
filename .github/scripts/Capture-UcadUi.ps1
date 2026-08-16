@@ -5,6 +5,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
+Add-Type -AssemblyName System.Windows.Forms
 Add-Type @"
 using System;
 using System.Runtime.InteropServices;
@@ -15,6 +16,11 @@ public static class UcadCaptureNative {
   [DllImport("user32.dll")] public static extern void mouse_event(uint flags, uint dx, uint dy, uint data, UIntPtr extraInfo);
 }
 "@
+
+$bounds = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+if ($bounds.Width -lt 1440 -or $bounds.Height -lt 900) {
+  throw "Real 1440x900 desktop required; primary screen is $($bounds.Width)x$($bounds.Height). Refusing black-padded fidelity screenshots."
+}
 
 New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
 $settingsRoot = Join-Path $env:LOCALAPPDATA 'UCAD'
@@ -140,4 +146,4 @@ foreach ($file in $files) {
     if ($image.Width -ne 1440 -or $image.Height -ne 900) { throw "Unexpected screenshot size for $($file.Name): $($image.Width)x$($image.Height)" }
   } finally { $image.Dispose() }
 }
-Write-Output "Captured ten 1440x900 UCAD fidelity/localization screenshots to $OutputDirectory."
+Write-Output "Captured ten real-desktop 1440x900 UCAD fidelity/localization screenshots to $OutputDirectory."
