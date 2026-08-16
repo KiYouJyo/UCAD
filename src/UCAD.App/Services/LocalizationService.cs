@@ -89,7 +89,32 @@ public sealed class LocalizationService
         return string.IsNullOrWhiteSpace(value) ? GetV039String(key) : value;
     }
 
-    public string GetShellString(string key) => GetStringFromMap(key, ShellLiveMapName);
+    public string GetShellString(string key)
+    {
+        // ERASE landed in v0.4.0 after the frozen v0.3.10 ShellLive map. Keep these two
+        // transient status strings centralized here until the next resource-map expansion,
+        // while still honoring the same live ResourceContext language selection.
+        if (string.Equals(key, "StatusEraseNothing", StringComparison.Ordinal))
+        {
+            return CurrentLanguageTag switch
+            {
+                "ja-JP" => "消去する選択オブジェクトがありません。",
+                "en-US" => "No selected objects to erase.",
+                _ => "没有可删除的已选对象。"
+            };
+        }
+        if (string.Equals(key, "StatusEraseCountFormat", StringComparison.Ordinal))
+        {
+            return CurrentLanguageTag switch
+            {
+                "ja-JP" => "{0} 個のオブジェクトを消去しました。",
+                "en-US" => "Erased {0} object(s).",
+                _ => "已删除 {0} 个对象。"
+            };
+        }
+
+        return GetStringFromMap(key, ShellLiveMapName);
+    }
 
     public string GetV039String(string key)
     {
