@@ -14,6 +14,7 @@ public sealed class LocalizationService
     private const string V039MapName = "UcadV039";
     private const string ShellLiveMapName = "ShellLive";
     private const string LiveReloadNoteKey = "Settings_Language_ReloadNote";
+    private const string DraftingInteractionNoteKey = "Settings_Drafting_PendingNote";
     private static readonly string[] SupportedLanguages = ["zh-CN", "ja-JP", "en-US"];
 
     private readonly Dictionary<string, ResourceMap?> _maps = new(StringComparer.OrdinalIgnoreCase);
@@ -98,6 +99,18 @@ public sealed class LocalizationService
                 "ja-JP" => "表示言語は現在のウィンドウ、Start、Settings、既存の図面タブへすぐに反映されます。UCAD の再起動は不要です。",
                 "en-US" => "Display-language changes apply immediately to the current window, Start, Settings, and existing drawing tabs. No UCAD restart is required.",
                 _ => "显示语言会立即应用到当前窗口、Start、Settings 与现有图纸标签，无需重启 UCAD。"
+            };
+        }
+
+        // The key predates v0.4.0 and is kept for Settings layout compatibility.
+        // Its runtime message now reflects the real drafting interaction implementation.
+        if (string.Equals(key, DraftingInteractionNoteKey, StringComparison.Ordinal))
+        {
+            return CurrentLanguageTag switch
+            {
+                "ja-JP" => "v0.4.0 では OSNAP と直交が実際の作図入力へ接続されています。ここで設定した既定値は新しい図面に適用され、作図中は F3 / F8 でも切り替えられます。",
+                "en-US" => "In v0.4.0, OSNAP and Ortho are connected to real drawing input. These defaults apply to new drawings and can be toggled during drafting with F3 / F8.",
+                _ => "v0.4.0 已将对象捕捉与正交接入真实绘图输入；此处默认值用于新图纸，绘图时也可通过 F3 / F8 随时切换。"
             };
         }
 
