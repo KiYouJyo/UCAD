@@ -34,6 +34,22 @@
     <SolidColorBrush x:Key="UcadCategorySelectedBrush" Color="#1C4257" />
     <SolidColorBrush x:Key="UcadAccentBrightBrush" Color="#4DADF5" />
 
+    <!-- Native ToggleButton checked states otherwise inject the system accent blue over
+         the programmatic CAD category / Inspector backgrounds. Keep Fluent interaction
+         behavior but align its checked visual state with the Figma CAD navigation tone. -->
+    <SolidColorBrush x:Key="ToggleButtonBackgroundChecked" Color="#1C4257" />
+    <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPointerOver" Color="#24516A" />
+    <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPressed" Color="#173749" />
+    <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedDisabled" Color="#661C4257" />
+    <SolidColorBrush x:Key="ToggleButtonForegroundChecked" Color="#EDEDF2" />
+    <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPointerOver" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPressed" Color="#EDEDF2" />
+    <SolidColorBrush x:Key="ToggleButtonForegroundCheckedDisabled" Color="#686872" />
+    <SolidColorBrush x:Key="ToggleButtonBorderBrushChecked" Color="Transparent" />
+    <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPointerOver" Color="Transparent" />
+    <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPressed" Color="Transparent" />
+    <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedDisabled" Color="Transparent" />
+
     <!-- Strokes. Figma card stroke is #404047 at 60% opacity. -->
     <SolidColorBrush x:Key="UcadDividerBrush" Color="#404047" />
     <SolidColorBrush x:Key="UcadCardBorderBrush" Color="#99404047" />
