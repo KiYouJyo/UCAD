@@ -11,7 +11,7 @@
 
 UCAD 目标是建立一套 Windows 原生、接近 AutoCAD 操作习惯、面向建筑与规划高频二维制图任务的轻量 CAD。坚持 DXF-first、2D-first，不以复制完整 AutoCAD 为目标。
 
-**当前候选版本 v0.3.9 — UI Completion / Figma Fidelity / Start & Settings Foundation。** 本版本不增加新的 CAD Core 能力，而是以 1440×900 Figma 文件作为视觉 SSOT，完成浏览器式文档标签、Start Center、完整 Settings、三语资源、Fluent 图标、设计 Token、版本 SSOT 与运行时截图验收，为 v0.4.0 的 Selection / OSNAP / Inspector 继续开发冻结一套稳定 UI 基础。
+**当前候选版本 v0.3.9 — UI Completion / Figma Fidelity / Start & Settings Foundation。** 本版本不增加新的 CAD Core 能力，而是以 Figma 为视觉 SSOT，完成浏览器式文档标签、Start Center、完整 Settings、三语资源、Fluent 图标、设计 Token、版本 SSOT 与 Shell 操作逻辑，为 v0.4.0 的 Selection / OSNAP / Inspector 继续开发冻结一套稳定 UI 基础。
 
 ## 安装
 
@@ -28,10 +28,10 @@ UCAD 目标是建立一套 Windows 原生、接近 AutoCAD 操作习惯、面向
 UCAD 当前明确区分三种标签内容：
 
 - **Drawing**：显示 Category Bar、Tool Shelf、Tool Rail、CAD Canvas、Inspector、Command Line 与 Status Bar。
-- **Start**：作为 CAD 新标签页 / Start Center；标题栏 `+` 默认进入 Start，只有点击“新建图纸”才创建真正的 `CadWorkspaceSession`。
+- **Start**：作为 CAD 新标签页 / Start Center。默认情况下标题栏 `+` 进入 Start，只有点击“新建图纸”才创建真正的 `CadWorkspaceSession`；如果关闭“新标签页显示开始页”，`+` 会直接创建空白 Drawing。
 - **Settings**：作为单例设置标签；不与 CAD Tool Rail / Inspector / Command Line / Status Bar 同时出现。
 
-Start 提供新建、打开入口、最近使用空状态、Blank / Architecture / Urban Planning 模板信息架构和 Learn UCAD。文件打开/保存与专业模板业务尚未实现的部分会明确保持占位状态，不伪造成可用功能。
+Start 提供新建、打开入口、最近使用空状态、Blank / Architecture / Urban Planning 模板信息架构和 Learn UCAD。文件打开/保存、最近文件、专业模板等尚未实现的业务不会伪造为可用功能；相应入口会明确禁用或提示尚未支持。
 
 ## 当前命令
 
@@ -54,16 +54,18 @@ Start 提供新建、打开入口、最近使用空状态、Blank / Architecture
 ## Settings 与显示基线
 
 - WinUI 3 / Windows App SDK 原生窗口，`PerMonitorV2` 高 DPI awareness；
-- 1440×900 Figma 文件为 UI 视觉 SSOT；
+- Figma 1440×900 Frame 为 UI 视觉 SSOT；
 - 标题栏 44、分类栏 44、工具架 64、Tool Rail 52、Inspector 304、命令行 34、状态栏 30 DIP；
 - Settings 左侧导航 228 DIP、内容起点 54 DIP、卡片 940×72 DIP，采用 35 / 12 / 8 / 30 DIP 纵向节奏；
-- App Theme 与 CAD Canvas Theme 独立；画布背景、栅格显示/强度、光标中心缩放、中键平移和滚轮方向通过集中设置层进入现有 Viewport；
+- **App Theme 与 CAD Canvas Theme 独立生效**：App Theme 会切换 Shell/控件明暗，Canvas Theme 独立控制几何、预览、栅格和十字光标调色板；画布背景也可独立设置；
+- 栅格显示/强度、光标中心缩放、中键平移、滚轮方向和坐标精度/小数格式会实时进入现有运行时逻辑；
+- 尚无底层能力的 Restore Session、手动 UI Scale、自动更新、最近文件清理等不会显示成“已实现”；
 - 通用动作优先使用 Fluent / WinUI 原生图标，CAD 专业图标使用 UCAD Fluent 风格 `PathIcon`；
 - 设置集中由 `SettingsService` / `AppSettings` 管理，并保存到 `%LOCALAPPDATA%\UCAD\settings.json`。
 
 ## 三语支持
 
-应用与仓库使用简体中文（zh-CN）、日本語（ja-JP）、English（en-US）三语资源。v0.3.9 的 Start 与全部 Settings 页面保持三语 key 一一对应。
+应用与仓库使用简体中文（zh-CN）、日本語（ja-JP）、English（en-US）三语资源。v0.3.9 的 Start 与全部 Settings 页面保持三语 key 一一对应。显示语言在下次启动创建 Shell 前统一应用，避免当前会话局部刷新后出现混语。
 
 ## 仓库结构
 
@@ -74,7 +76,7 @@ tests/                  自动化测试
 packaging/              一键安装与发布校验
 release/                发布 SSOT 元数据
 docs/                   架构与三语 Release Notes
-.github/workflows/       CI、UI 截图验收与 GitHub Release
+.github/workflows/       CI 与发布工作流
 ```
 
 ## 开发
@@ -85,7 +87,9 @@ dotnet build src/UCAD.App/UCAD.App.csproj -c Debug -p:Platform=x64 -r win-x64
 dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release
 ```
 
-CI 覆盖 Core tests、app-build、真实启动 smoke、MSIX/package validation、三语资源契约、版本 SSOT、PerMonitorV2、Unicode 占位图标扫描与 1440×900 UI 截图产物。
+CI 强制覆盖 Core tests、app-build、真实启动 smoke、MSIX/package validation、三语资源契约、版本 SSOT、PerMonitorV2、Unicode 占位图标扫描、Figma 关键尺寸/颜色 Token 与 Start/Settings/Canvas 的行为契约。
+
+像素级 Figma 对照保留在手动 `UI Fidelity Screenshots` 工作流中；只有当运行器提供真实的 1440×900 交互桌面时才执行截图，因此它不会阻塞功能开发或发布。
 
 ## 文档
 
