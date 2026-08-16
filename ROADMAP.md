@@ -64,7 +64,19 @@ UCAD aims to become a lightweight Windows-native 2D CAD focused on architecture 
 - [x] selection-backed inspector properties
 - [x] enable the corresponding existing status/tool surfaces from Core capability state
 
-**Interaction gate:** v0.4 freezes document-scoped selection and drafting-aid ownership. Pixel-level UI tuning is intentionally not part of this milestone. Modify commands should reuse `SelectionSet`, `CadEntityGeometry`, `CadInteractionState`, and the existing `CommandRegistry → CommandSession` path instead of creating parallel selection/edit models.
+## v0.4.1 — CAD Selection & Cursor Refinement
+
+- [x] AutoCAD-style two-point selection window: click first corner, move, click opposite corner
+- [x] retain press-drag-release selection as an alternate gesture
+- [x] Window / Crossing direction semantics shared by both gesture styles
+- [x] PICKADD-style additive object/window selection
+- [x] Shift-click and Shift-window removal from the current selection set
+- [x] Esc cancels an unfinished selection gesture before clearing completed selection
+- [x] empty completed window clears the current selection set
+- [x] CAD crosshair with central pickbox on the drawing surface
+- [x] live-adjustable crosshair size, pickbox size, and OSNAP aperture
+
+**Interaction gate:** v0.4.x freezes document-scoped selection and drafting-aid ownership. Pixel-level UI tuning is intentionally not part of this milestone. Modify commands should reuse `SelectionSet`, `CadEntityGeometry`, `CadInteractionState`, and the existing `CommandRegistry → CommandSession` path instead of creating parallel selection/edit models.
 
 ## v0.5 — Modify
 
