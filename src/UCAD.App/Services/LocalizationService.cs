@@ -1,5 +1,5 @@
-using Microsoft.Windows.ApplicationModel.Resources;
 using Microsoft.Windows.Globalization;
+using MrtResourceLoader = Microsoft.Windows.ApplicationModel.Resources.ResourceLoader;
 
 namespace UCAD.Services;
 
@@ -19,7 +19,7 @@ public sealed class LocalizationService
         "en-US"
     };
 
-    private readonly Dictionary<string, ResourceLoader> _loaders = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, MrtResourceLoader> _loaders = new(StringComparer.OrdinalIgnoreCase);
 
     private LocalizationService()
     {
@@ -145,17 +145,14 @@ public sealed class LocalizationService
         }
     }
 
-    private static ResourceLoader CreateLoader(string mapName)
+    private static MrtResourceLoader CreateLoader(string mapName)
     {
         if (string.Equals(mapName, DefaultMapName, StringComparison.OrdinalIgnoreCase))
         {
-            return new ResourceLoader();
+            return new MrtResourceLoader();
         }
 
-        // For a named .resw resource subtree, Windows App SDK requires the default
-        // PRI path plus the map name. ResourceLoader(string) treats its argument as
-        // the resource file/PRI path on current WinUI 3 localization guidance.
-        return new ResourceLoader(ResourceLoader.GetDefaultResourceFilePath(), mapName);
+        return new MrtResourceLoader(MrtResourceLoader.GetDefaultResourceFilePath(), mapName);
     }
 
     private static string ResolveOverride(string? displayLanguage, bool followSystemLanguage)
