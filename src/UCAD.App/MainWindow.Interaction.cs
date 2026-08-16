@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using UCAD.Core.Entities;
 using UCAD.Core.Interaction;
+using UCAD.Services;
 using UCAD.Workspace;
 using Windows.System;
 
