@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "product": {
     "name": "UCAD",
-    "version": "0.3.9",
-    "packageVersion": "0.3.9.0",
-    "releaseTitle": "UI Completion / Figma Fidelity / Start & Settings Foundation",
+    "version": "0.3.10",
+    "packageVersion": "0.3.10.0",
+    "releaseTitle": "Live Trilingual Localization Hotfix",
     "packageIdentityName": "F1BD5F25-4ED6-4037-B9FE-BB7D4B326E25",
     "publisher": "CN=AppPublisher",
     "applicationId": "App"

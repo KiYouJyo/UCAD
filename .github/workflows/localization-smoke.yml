@@ -1,0 +1,61 @@
+name: Localization Smoke
+
+on:
+  push:
+    branches:
+      - main
+      - 'codex/v0.3.10-live-localization'
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  live-localization:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.302'
+      - name: Restore and build UCAD
+        shell: pwsh
+        run: |
+          dotnet restore src/UCAD.App/UCAD.App.csproj -p:Platform=x64 -r win-x64
+          if ($LASTEXITCODE -ne 0) { throw "Restore failed: $LASTEXITCODE" }
+          dotnet build src/UCAD.App/UCAD.App.csproj -c Release --no-restore -p:Platform=x64 -r win-x64
+          if ($LASTEXITCODE -ne 0) { throw "Build failed: $LASTEXITCODE" }
+      - name: Switch zh-CN ja-JP en-US in one running process
+        shell: pwsh
+        run: |
+          $log = Join-Path $env:LOCALAPPDATA 'UCAD\Logs\startup.log'
+          Remove-Item -LiteralPath $log -Force -ErrorAction SilentlyContinue
+          $exe = Get-ChildItem src/UCAD.App/bin -Recurse -Filter 'UCAD.App.exe' | Where-Object FullName -match '\\Release\\' | Select-Object -First 1
+          if (-not $exe) { throw 'UCAD.App.exe was not found after build.' }
+
+          $env:UCAD_STARTUP_SMOKE = '1'
+          $env:UCAD_LOCALIZATION_SMOKE = '1'
+          $process = Start-Process -FilePath $exe.FullName -WorkingDirectory $exe.DirectoryName -PassThru
+          Start-Sleep -Seconds 10
+          $process.Refresh()
+
+          if (-not (Test-Path $log)) {
+            if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force }
+            throw 'startup.log was not created.'
+          }
+
+          $startupLog = Get-Content $log -Raw
+          Write-Output $startupLog
+          if ($process.HasExited) { throw "UCAD exited during localization smoke with code $($process.ExitCode)." }
+          if ($startupLog -notmatch 'Localization smoke: zh-CN -> ja-JP -> en-US refreshed without restart') {
+            Stop-Process -Id $process.Id -Force
+            throw 'The one-process trilingual localization marker was not written.'
+          }
+          if ($startupLog -match 'LocalizationSmoke|Localization:UcadV039:|UnhandledException') {
+            Stop-Process -Id $process.Id -Force
+            throw 'UCAD reported a runtime localization failure.'
+          }
+
+          Stop-Process -Id $process.Id -Force

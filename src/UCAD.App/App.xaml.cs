@@ -1,7 +1,6 @@
 using Microsoft.UI.Xaml;
 using System.Text;
 using UCAD.Services;
-using Windows.Globalization;
 
 namespace UCAD;
 
@@ -20,6 +19,7 @@ public partial class App : Application
         InitializeComponent();
         UnhandledException += App_UnhandledException;
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+        SettingsService.Current.SettingsChanged += SettingsService_SettingsChanged;
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
@@ -27,9 +27,12 @@ public partial class App : Application
         try
         {
             WriteStartupEvent("OnLaunched begin");
-            ApplyDisplayLanguagePreference();
-            _window = new MainWindow();
-            WriteStartupEvent("MainWindow constructed");
+            LocalizationService.Current.ApplyFromSettings();
+            var mainWindow = new MainWindow();
+            mainWindow.RefreshLocalization();
+            mainWindow.ScheduleLocalizationSmoke();
+            _window = mainWindow;
+            WriteStartupEvent("MainWindow constructed and localized");
             _window.Activate();
             WriteStartupEvent("MainWindow activated");
         }
@@ -40,33 +43,20 @@ public partial class App : Application
         }
     }
 
-    private static void ApplyDisplayLanguagePreference()
+    private void SettingsService_SettingsChanged(object? sender, EventArgs e)
     {
-        var settings = SettingsService.Current.Settings;
-        var language = settings.FollowSystemLanguage ? string.Empty : settings.DisplayLanguage;
-        if (language is "System" or null)
+        var localization = LocalizationService.Current;
+        if (localization.IsSettingsLanguageApplied)
         {
-            language = string.Empty;
+            return;
         }
 
-        if (language.Length > 0 && language is not ("zh-CN" or "ja-JP" or "en-US"))
+        if (_window is MainWindow mainWindow)
         {
-            language = string.Empty;
-        }
-
-        try
-        {
-            // This API is valid for the packaged production runtime. A raw build output
-            // launched by CI can be unpackaged, where Windows reports an invalid state;
-            // that must not turn a diagnostics-only smoke run into an application crash.
-            ApplicationLanguages.PrimaryLanguageOverride = language;
-            WriteStartupEvent(string.IsNullOrEmpty(language)
-                ? "Display language: system preference"
-                : $"Display language override: {language}");
-        }
-        catch (InvalidOperationException)
-        {
-            WriteStartupEvent("Display language override unavailable in unpackaged runtime; using the current Windows resource context");
+            // Settings controls persist during their own SelectionChanged/Toggled event.
+            // Enqueue the visual rebuild so that callback can return before the current
+            // Settings section is reconstructed in the new language.
+            mainWindow.ApplyLiveLocalizationFromSettings();
         }
     }
 

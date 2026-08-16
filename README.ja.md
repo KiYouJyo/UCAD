@@ -11,7 +11,7 @@
 
 UCAD は Windows ネイティブで AutoCAD に近い操作感を持ち、建築・都市計画の高頻度な 2D 作図へ範囲を絞った軽量 CAD を目指します。DXF-first / 2D-first が基本方針です。
 
-**現在の候補バージョンは v0.3.9 — UI Completion / Figma Fidelity / Start & Settings Foundation。** 本リリースでは CAD Core の新機能を追加せず、Figma をビジュアル SSOT として、ブラウザー型 Document Tabs、Start Center、全 Settings、3 言語リソース、Fluent アイコン、Design Tokens、バージョン SSOT、ページと設定の一貫した操作ロジックを完成させます。v0.4.0 の Selection / OSNAP / Inspector に向けた安定 UI 基盤です。
+**現在の候補バージョンは v0.3.10 — Live Trilingual Localization Hotfix。** v0.3.9 で Start / Settings にリソースキーが表示される問題と、表示言語の変更に再起動が必要だった問題を修正します。明示的な MRT Core `ResourceContext` により、簡体字中国語・日本語・English を同一プロセス内で即時切り替えし、v0.3.9 の UI Foundation と既存 CAD Core の挙動は維持します。
 
 ## インストール
 
@@ -51,7 +51,7 @@ Start には新規/開く、最近使用した項目の空状態、Blank / Archi
 
 ## 3 言語対応
 
-アプリとリポジトリは簡体字中国語（zh-CN）、日本語（ja-JP）、英語（en-US）の三言語構成です。v0.3.9 の Start と全 Settings ページは同一のリソースキー構成を保ちます。表示言語は次回 Shell 作成前にまとめて適用し、現在のセッションで一部だけ切り替わる混在状態を避けます。
+アプリとリポジトリは簡体字中国語（zh-CN）、日本語（ja-JP）、英語（en-US）の三言語構成です。v0.3.10 は独立した MRT Core `ResourceContext` で言語を選択します。Settings で「システム言語に従う」を無効にして言語を選ぶと、**UCAD を再起動せず**現在の Window、Start、Settings、ドキュメントタブ、メニュー、Inspector、コマンド領域、ステータスバーを即時再ローカライズします。既存の `CadWorkspaceSession` は再生成されないため、図形・Undo/Redo・ビュー状態は保持されます。
 
 ## 開発
 
@@ -61,7 +61,7 @@ dotnet build src/UCAD.App/UCAD.App.csproj -c Debug -p:Platform=x64 -r win-x64
 dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release
 ```
 
-必須 CI は Core tests、app-build、実際の起動 smoke、MSIX/package validation、3 言語リソース一致、バージョン SSOT、PerMonitorV2、Unicode 仮アイコン検査、Figma の主要寸法/色 Token、Start/Settings/Canvas の動作契約を検証します。
+必須 CI は Core tests、app-build、実際の起動 smoke、MSIX/package validation、3 言語リソース一致、バージョン SSOT、PerMonitorV2、Unicode 仮アイコン検査、Figma の主要寸法/色 Token、Start/Settings/Canvas の動作契約を検証します。v0.3.10 ではさらに Localization Smoke が同一プロセス内で zh-CN → ja-JP → en-US を順番に切り替え、実際の翻訳文字列を検証します。
 
 ピクセル単位の Figma 比較は手動の `UI Fidelity Screenshots` ワークフローとして残します。ランナーが実際の 1440×900 インタラクティブデスクトップを提供する場合のみ実行し、不適切なホスト画面が機能開発やリリースをブロックしないようにしています。
 
@@ -70,7 +70,7 @@ dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release
 - [Roadmap](ROADMAP.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Release process](docs/RELEASE-PROCESS.md)
-- [v0.3.9 Release Notes](docs/RELEASE-NOTES-v0.3.9.ja.md)
+- [v0.3.10 Release Notes](docs/RELEASE-NOTES-v0.3.10.ja.md)
 
 ## ライセンス
 

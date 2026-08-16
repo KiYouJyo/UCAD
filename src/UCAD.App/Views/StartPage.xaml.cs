@@ -1,12 +1,12 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.Windows.ApplicationModel.Resources;
+using UCAD.Services;
 
 namespace UCAD.Views;
 
 public sealed partial class StartPage : UserControl
 {
-    private readonly ResourceLoader _resources = new("UcadV039");
+    private readonly LocalizationService _localization = LocalizationService.Current;
 
     public StartPage()
     {
@@ -44,11 +44,17 @@ public sealed partial class StartPage : UserControl
         BasicDrawingText.Text = Get("Start_Learn_BasicDrawing.Text");
         CommandsText.Text = Get("Start_Learn_Commands.Text");
         DocsText.Text = Get("Start_Learn_Docs.Text");
+
+        var language = _localization.CurrentLanguageTag;
+        if (!string.IsNullOrWhiteSpace(language))
+        {
+            Language = language;
+        }
     }
 
     private string Get(string key)
     {
-        var value = _resources.GetString(key);
+        var value = _localization.GetV039String(key);
         return string.IsNullOrWhiteSpace(value) ? key : value;
     }
 

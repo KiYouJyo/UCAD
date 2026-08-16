@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.3.10 — 2026-08-16
+
+### Live trilingual localization hotfix
+- Fixed Start / Settings rendering resource identifiers such as `Start_TabTitle` and `Settings_Nav_Title` instead of translated UI text.
+- Replaced the broken imperative named-resource loading path with an explicit MRT Core `ResourceManager` / `ResourceContext` whose language qualifier can be changed inside the running process.
+- Added a dedicated plain-ID `ShellLive.resw` map for zh-CN / ja-JP / en-US so code-side hot refresh never depends on XAML `x:Uid` property-resource identifiers such as `FileMenuButton.Content`.
+- Added restart-free Simplified Chinese / Japanese / English switching for the current Window, Start, Settings, document tabs, menus, Category Bar, Inspector, command area, and status bar.
+- Preserved existing `CadWorkspaceSession` objects during language changes, including geometry, Undo/Redo history, command/session ownership, and viewport state.
+- Relocalized untitled drawing labels in place (`图纸 1` / `図面 1` / `Drawing 1`) and kept Follow System Language behavior.
+- Updated Settings language guidance so it no longer claims a restart is required.
+
+### Validation
+- Added a dedicated Localization Smoke workflow that switches `zh-CN → ja-JP → en-US` in one running UCAD process and rejects raw resource identifiers.
+- Added CI parity and representative-value checks for `Resources.resw`, `UcadV039.resw`, and the new `ShellLive.resw` in all three locales.
+- Kept Core tests, app-build, startup-smoke, package-validation, PerMonitorV2, version SSOT, Figma token contracts, and Unicode placeholder-icon checks.
+
 ## 0.3.9 — 2026-08-16
 
 ### UI Completion / Figma Fidelity

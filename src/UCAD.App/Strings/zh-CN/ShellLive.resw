@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="File" xml:space="preserve"><value>文件</value></data>
+  <data name="Edit" xml:space="preserve"><value>编辑</value></data>
+  <data name="View" xml:space="preserve"><value>视图</value></data>
+  <data name="NewDrawing" xml:space="preserve"><value>新建图纸</value></data>
+  <data name="CloseDrawing" xml:space="preserve"><value>关闭当前图纸</value></data>
+  <data name="Undo" xml:space="preserve"><value>撤销</value></data>
+  <data name="Redo" xml:space="preserve"><value>重做</value></data>
+  <data name="Clear" xml:space="preserve"><value>清空图形</value></data>
+  <data name="ResetView" xml:space="preserve"><value>重置视图</value></data>
+  <data name="CategoryDraw" xml:space="preserve"><value>绘图</value></data>
+  <data name="CategoryModify" xml:space="preserve"><value>修改</value></data>
+  <data name="CategoryAnnotate" xml:space="preserve"><value>注释</value></data>
+  <data name="CategoryLayers" xml:space="preserve"><value>图层</value></data>
+  <data name="CategoryBlocks" xml:space="preserve"><value>图块</value></data>
+  <data name="CategoryMeasure" xml:space="preserve"><value>测量</value></data>
+  <data name="CategoryView" xml:space="preserve"><value>视图</value></data>
+  <data name="CommandSearchPlaceholder" xml:space="preserve"><value>搜索命令</value></data>
+  <data name="ToolLine" xml:space="preserve"><value>直线</value></data>
+  <data name="ToolPolyline" xml:space="preserve"><value>多段线</value></data>
+  <data name="ToolRectangle" xml:space="preserve"><value>矩形</value></data>
+  <data name="ToolCircle" xml:space="preserve"><value>圆</value></data>
+  <data name="ToolArc" xml:space="preserve"><value>圆弧</value></data>
+  <data name="ToolHatch" xml:space="preserve"><value>填充</value></data>
+  <data name="ToolBoundary" xml:space="preserve"><value>边界</value></data>
+  <data name="ToolRay" xml:space="preserve"><value>射线</value></data>
+  <data name="ToolConstruction" xml:space="preserve"><value>构造线</value></data>
+  <data name="InspectorProperties" xml:space="preserve"><value>属性</value></data>
+  <data name="InspectorLayers" xml:space="preserve"><value>图层</value></data>
+  <data name="InspectorNoSelection" xml:space="preserve"><value>未选择对象</value></data>
+  <data name="InspectorSelectionUnavailable" xml:space="preserve"><value>选择功能将在 v0.4.0 接入；当前面板先显示活动文档状态。</value></data>
+  <data name="InspectorDocument" xml:space="preserve"><value>文档</value></data>
+  <data name="InspectorEntityCount" xml:space="preserve"><value>实体数</value></data>
+  <data name="InspectorActiveCommand" xml:space="preserve"><value>活动命令</value></data>
+  <data name="InspectorUndoAvailable" xml:space="preserve"><value>可撤销</value></data>
+  <data name="InspectorRedoAvailable" xml:space="preserve"><value>可重做</value></data>
+  <data name="InspectorFoundationHint" xml:space="preserve"><value>高 DPI 与工作区视觉基础已经就绪；v0.4.0 将在现有 CadWorkspaceSession 边界上接入选择、捕捉与正交。</value></data>
+  <data name="CommandPrompt" xml:space="preserve"><value>命令:</value></data>
+  <data name="CommandInputPlaceholder" xml:space="preserve"><value>输入命令、坐标或距离</value></data>
+  <data name="StatusSnap" xml:space="preserve"><value>捕捉</value></data>
+  <data name="StatusGrid" xml:space="preserve"><value>栅格</value></data>
+  <data name="StatusOrtho" xml:space="preserve"><value>正交</value></data>
+  <data name="StatusPolar" xml:space="preserve"><value>极轴</value></data>
+  <data name="StatusOsnap" xml:space="preserve"><value>对象捕捉</value></data>
+  <data name="StatusOtrack" xml:space="preserve"><value>对象追踪</value></data>
+</root>

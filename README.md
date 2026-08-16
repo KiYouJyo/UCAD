@@ -11,7 +11,7 @@
 
 UCAD 目标是建立一套 Windows 原生、接近 AutoCAD 操作习惯、面向建筑与规划高频二维制图任务的轻量 CAD。坚持 DXF-first、2D-first，不以复制完整 AutoCAD 为目标。
 
-**当前候选版本 v0.3.9 — UI Completion / Figma Fidelity / Start & Settings Foundation。** 本版本不增加新的 CAD Core 能力，而是以 Figma 为视觉 SSOT，完成浏览器式文档标签、Start Center、完整 Settings、三语资源、Fluent 图标、设计 Token、版本 SSOT 与 Shell 操作逻辑，为 v0.4.0 的 Selection / OSNAP / Inspector 继续开发冻结一套稳定 UI 基础。
+**当前候选版本 v0.3.10 — Live Trilingual Localization Hotfix。** 本版本修复 v0.3.9 Start / Settings 显示资源键以及语言切换必须重启的问题，以显式 MRT Core `ResourceContext` 实现简体中文、日本語、English 的进程内即时切换，同时保留 v0.3.9 已冻结的 UI Foundation 与现有 CAD Core 行为。
 
 ## 安装
 
@@ -65,7 +65,7 @@ Start 提供新建、打开入口、最近使用空状态、Blank / Architecture
 
 ## 三语支持
 
-应用与仓库使用简体中文（zh-CN）、日本語（ja-JP）、English（en-US）三语资源。v0.3.9 的 Start 与全部 Settings 页面保持三语 key 一一对应。显示语言在下次启动创建 Shell 前统一应用，避免当前会话局部刷新后出现混语。
+应用与仓库使用简体中文（zh-CN）、日本語（ja-JP）、English（en-US）三语资源。v0.3.10 使用独立 MRT Core `ResourceContext` 选择语言；在 Settings 关闭“跟随系统语言”后选择任一语言，会在**不重启 UCAD**的情况下立即刷新当前 Window、Start、Settings、文档标签、菜单、Inspector、命令区与状态栏。切换过程中不会重建现有 `CadWorkspaceSession`，因此图形、Undo/Redo 与视口状态保持不变。
 
 ## 仓库结构
 
@@ -87,7 +87,7 @@ dotnet build src/UCAD.App/UCAD.App.csproj -c Debug -p:Platform=x64 -r win-x64
 dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release
 ```
 
-CI 强制覆盖 Core tests、app-build、真实启动 smoke、MSIX/package validation、三语资源契约、版本 SSOT、PerMonitorV2、Unicode 占位图标扫描、Figma 关键尺寸/颜色 Token 与 Start/Settings/Canvas 的行为契约。
+CI 强制覆盖 Core tests、app-build、真实启动 smoke、MSIX/package validation、三语资源契约、版本 SSOT、PerMonitorV2、Unicode 占位图标扫描、Figma 关键尺寸/颜色 Token 与 Start/Settings/Canvas 的行为契约。v0.3.10 另有 Localization Smoke，在同一进程内依次切换 zh-CN → ja-JP → en-US 并验证真实资源文本。
 
 像素级 Figma 对照保留在手动 `UI Fidelity Screenshots` 工作流中；只有当运行器提供真实的 1440×900 交互桌面时才执行截图，因此它不会阻塞功能开发或发布。
 
@@ -97,7 +97,7 @@ CI 强制覆盖 Core tests、app-build、真实启动 smoke、MSIX/package valid
 - [架构说明](docs/ARCHITECTURE.md)
 - [发布流程](docs/RELEASE-PROCESS.md)
 - [打包说明](packaging/README.md)
-- [v0.3.9 发布说明](docs/RELEASE-NOTES-v0.3.9.md)
+- [v0.3.10 发布说明](docs/RELEASE-NOTES-v0.3.10.md)
 
 ## 许可证
 
