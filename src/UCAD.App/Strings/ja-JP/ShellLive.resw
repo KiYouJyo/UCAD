@@ -40,6 +40,24 @@
   <data name="InspectorUndoAvailable" xml:space="preserve"><value>元に戻せる</value></data>
   <data name="InspectorRedoAvailable" xml:space="preserve"><value>やり直せる</value></data>
   <data name="InspectorFoundationHint" xml:space="preserve"><value>HiDPI とワークスペースの視覚基盤は整備済みです。v0.4.0 では既存の CadWorkspaceSession 境界に選択・スナップ・直交を接続します。</value></data>
+  <data name="InspectorSelectionHelp" xml:space="preserve"><value>オブジェクトをクリックして選択するか、ドラッグして選択窓を作成します。</value></data>
+  <data name="InspectorSelectionWindowHint" xml:space="preserve"><value>左から右は完全に含まれるオブジェクトを選択し、右から左は交差するオブジェクトも選択します。Esc で選択解除、F3 で OSNAP、F8 で直交を切り替えます。</value></data>
+  <data name="InspectorMultipleSelectionFormat" xml:space="preserve"><value>{0} 個のオブジェクトを選択中</value></data>
+  <data name="InspectorMixedSelection" xml:space="preserve"><value>複数種類のエンティティが選択されています。</value></data>
+  <data name="InspectorSelection" xml:space="preserve"><value>選択</value></data>
+  <data name="InspectorSelectedCount" xml:space="preserve"><value>選択数</value></data>
+  <data name="InspectorEntityType" xml:space="preserve"><value>種類</value></data>
+  <data name="InspectorMixed" xml:space="preserve"><value>混在</value></data>
+  <data name="InspectorGeometry" xml:space="preserve"><value>ジオメトリ</value></data>
+  <data name="InspectorEntityId" xml:space="preserve"><value>エンティティ ID</value></data>
+  <data name="EntityLine" xml:space="preserve"><value>線分</value></data>
+  <data name="EntityPolyline" xml:space="preserve"><value>ポリライン</value></data>
+  <data name="EntityCircle" xml:space="preserve"><value>円</value></data>
+  <data name="EntityArc" xml:space="preserve"><value>円弧</value></data>
+  <data name="GeometryLineFormat" xml:space="preserve"><value>長さ {0:0.##}</value></data>
+  <data name="GeometryPolylineFormat" xml:space="preserve"><value>頂点 {0}、長さ {1:0.##}</value></data>
+  <data name="GeometryCircleFormat" xml:space="preserve"><value>半径 {0:0.##}</value></data>
+  <data name="GeometryArcFormat" xml:space="preserve"><value>半径 {0:0.##}、中心角 {1:0.##}°</value></data>
   <data name="CommandPrompt" xml:space="preserve"><value>コマンド:</value></data>
   <data name="CommandInputPlaceholder" xml:space="preserve"><value>コマンド、座標、距離を入力</value></data>
   <data name="StatusSnap" xml:space="preserve"><value>スナップ</value></data>
@@ -48,4 +66,8 @@
   <data name="StatusPolar" xml:space="preserve"><value>極軸</value></data>
   <data name="StatusOsnap" xml:space="preserve"><value>OSNAP</value></data>
   <data name="StatusOtrack" xml:space="preserve"><value>OTRACK</value></data>
+  <data name="StatusOsnapOnMessage" xml:space="preserve"><value>オブジェクトスナップをオン（F3）</value></data>
+  <data name="StatusOsnapOffMessage" xml:space="preserve"><value>オブジェクトスナップをオフ（F3）</value></data>
+  <data name="StatusOrthoOnMessage" xml:space="preserve"><value>直交モードをオン（F8）</value></data>
+  <data name="StatusOrthoOffMessage" xml:space="preserve"><value>直交モードをオフ（F8）</value></data>
 </root>
