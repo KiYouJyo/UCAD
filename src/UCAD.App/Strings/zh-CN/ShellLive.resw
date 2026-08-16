@@ -70,4 +70,31 @@
   <data name="StatusOsnapOffMessage" xml:space="preserve"><value>对象捕捉已关闭（F3）</value></data>
   <data name="StatusOrthoOnMessage" xml:space="preserve"><value>正交模式已开启（F8）</value></data>
   <data name="StatusOrthoOffMessage" xml:space="preserve"><value>正交模式已关闭（F8）</value></data>
+  <data name="ModifySelectObjects" xml:space="preserve"><value>选择对象，然后按 Enter 确认。</value></data>
+  <data name="ModifyBasePoint" xml:space="preserve"><value>指定基点。</value></data>
+  <data name="ModifyPointRequired" xml:space="preserve"><value>请指定有效点。</value></data>
+  <data name="ModifyMoveTarget" xml:space="preserve"><value>指定第二点或位移。</value></data>
+  <data name="ModifyCopyTarget" xml:space="preserve"><value>指定复制的第二点。</value></data>
+  <data name="ModifyRotationAngle" xml:space="preserve"><value>输入旋转角度（度）或在画布上指定点。</value></data>
+  <data name="ModifyScaleFactor" xml:space="preserve"><value>输入正数比例因子或在画布上指定点。</value></data>
+  <data name="ModifyMirrorFirstPoint" xml:space="preserve"><value>指定镜像轴的第一点。</value></data>
+  <data name="ModifyMirrorSecondPoint" xml:space="preserve"><value>指定镜像轴的第二点。</value></data>
+  <data name="ModifyMirrorEraseSource" xml:space="preserve"><value>删除源对象？[是/否] &lt;否&gt;：</value></data>
+  <data name="ModifyOffsetDistance" xml:space="preserve"><value>指定偏移距离。</value></data>
+  <data name="ModifyOffsetPickEntity" xml:space="preserve"><value>选择要偏移的对象。</value></data>
+  <data name="ModifyOffsetSidePoint" xml:space="preserve"><value>在要偏移的一侧指定点。</value></data>
+  <data name="ModifyTrimPick" xml:space="preserve"><value>选择要修剪的对象段；按 Enter 结束。</value></data>
+  <data name="ModifyExtendPick" xml:space="preserve"><value>选择要延伸的对象端；按 Enter 结束。</value></data>
+  <data name="ModifyComplete" xml:space="preserve"><value>修改命令已完成。</value></data>
+  <data name="ModifyTrimContinue" xml:space="preserve"><value>已修剪。继续选择对象段，或按 Enter 结束。</value></data>
+  <data name="ModifyTrimNoBoundary" xml:space="preserve"><value>该位置未找到有效修剪边界。</value></data>
+  <data name="ModifyExtendContinue" xml:space="preserve"><value>已延伸。继续选择对象端，或按 Enter 结束。</value></data>
+  <data name="ModifyExtendNoBoundary" xml:space="preserve"><value>该方向未找到有效延伸边界。</value></data>
+  <data name="ModifyMoveComplete" xml:space="preserve"><value>移动完成。</value></data>
+  <data name="ModifyCopyComplete" xml:space="preserve"><value>复制完成。</value></data>
+  <data name="ModifyRotateComplete" xml:space="preserve"><value>旋转完成。</value></data>
+  <data name="ModifyScaleComplete" xml:space="preserve"><value>缩放完成。</value></data>
+  <data name="ModifyMirrorComplete" xml:space="preserve"><value>镜像完成。</value></data>
+  <data name="ModifyOffsetInvalid" xml:space="preserve"><value>无法在该侧创建有效偏移。</value></data>
+  <data name="ModifyOffsetComplete" xml:space="preserve"><value>偏移完成。</value></data>
 </root>
