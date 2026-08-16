@@ -106,7 +106,8 @@ function Capture-View([string]$name, [string]$startup, [Nullable[int]]$settingsN
   try {
     $process = Start-Ucad $startup
     if ($settingsNavY.HasValue) {
-      # Shared category bar gear: 36 px wide, right-aligned after the 172 px search box.
+      # Figma Settings frames are entered from a drawing tab. The shared category-bar
+      # gear is 36 px wide immediately to the right of the 172 px command search.
       Click-At 1412 66
       if ($settingsNavY.Value -gt 0) { Click-At 110 $settingsNavY.Value }
     }
@@ -119,10 +120,10 @@ function Capture-View([string]$name, [string]$startup, [Nullable[int]]$settingsN
 
 Capture-View 'drawing' 'BlankDrawing' $null
 Capture-View 'start' 'StartPage' $null
-Capture-View 'settings-general' 'StartPage' 0
-Capture-View 'settings-appearance' 'StartPage' 212
-Capture-View 'settings-input' 'StartPage' 296
-Capture-View 'settings-about' 'StartPage' 870
+Capture-View 'settings-general' 'BlankDrawing' 0
+Capture-View 'settings-appearance' 'BlankDrawing' 212
+Capture-View 'settings-input' 'BlankDrawing' 296
+Capture-View 'settings-about' 'BlankDrawing' 870
 
 $files = Get-ChildItem $OutputDirectory -Filter '*.png'
 if ($files.Count -ne 6) { throw "Expected 6 screenshots, produced $($files.Count)." }
