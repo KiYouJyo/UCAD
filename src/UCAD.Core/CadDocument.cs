@@ -59,6 +59,27 @@ public sealed class CadDocument
         return true;
     }
 
+    public int RemoveRange(IEnumerable<Guid> ids)
+    {
+        ArgumentNullException.ThrowIfNull(ids);
+        var requested = ids.ToHashSet();
+        if (requested.Count == 0)
+        {
+            return 0;
+        }
+
+        var removedCount = _entities.Count(entity => requested.Contains(entity.Id));
+        if (removedCount == 0)
+        {
+            return 0;
+        }
+
+        RecordMutation();
+        _entities.RemoveAll(entity => requested.Contains(entity.Id));
+        RaiseChanged(CadDocumentChangeKind.RemoveRange);
+        return removedCount;
+    }
+
     public void Clear()
     {
         if (_entities.Count == 0)
