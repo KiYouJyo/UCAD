@@ -16,6 +16,7 @@ foreach ($fake in @('╱','⌁','▭','○','◜','↖','✥','⧉','▧','⬚',
 }
 
 # Figma-derived token SSOT remains mandatory even though screenshot overlay is non-gating.
+# v0.4.0 intentionally does not tune visual geometry; it must not regress the frozen shell tokens.
 $tokens = Get-Content src/UCAD.App/Styles/UcadDesignTokens.xaml -Raw
 foreach ($required in @(
   'UcadTitleBarHeight','UcadCategoryBarHeight','UcadToolShelfHeight','UcadDocumentTabWidth',
@@ -50,7 +51,7 @@ foreach ($visualContract in @(
 $version = (Get-Content VERSION -Raw).Trim()
 $release = Get-Content release/release.json -Raw | ConvertFrom-Json
 [xml]$package = Get-Content src/UCAD.App/Package.appxmanifest -Raw
-if ($version -ne '0.3.10') { throw "Expected VERSION 0.3.10, got $version" }
+if ($version -ne '0.4.0') { throw "Expected VERSION 0.4.0, got $version" }
 if ($release.product.version -ne $version) { throw 'release.json version must match VERSION.' }
 if ($release.product.packageVersion -ne "$version.0") { throw 'release packageVersion must be VERSION + .0.' }
 if ($package.Package.Identity.Version -ne "$version.0") { throw 'MSIX Identity.Version must match VERSION + .0.' }
@@ -66,9 +67,18 @@ foreach ($view in @(
   'src/UCAD.App/Views/UcadSettingsPage.xaml.cs',
   'src/UCAD.App/Controls/SettingCard.xaml',
   'src/UCAD.App/MainWindow.Localization.cs',
-  'src/UCAD.App/Services/LocalizationService.cs'
+  'src/UCAD.App/MainWindow.Interaction.cs',
+  'src/UCAD.App/Services/LocalizationService.cs',
+  'src/UCAD.App/Views/CadViewport.SelectionSemantics.cs',
+  'src/UCAD.Core/Geometry/CadRect.cs',
+  'src/UCAD.Core/Interaction/CadEntityGeometry.cs',
+  'src/UCAD.Core/Interaction/CadInteractionState.cs',
+  'src/UCAD.Core/Interaction/CadSelectionQuery.cs',
+  'src/UCAD.Core/Interaction/ObjectSnap.cs',
+  'src/UCAD.Core/Interaction/OrthoConstraint.cs',
+  'src/UCAD.Core/Interaction/SelectionSet.cs'
 )) {
-  if (-not (Test-Path $view)) { throw "Missing UI/localization foundation file: $view" }
+  if (-not (Test-Path $view)) { throw "Missing UI/interaction/localization foundation file: $view" }
 }
 
 $mainCode = Get-Content src/UCAD.App/MainWindow.xaml.cs -Raw
@@ -80,8 +90,36 @@ if ($mainCode -notmatch 'ShowStartOnNewTab[\s\S]{0,500}CreateStartTab\(\)[\s\S]{
 }
 
 $viewportCode = Get-Content src/UCAD.App/Views/CadViewport.xaml.cs -Raw
-foreach ($contract in @('settings.CanvasTheme','_geometryColor','_transientColor','_gridBaseColor','_crosshairColor')) {
-  if (-not $viewportCode.Contains($contract)) { throw "Canvas theme is not wired to the runtime palette: $contract" }
+foreach ($contract in @(
+  'settings.CanvasTheme','_geometryColor','_transientColor','_gridBaseColor','_crosshairColor',
+  'CadSelectionQuery.HitTestNearest','CadSelectionQuery.QueryWindow','ObjectSnapResolver.Resolve',
+  'OrthoConstraint.Apply','_interaction.Selection','DrawSelectionGrips','DrawSelectionWindow','DrawSnapMarker'
+)) {
+  if (-not $viewportCode.Contains($contract)) { throw "Viewport runtime contract missing: $contract" }
+}
+
+$interactionCode = Get-Content src/UCAD.App/MainWindow.Interaction.cs -Raw
+foreach ($contract in @(
+  'EnsureInteractionUiInitialized','VirtualKey.F3','VirtualKey.F8',
+  'ObjectSnapEnabled','OrthoEnabled','RefreshInspectorSelection',
+  'HasRegisteredCategory','CadCommandCategory.Modify','CadCommandCategory.View'
+)) {
+  if (-not $interactionCode.Contains($contract)) { throw "v0.4 shell interaction contract missing: $contract" }
+}
+
+$workspaceCode = Get-Content src/UCAD.App/Workspace/CadWorkspaceSession.cs -Raw
+foreach ($contract in @('CadInteractionState','ApplyDraftingDefaults','DefaultObjectSnap','DefaultSnapTypes','DefaultOrtho')) {
+  if (-not $workspaceCode.Contains($contract)) { throw "Workspace drafting-state contract missing: $contract" }
+}
+
+$commandSessionCode = Get-Content src/UCAD.Core/Commands/CommandSession.cs -Raw
+if (-not $commandSessionCode.Contains('event EventHandler? Changed')) {
+  throw 'CommandSession must expose observable lifecycle changes for Inspector synchronization.'
+}
+
+$selectionSemantics = Get-Content src/UCAD.App/Views/CadViewport.SelectionSemantics.cs -Raw
+foreach ($contract in @('SelectedIds.ToArray()','Selection.Add(previous)','PointerReleasedEvent')) {
+  if (-not $selectionSemantics.Contains($contract)) { throw "Additive CAD selection contract missing: $contract" }
 }
 
 $startXaml = Get-Content src/UCAD.App/Views/StartPage.xaml -Raw
@@ -100,7 +138,7 @@ foreach ($contract in @(
   if (-not $settingsCode.Contains($contract)) { throw "Missing Settings behavior contract: $contract" }
 }
 
-# v0.3.10 localization architecture: explicit MRT ResourceContext, never process-global override.
+# v0.3.10+ localization architecture remains mandatory in v0.4.0.
 $localizationCode = Get-Content src/UCAD.App/Services/LocalizationService.cs -Raw
 foreach ($contract in @(
   'new ResourceManager()',
@@ -135,8 +173,11 @@ if ($liveUiCode -match 'GetString\("[^"]+\.(Content|Text|PlaceholderText)"\)') {
   throw "Hot refresh must not imperatively request x:Uid property resources: $($Matches[0])"
 }
 $appCode = Get-Content src/UCAD.App/App.xaml.cs -Raw
-foreach ($contract in @('SettingsService.Current.SettingsChanged','ApplyLiveLocalizationFromSettings','mainWindow.RefreshLocalization()','ScheduleLocalizationSmoke')) {
-  if (-not $appCode.Contains($contract)) { throw "App does not wire live localization: $contract" }
+foreach ($contract in @(
+  'SettingsService.Current.SettingsChanged','ApplyLiveLocalizationFromSettings',
+  'mainWindow.RefreshLocalization()','EnsureInteractionUiInitialized','ScheduleLocalizationSmoke'
+)) {
+  if (-not $appCode.Contains($contract)) { throw "App does not wire required shell service: $contract" }
 }
 
 # Three languages must have identical keys across all three runtime resource maps.
@@ -174,9 +215,9 @@ $v039Representatives = @{
   'en-US' = @{ Start_TabTitle='Start'; Settings_Nav_Title='Settings' }
 }
 $shellRepresentatives = @{
-  'zh-CN' = @{ File='文件'; CategoryDraw='绘图'; InspectorProperties='属性' }
-  'ja-JP' = @{ File='ファイル'; CategoryDraw='作図'; InspectorProperties='プロパティ' }
-  'en-US' = @{ File='File'; CategoryDraw='Draw'; InspectorProperties='Properties' }
+  'zh-CN' = @{ File='文件'; CategoryDraw='绘图'; InspectorProperties='属性'; StatusOsnapOnMessage='对象捕捉已开启（F3）' }
+  'ja-JP' = @{ File='ファイル'; CategoryDraw='作図'; InspectorProperties='プロパティ'; StatusOsnapOnMessage='オブジェクトスナップをオン（F3）' }
+  'en-US' = @{ File='File'; CategoryDraw='Draw'; InspectorProperties='Properties'; StatusOsnapOnMessage='Object snap on (F3)' }
 }
 foreach ($locale in $locales) {
   [xml]$v039Xml = Get-Content "src/UCAD.App/Strings/$locale/UcadV039.resw" -Raw
@@ -195,4 +236,4 @@ foreach ($locale in $locales) {
   }
 }
 
-Write-Output "Validated v0.3.10 UI/behavior contracts, PMv2, version SSOT, Figma tokens, explicit MRT ResourceContext hot switching, $($v039Baseline.Count) Start/Settings keys, and $($keySets['ShellLive']['zh-CN'].Count) plain ShellLive keys in zh-CN/ja-JP/en-US."
+Write-Output "Validated v0.4.0 interaction/core contracts, PMv2, version SSOT, frozen Figma tokens, live trilingual MRT resources, $($v039Baseline.Count) Start/Settings keys, and $($keySets['ShellLive']['zh-CN'].Count) ShellLive keys in zh-CN/ja-JP/en-US."
