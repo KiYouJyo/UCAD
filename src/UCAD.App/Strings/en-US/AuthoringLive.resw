@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="AuthoringFailedFormat" xml:space="preserve"><value>{0} failed: {1}</value></data>
+  <data name="LayerComplete" xml:space="preserve"><value>Layer Manager closed.</value></data>
+  <data name="PropertiesComplete" xml:space="preserve"><value>Object properties updated.</value></data>
+  <data name="TextInsertionPoint" xml:space="preserve"><value>TEXT: specify insertion point.</value></data>
+  <data name="TextComplete" xml:space="preserve"><value>Text created.</value></data>
+  <data name="DimFirstPoint" xml:space="preserve"><value>DIM: specify first extension-line origin.</value></data>
+  <data name="DimSecondPoint" xml:space="preserve"><value>DIM: specify second extension-line origin.</value></data>
+  <data name="DimLinePoint" xml:space="preserve"><value>DIM: specify dimension-line location.</value></data>
+  <data name="DimComplete" xml:space="preserve"><value>Linear dimension created.</value></data>
+  <data name="HatchNeedsBoundary" xml:space="preserve"><value>HATCH requires one selected closed polyline or circle.</value></data>
+  <data name="HatchComplete" xml:space="preserve"><value>Solid hatch created.</value></data>
+  <data name="BlockNeedsSelection" xml:space="preserve"><value>BLOCK requires a selection.</value></data>
+  <data name="BlockNameTitle" xml:space="preserve"><value>Create Block</value></data>
+  <data name="BlockNamePrompt" xml:space="preserve"><value>Block name</value></data>
+  <data name="BlockBasePoint" xml:space="preserve"><value>BLOCK: specify base point.</value></data>
+  <data name="BlockCompleteFormat" xml:space="preserve"><value>Block '{0}' defined.</value></data>
+  <data name="InsertNoBlocks" xml:space="preserve"><value>No block definitions are available.</value></data>
+  <data name="InsertPoint" xml:space="preserve"><value>INSERT: specify insertion point.</value></data>
+  <data name="InsertCompleteFormat" xml:space="preserve"><value>Block '{0}' inserted.</value></data>
+  <data name="ExplodeNeedsOneBlock" xml:space="preserve"><value>EXPLODE requires exactly one selected block reference.</value></data>
+  <data name="ExplodeCompleteFormat" xml:space="preserve"><value>Block exploded into {0} objects.</value></data>
+  <data name="LayerCurrent" xml:space="preserve"><value>Current layer</value></data>
+  <data name="LayerNewName" xml:space="preserve"><value>New layer name</value></data>
+  <data name="LayerAdd" xml:space="preserve"><value>Add</value></data>
+  <data name="LayerVisible" xml:space="preserve"><value>On</value></data>
+  <data name="LayerLocked" xml:space="preserve"><value>Lock</value></data>
+  <data name="LayerApply" xml:space="preserve"><value>Apply</value></data>
+  <data name="LayerDelete" xml:space="preserve"><value>Delete</value></data>
+  <data name="LayerManagerTitle" xml:space="preserve"><value>Layer Manager</value></data>
+  <data name="Close" xml:space="preserve"><value>Close</value></data>
+  <data name="PropertiesNeedsSelection" xml:space="preserve"><value>CHPROP requires a selection.</value></data>
+  <data name="PropertyLayer" xml:space="preserve"><value>Layer</value></data>
+  <data name="PropertyColor" xml:space="preserve"><value>Color (#RRGGBB)</value></data>
+  <data name="PropertyLineWeight" xml:space="preserve"><value>Lineweight</value></data>
+  <data name="PropertyLineType" xml:space="preserve"><value>Linetype</value></data>
+  <data name="ByLayer" xml:space="preserve"><value>ByLayer</value></data>
+  <data name="PropertiesTitleFormat" xml:space="preserve"><value>Properties — {0} selected</value></data>
+  <data name="Apply" xml:space="preserve"><value>Apply</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="InvalidLineWeight" xml:space="preserve"><value>Lineweight must be a positive number.</value></data>
+  <data name="TextContent" xml:space="preserve"><value>Text</value></data>
+  <data name="TextHeight" xml:space="preserve"><value>Text height</value></data>
+  <data name="RotationDegrees" xml:space="preserve"><value>Rotation (degrees)</value></data>
+  <data name="TextDialogTitle" xml:space="preserve"><value>Text</value></data>
+  <data name="Create" xml:space="preserve"><value>Create</value></data>
+  <data name="InsertBlock" xml:space="preserve"><value>Block</value></data>
+  <data name="InsertScale" xml:space="preserve"><value>Scale</value></data>
+  <data name="InsertDialogTitle" xml:space="preserve"><value>Insert Block</value></data>
+  <data name="Continue" xml:space="preserve"><value>Continue</value></data>
+  <data name="InspectorPropertySummaryFormat" xml:space="preserve"><value>Layer: {0}   Color: {1}   Lineweight: {2}   Linetype: {3}</value></data>
+</root>

@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.5.0 — 2026-08-16
+
+### Modify Foundation
+- Added MOVE (`M`), COPY (`CO`, `CP`), ROTATE (`RO`), SCALE (`SC`), MIRROR (`MI`), OFFSET (`O`), TRIM (`TR`), and EXTEND (`EX`) through the existing `CommandRegistry → CommandSession` path.
+- Added both CAD noun/verb and verb/noun workflows: preselected entities can enter Modify immediately, while command-first operation keeps normal click/Window/Crossing selection active until Enter confirms the selection set.
+- Added shared immutable `CadEntityTransform` logic for translate, rotate, scale, and mirror across Line / Polyline / Circle / Arc, with identity-preserving edits and fresh identities for generated copies.
+- Added `CadDocument.Replace` / `ReplaceRange` so identity-preserving transforms and trim/extend replacements are recorded as one undoable document mutation.
+- Added foundational OFFSET geometry for Line / Polyline / Circle / Arc and quick-mode TRIM / EXTEND geometry using other visible entities as boundaries.
+- Added OSNAP-aware Modify point input, F8 Ortho support for displacement input, transient transform/offset previews, and real entity-pick phases without creating a second selection model.
+- Promoted the Modify category and existing MOVE / COPY / OFFSET / TRIM shell surfaces from reserved placeholders to real commands, with ROTATE / SCALE / MIRROR / EXTEND added to the Modify shelf.
+- Added restart-free zh-CN / ja-JP / en-US Modify phase prompts while preserving v0.4.1 two-click selection and the transparent native cursor + Win2D CAD cursor architecture.
+
+### Validation
+- Added Core coverage for identity preservation, one-step Undo, translate / rotate / scale / mirror, offset side/radius/polyline behavior, quick trim/extend geometry, and edit-transaction identity safety.
+- Added a dedicated Modify Smoke workflow that launches real UCAD and executes MOVE + COPY + ROTATE + SCALE + MIRROR + OFFSET + TRIM + EXTEND in one running process.
+- Extended static contracts for the full v0.5 Modify registry, shared geometry services, viewport input bridge, undoable replacements, trilingual prompt parity, and version SSOT.
+- Retained Core tests, app-build, startup-smoke, Interaction Smoke, Localization Smoke, MSIX / one-click package validation, PerMonitorV2, frozen Figma-critical design tokens, and transparent CAD cursor regression checks.
+
 ## 0.4.1 — 2026-08-16
 
 ### CAD Selection & Cursor Interaction Refinement

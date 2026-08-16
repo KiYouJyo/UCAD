@@ -80,21 +80,51 @@ UCAD aims to become a lightweight Windows-native 2D CAD focused on architecture 
 
 ## v0.5 — Modify
 
-- [ ] MOVE
-- [ ] COPY
-- [ ] ROTATE
-- [ ] SCALE
-- [ ] MIRROR
-- [ ] OFFSET
-- [ ] TRIM
-- [ ] EXTEND
+- [x] MOVE
+- [x] COPY
+- [x] ROTATE
+- [x] SCALE
+- [x] MIRROR
+- [x] OFFSET
+- [x] TRIM
+- [x] EXTEND
+- [x] shared identity-preserving transform pipeline
+- [x] undoable `Replace` / `ReplaceRange` edit transactions
+- [x] command-first and preselection workflows
+- [x] OSNAP-aware Modify point input and transient previews
+- [x] dedicated real-process Modify Smoke coverage
 
-**Project gate:** UCAD should not expand into architecture/GIS convenience features until the v0.5 drawing-editing loop feels coherent and reliable.
+## v0.6 — Layers & Entity Properties
 
-## v0.6–v1.0
+- [x] document layer table with protected layer `0`
+- [x] current-layer inheritance for newly created entities
+- [x] create / rename / delete / set-current layer workflow
+- [x] layer visibility and lock state
+- [x] layer color, lineweight, and linetype metadata
+- [x] per-entity layer / color / lineweight / linetype overrides with ByLayer inheritance
+- [x] layer-aware drawing visibility, selection, OSNAP, and Modify picking
+- [x] Layer Manager surfaced from the existing Layers category / Inspector
+- [x] `LAYER` / `LA` and `CHPROP` / `CH` command registration
+- [x] layer/property state participates in the document Undo/Redo snapshot
 
-- layers and entity properties
-- text / dimensions / hatch / blocks
+## v0.7 — Annotation, Hatch & Blocks
+
+- [x] `TEXT` / `T` single-line text entity and insertion workflow
+- [x] `DIM` / `DLI` / `DIMLINEAR` foundational aligned linear dimensions
+- [x] `HATCH` / `H` solid hatch for a selected closed polyline or circle
+- [x] text / dimension / hatch rendering, selection geometry, grips, and shared transforms
+- [x] document block-definition table
+- [x] `BLOCK` / `B` definition workflow from selected entities
+- [x] `INSERT` / `I` block reference with insertion point, scale, and rotation
+- [x] `EXPLODE` / `X` block-reference explosion as one undoable replace mutation
+- [x] shared geometry queries and Modify transforms for the new v0.7 entity types
+- [x] restart-free zh-CN / ja-JP / en-US authoring prompts and dialogs
+- [x] dedicated real-process Authoring Smoke for v0.6 + v0.7 capabilities
+
+**Combined acceptance gate:** the v0.7.0 candidate intentionally carries v0.5, v0.6, and v0.7 together so Modify, Layers/Properties, annotation, hatch, and blocks can be accepted as one coherent CAD authoring loop before release.
+
+## v0.8–v1.0
+
 - DXF-first import/export
 - print/PDF workflow
 - architectural helpers

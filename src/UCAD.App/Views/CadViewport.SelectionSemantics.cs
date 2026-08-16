@@ -12,10 +12,6 @@ public sealed partial class CadViewport
 {
     private void CadViewport_Loaded(object sender, RoutedEventArgs e)
     {
-        // ProtectedCursor is the Windows App SDK cursor path for XAML elements.
-        // Give WinUI a real but fully transparent InputCursor, then let Win2D draw
-        // the visible CAD crosshair/pickbox. This avoids racing WinUI's own cursor
-        // ownership with imperative Win32 cursor changes on every mouse movement.
         try
         {
             ProtectedCursor = TransparentInputCursor.GetOrCreate();
@@ -24,6 +20,8 @@ public sealed partial class CadViewport
         {
             App.WriteStartupFailure("CadViewport.TransparentCursor", ex);
         }
+
+        EnsureModifyInputHooks();
     }
 
     private static bool ShiftSelection(PointerRoutedEventArgs e) =>
@@ -45,7 +43,8 @@ public sealed partial class CadViewport
         var startScreen = WorldToScreen(_selectionStartWorld);
         var rectangle = CadRect.FromPoints(_selectionStartWorld, endWorld);
         var crossing = _pointerScreen.X < startScreen.X;
-        var ids = CadSelectionQuery.QueryWindow(_document.Entities, rectangle, crossing);
+        // Hidden and locked layers are intentionally excluded from direct selection.
+        var ids = CadSelectionQuery.QueryWindow(_document.SelectableEntities, rectangle, crossing);
 
         if (remove)
         {
@@ -53,8 +52,6 @@ public sealed partial class CadViewport
         }
         else if (ids.Count == 0)
         {
-            // An empty completed window is the CAD-style quick way to clear a
-            // selection set. The first blank click still only starts the window.
             _interaction.Selection.Clear();
         }
         else
@@ -70,24 +67,13 @@ public sealed partial class CadViewport
 
     private void ApplyPointSelection(Guid entityId, bool remove)
     {
-        if (remove)
-        {
-            _interaction.Selection.Remove(entityId);
-        }
-        else
-        {
-            // AutoCAD-style PICKADD behavior: each new pick joins the current set.
-            _interaction.Selection.Add(entityId);
-        }
+        if (remove) _interaction.Selection.Remove(entityId);
+        else _interaction.Selection.Add(entityId);
     }
 
     public bool CancelSelectionGesture()
     {
-        if (!_selectionWindowArmed && !_selectionPointerDown && !_selectionDragging)
-        {
-            return false;
-        }
-
+        if (!_selectionWindowArmed && !_selectionPointerDown && !_selectionDragging) return false;
         _selectionWindowArmed = false;
         _selectionPointerDown = false;
         _selectionDragging = false;

@@ -28,6 +28,7 @@ public sealed partial class MainWindow
 
         _interactionUiInitialized = true;
         ApplyRegisteredCapabilityState();
+        ActivateModifyToolSurfaces();
 
         // v0.4.x activates only the drafting aids that have real interaction logic.
         // SNAP (grid snap), POLAR and OTRACK remain reserved rather than becoming no-op buttons.
@@ -124,7 +125,7 @@ public sealed partial class MainWindow
                     throw new InvalidOperationException("Interaction smoke Ortho constraint failed.");
                 }
 
-                if (!DrawCategoryButton.IsEnabled || !ViewCategoryButton.IsEnabled || ModifyCategoryButton.IsEnabled)
+                if (!DrawCategoryButton.IsEnabled || !ViewCategoryButton.IsEnabled || !ModifyCategoryButton.IsEnabled)
                 {
                     throw new InvalidOperationException("Interaction smoke capability-derived category state failed.");
                 }
@@ -205,10 +206,8 @@ public sealed partial class MainWindow
         };
         session.CommandSession.Changed += (_, _) =>
         {
-            // ERASE is the first selection-backed edit command. Handling the registered
-            // command at the shared CommandSession boundary lets keyboard Delete, typed
-            // ERASE/E/DELETE, and command search all converge on the same implementation
-            // without creating a second command model in the shell.
+            // ERASE stays on the shared command boundary so keyboard Delete, typed
+            // ERASE/E/DELETE, and command search all converge on one implementation.
             if (session.CommandSession.ActiveCommand?.Name == "ERASE")
             {
                 ExecuteEraseSelection(session);
@@ -216,8 +215,23 @@ public sealed partial class MainWindow
                 return;
             }
 
+            // v0.5 Modify commands use the same CommandSession boundary. The controller
+            // owns phased mouse/keyboard input but never creates a parallel command model.
+            if (HandleModifyCommandSessionChanged(session))
+            {
+                RootLayout.DispatcherQueue.TryEnqueue(() =>
+                {
+                    if (ReferenceEquals(ActiveSession, session))
+                    {
+                        ModeText.Text = session.StatusText;
+                        RefreshInspectorSelection(session);
+                    }
+                });
+                return;
+            }
+
             // MainWindow's command-dispatch stack can still update legacy Inspector rows
-            // after CommandSession changes. Defer the v0.4 selection Inspector refresh so
+            // after CommandSession changes. Defer the selection Inspector refresh so
             // it wins after that synchronous stack without coupling Core back to WinUI.
             RootLayout.DispatcherQueue.TryEnqueue(() =>
             {
@@ -342,6 +356,10 @@ public sealed partial class MainWindow
         }
         _interactionLocalizationGeneration = generation;
         RefreshActiveInteractionUi();
+        if (ActiveSession is CadWorkspaceSession session)
+        {
+            RefreshModifyLocalization(session);
+        }
     }
 
     private void RefreshActiveInteractionUi()
@@ -363,6 +381,7 @@ public sealed partial class MainWindow
 
         SetStatusButtonState(OsnapStatusButton, session.Interaction.ObjectSnapEnabled, enabled: true);
         SetStatusButtonState(OrthoStatusButton, session.Interaction.OrthoEnabled, enabled: true);
+        ModeText.Text = session.StatusText;
         RefreshInspectorSelection(session);
     }
 

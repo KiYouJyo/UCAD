@@ -6,15 +6,16 @@ public sealed class ArcEntity : ICadEntity
 {
     private const double Epsilon = 1e-9;
 
-    private ArcEntity(CadPoint center, double radius, double startAngleRadians, double sweepAngleRadians)
+    private ArcEntity(CadPoint center, double radius, double startAngleRadians, double sweepAngleRadians, Guid id)
     {
         Center = center;
         Radius = radius;
         StartAngleRadians = startAngleRadians;
         SweepAngleRadians = sweepAngleRadians;
+        Id = id;
     }
 
-    public Guid Id { get; } = Guid.NewGuid();
+    public Guid Id { get; }
 
     public CadPoint Center { get; }
 
@@ -59,6 +60,36 @@ public sealed class ArcEntity : ICadEntity
         return points;
     }
 
+    internal static ArcEntity Create(
+        CadPoint center,
+        double radius,
+        double startAngleRadians,
+        double sweepAngleRadians,
+        Guid id)
+    {
+        if (!double.IsFinite(radius) || radius <= Epsilon)
+        {
+            throw new ArgumentOutOfRangeException(nameof(radius), "Arc radius must be positive and finite.");
+        }
+        if (!double.IsFinite(startAngleRadians))
+        {
+            throw new ArgumentOutOfRangeException(nameof(startAngleRadians));
+        }
+        if (!double.IsFinite(sweepAngleRadians) || Math.Abs(sweepAngleRadians) <= Epsilon || Math.Abs(sweepAngleRadians) > Math.Tau + Epsilon)
+        {
+            throw new ArgumentOutOfRangeException(nameof(sweepAngleRadians), "Arc sweep must be finite and non-zero.");
+        }
+
+        return new ArcEntity(center, radius, startAngleRadians, sweepAngleRadians, id);
+    }
+
+    internal static ArcEntity Create(
+        CadPoint center,
+        double radius,
+        double startAngleRadians,
+        double sweepAngleRadians) =>
+        Create(center, radius, startAngleRadians, sweepAngleRadians, Guid.NewGuid());
+
     public static bool TryCreateFromThreePoints(CadPoint start, CadPoint pointOnArc, CadPoint end, out ArcEntity? arc)
     {
         arc = null;
@@ -101,7 +132,7 @@ public sealed class ArcEntity : ICadEntity
             return false;
         }
 
-        arc = new ArcEntity(center, radius, startAngle, sweep);
+        arc = Create(center, radius, startAngle, sweep);
         return true;
     }
 

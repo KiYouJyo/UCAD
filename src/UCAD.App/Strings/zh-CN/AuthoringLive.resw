@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="AuthoringFailedFormat" xml:space="preserve"><value>{0} 执行失败：{1}</value></data>
+  <data name="LayerComplete" xml:space="preserve"><value>图层管理器已关闭。</value></data>
+  <data name="PropertiesComplete" xml:space="preserve"><value>对象属性已更新。</value></data>
+  <data name="TextInsertionPoint" xml:space="preserve"><value>TEXT：指定文字插入点。</value></data>
+  <data name="TextComplete" xml:space="preserve"><value>文字已创建。</value></data>
+  <data name="DimFirstPoint" xml:space="preserve"><value>DIM：指定第一条尺寸界线原点。</value></data>
+  <data name="DimSecondPoint" xml:space="preserve"><value>DIM：指定第二条尺寸界线原点。</value></data>
+  <data name="DimLinePoint" xml:space="preserve"><value>DIM：指定尺寸线位置。</value></data>
+  <data name="DimComplete" xml:space="preserve"><value>线性标注已创建。</value></data>
+  <data name="HatchNeedsBoundary" xml:space="preserve"><value>HATCH 需要先选择一个闭合多段线或圆。</value></data>
+  <data name="HatchComplete" xml:space="preserve"><value>实体填充已创建。</value></data>
+  <data name="BlockNeedsSelection" xml:space="preserve"><value>BLOCK 需要先选择对象。</value></data>
+  <data name="BlockNameTitle" xml:space="preserve"><value>创建图块</value></data>
+  <data name="BlockNamePrompt" xml:space="preserve"><value>图块名称</value></data>
+  <data name="BlockBasePoint" xml:space="preserve"><value>BLOCK：指定图块基点。</value></data>
+  <data name="BlockCompleteFormat" xml:space="preserve"><value>图块“{0}”已定义。</value></data>
+  <data name="InsertNoBlocks" xml:space="preserve"><value>当前图纸没有可插入的图块定义。</value></data>
+  <data name="InsertPoint" xml:space="preserve"><value>INSERT：指定插入点。</value></data>
+  <data name="InsertCompleteFormat" xml:space="preserve"><value>图块“{0}”已插入。</value></data>
+  <data name="ExplodeNeedsOneBlock" xml:space="preserve"><value>EXPLODE 需要且仅能选择一个图块参照。</value></data>
+  <data name="ExplodeCompleteFormat" xml:space="preserve"><value>图块已分解为 {0} 个对象。</value></data>
+  <data name="LayerCurrent" xml:space="preserve"><value>当前图层</value></data>
+  <data name="LayerNewName" xml:space="preserve"><value>新图层名称</value></data>
+  <data name="LayerAdd" xml:space="preserve"><value>添加</value></data>
+  <data name="LayerVisible" xml:space="preserve"><value>开</value></data>
+  <data name="LayerLocked" xml:space="preserve"><value>锁定</value></data>
+  <data name="LayerApply" xml:space="preserve"><value>应用</value></data>
+  <data name="LayerDelete" xml:space="preserve"><value>删除</value></data>
+  <data name="LayerManagerTitle" xml:space="preserve"><value>图层管理器</value></data>
+  <data name="Close" xml:space="preserve"><value>关闭</value></data>
+  <data name="PropertiesNeedsSelection" xml:space="preserve"><value>CHPROP 需要先选择对象。</value></data>
+  <data name="PropertyLayer" xml:space="preserve"><value>图层</value></data>
+  <data name="PropertyColor" xml:space="preserve"><value>颜色（#RRGGBB）</value></data>
+  <data name="PropertyLineWeight" xml:space="preserve"><value>线宽</value></data>
+  <data name="PropertyLineType" xml:space="preserve"><value>线型</value></data>
+  <data name="ByLayer" xml:space="preserve"><value>随层</value></data>
+  <data name="PropertiesTitleFormat" xml:space="preserve"><value>属性 — 已选择 {0} 个对象</value></data>
+  <data name="Apply" xml:space="preserve"><value>应用</value></data>
+  <data name="Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="InvalidLineWeight" xml:space="preserve"><value>线宽必须为正数。</value></data>
+  <data name="TextContent" xml:space="preserve"><value>文字内容</value></data>
+  <data name="TextHeight" xml:space="preserve"><value>文字高度</value></data>
+  <data name="RotationDegrees" xml:space="preserve"><value>旋转角（度）</value></data>
+  <data name="TextDialogTitle" xml:space="preserve"><value>单行文字</value></data>
+  <data name="Create" xml:space="preserve"><value>创建</value></data>
+  <data name="InsertBlock" xml:space="preserve"><value>图块</value></data>
+  <data name="InsertScale" xml:space="preserve"><value>比例</value></data>
+  <data name="InsertDialogTitle" xml:space="preserve"><value>插入图块</value></data>
+  <data name="Continue" xml:space="preserve"><value>继续</value></data>
+  <data name="InspectorPropertySummaryFormat" xml:space="preserve"><value>图层：{0}   颜色：{1}   线宽：{2}   线型：{3}</value></data>
+</root>
