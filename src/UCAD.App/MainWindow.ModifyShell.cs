@@ -53,7 +53,6 @@ public sealed partial class MainWindow
                     {
                         Text = command,
                         FontSize = 10,
-                        FontWeight = Windows.UI.Text.FontWeights.SemiBold,
                         HorizontalAlignment = HorizontalAlignment.Center
                     },
                     new TextBlock
