@@ -5,6 +5,11 @@ namespace UCAD.Core.Entities;
 public sealed class CircleEntity : ICadEntity
 {
     public CircleEntity(CadPoint center, double radius)
+        : this(center, radius, Guid.NewGuid())
+    {
+    }
+
+    internal CircleEntity(CadPoint center, double radius, Guid id)
     {
         if (!double.IsFinite(radius) || radius <= 0)
         {
@@ -13,9 +18,10 @@ public sealed class CircleEntity : ICadEntity
 
         Center = center;
         Radius = radius;
+        Id = id;
     }
 
-    public Guid Id { get; } = Guid.NewGuid();
+    public Guid Id { get; }
 
     public CadPoint Center { get; }
 
