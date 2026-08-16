@@ -18,8 +18,6 @@ namespace UCAD.Views;
 public sealed partial class CadViewport : UserControl
 {
     private const double GeometryEpsilon = 1e-9;
-    private const float ClickSelectionAperturePixels = 6f;
-    private const float ObjectSnapAperturePixels = 10f;
     private const float SelectionDragThresholdPixels = 4f;
 
     private readonly CadDocument _document;
@@ -34,6 +32,7 @@ public sealed partial class CadViewport : UserControl
 
     private bool _selectionPointerDown;
     private bool _selectionDragging;
+    private bool _selectionWindowArmed;
     private Vector2 _selectionStartScreen;
     private CadPoint _selectionStartWorld;
     private Guid? _hoverEntityId;
@@ -54,6 +53,9 @@ public sealed partial class CadViewport : UserControl
     private bool _middleMousePan = true;
     private bool _reverseWheelZoom;
     private bool _selectionPreview = true;
+    private float _crosshairSizePercent = 100f;
+    private float _pickboxSizePixels = 6f;
+    private float _objectSnapAperturePixels = 10f;
 
     public event Action<CadPoint>? PointerWorldPositionChanged;
     public event Action<DrawingCommandKind, int, CadPoint>? DrawingPointAccepted;
@@ -105,7 +107,7 @@ public sealed partial class CadViewport : UserControl
             _snapColor = ColorHelper.FromArgb(255, 0, 145, 90);
             _gridBaseColor = ColorHelper.FromArgb(255, 112, 116, 122);
             _originColor = ColorHelper.FromArgb(180, 105, 105, 110);
-            _crosshairColor = ColorHelper.FromArgb(120, 75, 78, 82);
+            _crosshairColor = ColorHelper.FromArgb(180, 75, 78, 82);
         }
         else
         {
@@ -116,7 +118,7 @@ public sealed partial class CadViewport : UserControl
             _snapColor = ColorHelper.FromArgb(255, 80, 220, 150);
             _gridBaseColor = ColorHelper.FromArgb(255, 90, 94, 101);
             _originColor = ColorHelper.FromArgb(180, 70, 70, 70);
-            _crosshairColor = ColorHelper.FromArgb(110, 180, 180, 180);
+            _crosshairColor = ColorHelper.FromArgb(190, 220, 220, 225);
         }
 
         _showGrid = settings.ShowGrid;
@@ -125,6 +127,9 @@ public sealed partial class CadViewport : UserControl
         _middleMousePan = settings.MiddleMousePan;
         _reverseWheelZoom = settings.ReverseWheelZoom;
         _selectionPreview = settings.SelectionPreview;
+        _crosshairSizePercent = Math.Clamp(settings.CrosshairSizePercent, 5, 100);
+        _pickboxSizePixels = Math.Clamp(settings.PickboxSize, 3, 20);
+        _objectSnapAperturePixels = Math.Clamp(settings.ObjectSnapAperture, 3, 50);
         if (!_selectionPreview)
         {
             _hoverEntityId = null;
@@ -145,6 +150,7 @@ public sealed partial class CadViewport : UserControl
 
     public void BeginDrawingCommand(DrawingCommandKind kind)
     {
+        CancelSelectionGesture();
         _drawingCommand = kind;
         _inputPoints.Clear();
         _hoverEntityId = null;
@@ -205,6 +211,7 @@ public sealed partial class CadViewport : UserControl
     public void ClearDocument()
     {
         CancelDrawingCommand();
+        CancelSelectionGesture();
         _interaction.Selection.Clear();
         _document.Clear();
         Canvas.Invalidate();
@@ -335,7 +342,7 @@ public sealed partial class CadViewport : UserControl
             _activeSnap = ObjectSnapResolver.Resolve(
                 _document.Entities,
                 RawPointerWorldPosition,
-                ObjectSnapAperturePixels / _zoom,
+                _objectSnapAperturePixels / _zoom,
                 _interaction.ObjectSnapModes);
         }
         else
@@ -370,7 +377,7 @@ public sealed partial class CadViewport : UserControl
         DrawTransientGeometry(ds);
         DrawSelectionWindow(ds);
         DrawSnapMarker(ds);
-        DrawCrosshair(ds, sender.ActualWidth, sender.ActualHeight);
+        DrawCadCursor(ds, sender.ActualWidth, sender.ActualHeight);
     }
 
     private void DrawEntity(CanvasDrawingSession ds, ICadEntity entity, Color color, float strokeWidth)
@@ -436,12 +443,13 @@ public sealed partial class CadViewport : UserControl
 
     private void DrawSelectionWindow(CanvasDrawingSession ds)
     {
-        if (!_selectionDragging) return;
-        var left = Math.Min(_selectionStartScreen.X, _pointerScreen.X);
-        var top = Math.Min(_selectionStartScreen.Y, _pointerScreen.Y);
-        var width = Math.Abs(_pointerScreen.X - _selectionStartScreen.X);
-        var height = Math.Abs(_pointerScreen.Y - _selectionStartScreen.Y);
-        var crossing = _pointerScreen.X < _selectionStartScreen.X;
+        if (!_selectionDragging && !_selectionWindowArmed) return;
+        var startScreen = WorldToScreen(_selectionStartWorld);
+        var left = Math.Min(startScreen.X, _pointerScreen.X);
+        var top = Math.Min(startScreen.Y, _pointerScreen.Y);
+        var width = Math.Abs(_pointerScreen.X - startScreen.X);
+        var height = Math.Abs(_pointerScreen.Y - startScreen.Y);
+        var crossing = _pointerScreen.X < startScreen.X;
         var outline = crossing
             ? ColorHelper.FromArgb(230, 70, 190, 110)
             : ColorHelper.FromArgb(230, 70, 145, 230);
@@ -510,10 +518,48 @@ public sealed partial class CadViewport : UserControl
         ds.DrawLine(origin.X, 0, origin.X, (float)height, _originColor, 1);
     }
 
-    private void DrawCrosshair(CanvasDrawingSession ds, double width, double height)
+    private void DrawCadCursor(CanvasDrawingSession ds, double width, double height)
     {
-        ds.DrawLine(0, _pointerScreen.Y, (float)width, _pointerScreen.Y, _crosshairColor, 0.7f);
-        ds.DrawLine(_pointerScreen.X, 0, _pointerScreen.X, (float)height, _crosshairColor, 0.7f);
+        if (_isPanning) return;
+
+        var x = _pointerScreen.X;
+        var y = _pointerScreen.Y;
+        var pickboxHalf = _pickboxSizePixels / 2f;
+        var gap = pickboxHalf + 2f;
+
+        float left;
+        float right;
+        float top;
+        float bottom;
+        if (_crosshairSizePercent >= 99.5f)
+        {
+            left = 0;
+            right = (float)width;
+            top = 0;
+            bottom = (float)height;
+        }
+        else
+        {
+            var halfWidth = (float)(width * _crosshairSizePercent / 200.0);
+            var halfHeight = (float)(height * _crosshairSizePercent / 200.0);
+            left = Math.Max(0, x - halfWidth);
+            right = Math.Min((float)width, x + halfWidth);
+            top = Math.Max(0, y - halfHeight);
+            bottom = Math.Min((float)height, y + halfHeight);
+        }
+
+        if (left < x - gap) ds.DrawLine(left, y, x - gap, y, _crosshairColor, 0.9f);
+        if (right > x + gap) ds.DrawLine(x + gap, y, right, y, _crosshairColor, 0.9f);
+        if (top < y - gap) ds.DrawLine(x, top, x, y - gap, _crosshairColor, 0.9f);
+        if (bottom > y + gap) ds.DrawLine(x, y + gap, x, bottom, _crosshairColor, 0.9f);
+
+        ds.DrawRectangle(
+            x - pickboxHalf,
+            y - pickboxHalf,
+            _pickboxSizePixels,
+            _pickboxSizePixels,
+            _crosshairColor,
+            1.0f);
     }
 
     private Vector2 WorldToScreen(CadPoint point) => new((float)(point.X * _zoom) + _pan.X, (float)(-point.Y * _zoom) + _pan.Y);
@@ -541,12 +587,16 @@ public sealed partial class CadViewport : UserControl
             _hoverEntityId = null;
             UpdatePointerInteraction();
         }
-        else if (!_selectionPointerDown && _selectionPreview)
+        else if (!_selectionPointerDown && !_selectionWindowArmed && _selectionPreview)
         {
             _hoverEntityId = CadSelectionQuery.HitTestNearest(
                 _document.Entities,
                 RawPointerWorldPosition,
-                ClickSelectionAperturePixels / _zoom)?.Id;
+                _pickboxSizePixels / _zoom)?.Id;
+        }
+        else if (_selectionWindowArmed)
+        {
+            _hoverEntityId = null;
         }
 
         PointerWorldPositionChanged?.Invoke(CurrentPointerWorldPosition);
@@ -559,6 +609,7 @@ public sealed partial class CadViewport : UserControl
         _pointerScreen = new Vector2((float)point.Position.X, (float)point.Position.Y);
         if (_middleMousePan && point.Properties.IsMiddleButtonPressed)
         {
+            CancelSelectionGesture();
             _isPanning = true;
             _lastPanPointer = _pointerScreen;
             Canvas.CapturePointer(e.Pointer);
@@ -574,6 +625,13 @@ public sealed partial class CadViewport : UserControl
         {
             UpdatePointerInteraction();
             SubmitDrawingPoint(CurrentPointerWorldPosition);
+            e.Handled = true;
+            return;
+        }
+
+        if (_selectionWindowArmed)
+        {
+            CommitSelectionWindow(RawPointerWorldPosition, ShiftSelection(e));
             e.Handled = true;
             return;
         }
@@ -603,30 +661,32 @@ public sealed partial class CadViewport : UserControl
 
         var point = e.GetCurrentPoint(Canvas);
         _pointerScreen = new Vector2((float)point.Position.X, (float)point.Position.Y);
+        var remove = ShiftSelection(e);
         if (_selectionDragging)
         {
-            var rectangle = CadRect.FromPoints(_selectionStartWorld, RawPointerWorldPosition);
-            var crossing = _pointerScreen.X < _selectionStartScreen.X;
-            _interaction.Selection.Replace(CadSelectionQuery.QueryWindow(_document.Entities, rectangle, crossing));
+            CommitSelectionWindow(RawPointerWorldPosition, remove);
         }
         else
         {
             var hit = CadSelectionQuery.HitTestNearest(
                 _document.Entities,
                 RawPointerWorldPosition,
-                ClickSelectionAperturePixels / _zoom);
+                _pickboxSizePixels / _zoom);
             if (hit is null)
             {
-                _interaction.Selection.Clear();
+                // AutoCAD-style automatic window selection: the first empty click is
+                // a corner. Releasing the mouse does not finish the gesture; moving the
+                // pointer previews the rectangle until the second click commits it.
+                ArmTwoClickSelectionWindow(_selectionStartScreen, _selectionStartWorld);
             }
             else
             {
-                _interaction.Selection.Replace(hit.Id);
+                ApplyPointSelection(hit.Id, remove);
+                _selectionPointerDown = false;
+                _selectionDragging = false;
             }
         }
 
-        _selectionPointerDown = false;
-        _selectionDragging = false;
         Canvas.ReleasePointerCapture(e.Pointer);
         Canvas.Invalidate();
         e.Handled = true;
@@ -642,7 +702,7 @@ public sealed partial class CadViewport : UserControl
 
     private void Canvas_PointerExited(object sender, PointerRoutedEventArgs e)
     {
-        if (!_selectionPointerDown && !_isPanning)
+        if (!_selectionPointerDown && !_selectionWindowArmed && !_isPanning)
         {
             _hoverEntityId = null;
             _activeSnap = null;
