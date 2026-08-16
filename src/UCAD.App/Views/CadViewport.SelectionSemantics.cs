@@ -45,6 +45,12 @@ public sealed partial class CadViewport
         {
             _interaction.Selection.Remove(ids);
         }
+        else if (ids.Count == 0)
+        {
+            // An empty completed window is the CAD-style quick way to clear a
+            // selection set. The first blank click still only starts the window.
+            _interaction.Selection.Clear();
+        }
         else
         {
             _interaction.Selection.Add(ids);
