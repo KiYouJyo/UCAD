@@ -71,14 +71,19 @@ Assert-Contains $viewport @(
   'settings.CrosshairSizePercent','settings.PickboxSize','settings.ObjectSnapAperture'
 ) 'Viewport interaction'
 
-# AutoCAD-style selection semantics live in a separate partial so the gesture state stays readable.
+# AutoCAD-style selection semantics and the clean custom CAD pointer live in a separate partial.
 $selectionSemantics = Get-Content src/UCAD.App/Views/CadViewport.SelectionSemantics.cs -Raw
 Assert-Contains $selectionSemantics @(
-  'InputSystemCursorShape.Cross','VirtualKeyModifiers.Shift','CadSelectionQuery.QueryWindow',
+  'SetCursor(IntPtr.Zero)','Canvas.PointerEntered += Canvas_HideNativeCursor',
+  'Canvas.PointerMoved += Canvas_HideNativeCursor','Canvas.PointerExited += Canvas_RestoreNativeCursor',
+  'VirtualKeyModifiers.Shift','CadSelectionQuery.QueryWindow',
   'ArmTwoClickSelectionWindow','CommitSelectionWindow',
   '_interaction.Selection.Add(ids)','_interaction.Selection.Remove(ids)',
   'ApplyPointSelection','CancelSelectionGesture'
 ) 'CAD selection/cursor semantics'
+if ($selectionSemantics.Contains('InputSystemCursorShape.Cross')) {
+  throw 'The native Windows cross cursor must not be layered over the Win2D CAD cursor.'
+}
 
 $selectionSet = Get-Content src/UCAD.Core/Interaction/SelectionSet.cs -Raw
 Assert-Contains $selectionSet @('Remove(IEnumerable<Guid> ids)','_selectedIds.Remove(id)') 'Shift-style selection removal'
@@ -93,14 +98,14 @@ Assert-Contains $interaction @(
 $appSettings = Get-Content src/UCAD.App/Services/AppSettings.cs -Raw
 Assert-Contains $appSettings @(
   'CrosshairSizePercent { get; set; } = 100',
-  'PickboxSize { get; set; } = 6',
+  'PickboxSize { get; set; } = 10',
   'ObjectSnapAperture { get; set; } = 10'
 ) 'CAD pointer defaults'
 
 $cursorSettings = Get-Content src/UCAD.App/Views/UcadSettingsPage.CadPointer.cs -Raw
 Assert-Contains $cursorSettings @(
   'CrosshairSizePercent','PickboxSize','ObjectSnapAperture','NumericSlider',
-  'CAD カーソル','CAD cursor','CAD 光标'
+  '中心拾取框大小','3–20 px','CAD カーソル','CAD cursor','CAD 光标'
 ) 'CAD cursor settings'
 
 # Existing v0.4.0 interaction foundation must not regress.
@@ -158,4 +163,4 @@ foreach ($mapName in @('Resources','UcadV039','ShellLive')) {
   }
 }
 
-Write-Output 'Validated v0.4.1 two-click Window/Crossing, Shift removal, adjustable CAD cursor/pickbox/aperture, v0.4 interaction foundation, PMv2, version SSOT, frozen Figma tokens, and live trilingual resources.'
+Write-Output 'Validated v0.4.1 two-click Window/Crossing, Shift removal, clean Win2D CAD cursor, adjustable pickbox/aperture, v0.4 interaction foundation, PMv2, version SSOT, frozen Figma tokens, and live trilingual resources.'
