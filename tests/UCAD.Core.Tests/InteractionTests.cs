@@ -41,6 +41,28 @@ public sealed class InteractionTests
     }
 
     [Fact]
+    public void SelectionSetSupportsShiftStyleBatchRemovalWithSingleChange()
+    {
+        var document = new CadDocument();
+        var first = new LineEntity(new CadPoint(0, 0), new CadPoint(10, 0));
+        var second = new CircleEntity(new CadPoint(20, 0), 5);
+        var third = new LineEntity(new CadPoint(30, 0), new CadPoint(40, 0));
+        document.Add(first);
+        document.Add(second);
+        document.Add(third);
+        var selection = new SelectionSet(document);
+        selection.Add([first.Id, second.Id, third.Id]);
+        var changedCount = 0;
+        selection.Changed += (_, _) => changedCount++;
+
+        Assert.True(selection.Remove([first.Id, third.Id]));
+
+        Assert.Equal(1, changedCount);
+        Assert.Single(selection.SelectedIds);
+        Assert.Contains(second.Id, selection.SelectedIds);
+    }
+
+    [Fact]
     public void PointHitTestReturnsNearestVisibleEntity()
     {
         var line = new LineEntity(new CadPoint(0, 0), new CadPoint(10, 0));
