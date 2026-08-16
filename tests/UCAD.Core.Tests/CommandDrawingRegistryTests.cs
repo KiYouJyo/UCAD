@@ -13,7 +13,16 @@ public sealed class CommandDrawingRegistryTests
     [InlineData("A", "ARC")]
     [InlineData("U", "UNDO")]
     [InlineData("REDO", "REDO")]
-    public void DefaultRegistryResolvesDrawingAndHistoryAliases(string token, string expected)
+    [InlineData("M", "MOVE")]
+    [InlineData("CO", "COPY")]
+    [InlineData("CP", "COPY")]
+    [InlineData("RO", "ROTATE")]
+    [InlineData("SC", "SCALE")]
+    [InlineData("MI", "MIRROR")]
+    [InlineData("O", "OFFSET")]
+    [InlineData("TR", "TRIM")]
+    [InlineData("EX", "EXTEND")]
+    public void DefaultRegistryResolvesDrawingHistoryAndModifyAliases(string token, string expected)
     {
         var registry = CommandRegistry.CreateDefault();
 
@@ -34,6 +43,24 @@ public sealed class CommandDrawingRegistryTests
         Assert.True(registry.TryResolve(token, out var command));
         Assert.Equal(CadCommandCategory.Draw, command!.Category);
         Assert.Equal(expectedKind, command.DrawingKind);
+    }
+
+    [Theory]
+    [InlineData("MOVE")]
+    [InlineData("COPY")]
+    [InlineData("ROTATE")]
+    [InlineData("SCALE")]
+    [InlineData("MIRROR")]
+    [InlineData("OFFSET")]
+    [InlineData("TRIM")]
+    [InlineData("EXTEND")]
+    public void ModifyCommandsExposeModifyCategoryWithoutDrawingKind(string token)
+    {
+        var registry = CommandRegistry.CreateDefault();
+
+        Assert.True(registry.TryResolve(token, out var command));
+        Assert.Equal(CadCommandCategory.Modify, command!.Category);
+        Assert.Null(command.DrawingKind);
     }
 
     [Theory]
