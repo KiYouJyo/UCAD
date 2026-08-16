@@ -24,6 +24,8 @@ public sealed partial class CadViewport
         {
             App.WriteStartupFailure("CadViewport.TransparentCursor", ex);
         }
+
+        EnsureModifyInputHooks();
     }
 
     private static bool ShiftSelection(PointerRoutedEventArgs e) =>
