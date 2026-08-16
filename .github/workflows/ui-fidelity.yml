@@ -27,11 +27,12 @@ jobs:
         shell: pwsh
         run: |
           $output = Join-Path $env:RUNNER_TEMP 'UCAD-UiPackages'
-          dotnet build src/UCAD.App/UCAD.App.csproj -c Release -p:Platform=x64 -r win-x64 -p:GenerateAppxPackageOnBuild=true -p:AppxPackageSigningEnabled=false -p:AppxBundle=Always -p:AppxBundlePlatforms=x64 -p:UapAppxPackageBuildMode=SideloadOnly -p:AppxPackageDir="$output\"
+          dotnet build src/UCAD.App/UCAD.App.csproj -c Release -p:Platform=x64 -r win-x64 -p:GenerateAppxPackageOnBuild=true -p:AppxPackageSigningEnabled=false -p:AppxBundle=Never -p:UapAppxPackageBuildMode=SideloadOnly -p:AppxPackageDir="$output\"
           if ($LASTEXITCODE -ne 0) { throw "MSIX build failed: $LASTEXITCODE" }
-          $msix = @(Get-ChildItem $output -Recurse -Filter '*.msix' | Where-Object { $_.Name -notlike '*.msixbundle' }) | Select-Object -First 1
+          $msix = @(Get-ChildItem $output -Recurse -Filter '*.msix') | Select-Object -First 1
           if (-not $msix) { throw 'x64 MSIX was not produced.' }
           "MSIX_PATH=$($msix.FullName)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Output "Using single MSIX layout source: $($msix.FullName)"
 
       - name: Register loose packaged UCAD for UI capture
         shell: pwsh
