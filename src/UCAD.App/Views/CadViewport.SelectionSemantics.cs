@@ -11,6 +11,7 @@ namespace UCAD.Views;
 public sealed partial class CadViewport
 {
     private static readonly IntPtr ArrowCursorId = new(32512);
+    private bool _nativeCursorEventHooksInitialized;
 
     [DllImport("user32.dll")]
     private static extern IntPtr SetCursor(IntPtr hCursor);
@@ -20,25 +21,37 @@ public sealed partial class CadViewport
 
     private void CadViewport_Loaded(object sender, RoutedEventArgs e)
     {
-        Loaded -= CadViewport_Loaded;
+        if (!_nativeCursorEventHooksInitialized)
+        {
+            _nativeCursorEventHooksInitialized = true;
+            Canvas.PointerEntered += Canvas_HideNativeCursor;
+            Canvas.PointerMoved += Canvas_HideNativeCursor;
+            Canvas.PointerPressed += Canvas_HideNativeCursor;
+            Canvas.PointerReleased += Canvas_HideNativeCursor;
+            Canvas.PointerWheelChanged += Canvas_HideNativeCursor;
+            Canvas.PointerExited += Canvas_RestoreNativeCursor;
+            Unloaded += CadViewport_Unloaded;
+        }
 
-        // The CAD cursor is rendered entirely by Win2D. Do not layer a Windows
-        // arrow/cross on top of the pickbox: that produces the double-cursor
-        // appearance seen in v0.4.1 acceptance builds. These handlers run after
-        // the normal Canvas pointer handlers and suppress the native cursor while
-        // the pointer is inside the drawing surface.
-        Canvas.PointerEntered += Canvas_HideNativeCursor;
-        Canvas.PointerMoved += Canvas_HideNativeCursor;
-        Canvas.PointerPressed += Canvas_HideNativeCursor;
-        Canvas.PointerReleased += Canvas_HideNativeCursor;
-        Canvas.PointerWheelChanged += Canvas_HideNativeCursor;
-        Canvas.PointerExited += Canvas_RestoreNativeCursor;
+        // Pointer-event SetCursor(NULL) is retained as a fallback, but the HWND
+        // WM_SETCURSOR subclass is the authoritative suppression path. Without the
+        // subclass, DefWindowProc/WinUI can restore the native cursor on every move.
+        InstallNativeCursorSuppression();
+    }
+
+    private void CadViewport_Unloaded(object sender, RoutedEventArgs e)
+    {
+        RemoveNativeCursorSuppression();
+        RestoreNativeArrowCursor();
     }
 
     private static void Canvas_HideNativeCursor(object sender, PointerRoutedEventArgs e) =>
         _ = SetCursor(IntPtr.Zero);
 
-    private static void Canvas_RestoreNativeCursor(object sender, PointerRoutedEventArgs e)
+    private static void Canvas_RestoreNativeCursor(object sender, PointerRoutedEventArgs e) =>
+        RestoreNativeArrowCursor();
+
+    private static void RestoreNativeArrowCursor()
     {
         var arrow = LoadCursor(IntPtr.Zero, ArrowCursorId);
         if (arrow != IntPtr.Zero)
