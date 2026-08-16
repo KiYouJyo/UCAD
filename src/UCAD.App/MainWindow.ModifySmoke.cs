@@ -100,11 +100,14 @@ public sealed partial class MainWindow
 
     private void StartModifySmokeCommand(CadWorkspaceSession session, string token)
     {
-        var result = session.CommandSession.Start(token);
-        if (result.Status != CommandStartStatus.Started ||
-            session.CommandSession.ActiveCommand?.Category != CadCommandCategory.Modify)
+        // Use the exact production dispatch path instead of calling CommandSession.Start
+        // directly; this catches regressions between registry resolution, shell dispatch,
+        // CommandSession lifecycle, and the v0.5 Modify controller.
+        StartCommand(session, token);
+        if (session.CommandSession.ActiveCommand?.Category != CadCommandCategory.Modify ||
+            !string.Equals(session.CommandSession.ActiveCommand.Name, token, StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException($"Modify smoke could not start {token}.");
+            throw new InvalidOperationException($"Modify smoke could not start {token} through production dispatch.");
         }
     }
 
