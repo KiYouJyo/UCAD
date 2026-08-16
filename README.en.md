@@ -11,7 +11,7 @@ Lightweight 2D CAD for urban planning and architectural design.
 
 UCAD aims to be a Windows-native lightweight 2D CAD with familiar AutoCAD-style interaction and a deliberately bounded architecture/planning feature set. The project is DXF-first and 2D-first.
 
-**Current candidate: v0.3.9 — UI Completion / Figma Fidelity / Start & Settings Foundation.** This release adds no new CAD Core capability. It uses the 1440×900 Figma file as the visual SSOT and completes the browser-style document strip, Start Center, full Settings workspace, three-language resources, Fluent icon cleanup, design tokens, version SSOT, and runtime screenshot validation before v0.4.0 Selection / OSNAP / Inspector work.
+**Current candidate: v0.3.9 — UI Completion / Figma Fidelity / Start & Settings Foundation.** This release adds no new CAD Core capability. Figma remains the visual SSOT while the production shell completes browser-style document tabs, Start Center, full Settings, three-language resources, Fluent icons, design tokens, version SSOT, and coherent page/settings behavior before v0.4.0 Selection / OSNAP / Inspector work.
 
 ## Installation
 
@@ -23,33 +23,35 @@ Download production builds from [GitHub Releases](https://github.com/KiYouJyo/UC
 
 ## Workspace pages
 
-UCAD now has three explicit tab-content types:
+UCAD has three explicit tab-content types:
 
 - **Drawing**: Category Bar, Tool Shelf, Tool Rail, CAD Canvas, Inspector, Command Line, and Status Bar.
-- **Start**: the CAD new-tab / Start Center. The title-bar `+` opens Start; a real `CadWorkspaceSession` is created only after New Drawing is chosen.
+- **Start**: the CAD new-tab / Start Center. By default the title-bar `+` opens Start and a real `CadWorkspaceSession` is created only after New Drawing is chosen. If “show Start on new tab” is disabled, `+` creates a blank Drawing directly.
 - **Settings**: a single reusable settings tab, without the CAD Tool Rail, Inspector, Command Line, or Status Bar.
 
-Start includes New/Open entry points, an honest empty Recent state, Blank / Architecture / Urban Planning template information architecture, and Learn UCAD. Unsupported file I/O and template features remain explicit placeholders rather than fabricated behavior.
+Start includes New/Open entry points, an honest empty Recent state, Blank / Architecture / Urban Planning template information architecture, and Learn UCAD. Unsupported file I/O, recent-file storage, and template features are disabled or explicitly reported as unavailable rather than fabricated.
 
 ## Commands
 
 Each Drawing tab is an independent in-memory CAD session with its own geometry, Undo/Redo history, command state, and viewport state. Available commands are `LINE/L`, `PLINE/PL`, `RECTANGLE/REC`, `CIRCLE/C`, `ARC/A`, `UNDO/U`, `REDO`, `CLEAR`, and `RESETVIEW/RV`.
 
-All UI entry points route through `CommandRegistry → CommandSession → CAD Core`. Selection, MOVE/COPY/OFFSET/TRIM, layers, OSNAP, ORTHO, and related planned capabilities retain UI slots but are not exposed as working commands until the matching Core capability exists.
+All working UI entry points route through `CommandRegistry → CommandSession → CAD Core`. Selection, MOVE/COPY/OFFSET/TRIM, layers, OSNAP, ORTHO, and related planned capabilities retain UI slots but are not exposed as working commands until the matching Core capability exists.
 
 ## Settings and display baseline
 
 - Native WinUI 3 / Windows App SDK window with `PerMonitorV2` high-DPI awareness;
-- 1440×900 Figma file as the UI visual SSOT;
+- 1440×900 Figma frames remain the UI visual SSOT;
 - 44 title bar, 44 category bar, 64 tool shelf, 52 Tool Rail, 304 Inspector, 34 command line, and 30 status bar DIP;
 - 228-DIP Settings navigation, 54-DIP content offset, 940×72 cards, and 35 / 12 / 8 / 30 DIP vertical rhythm;
-- independent App Theme and CAD Canvas Theme; canvas background, grid visibility/opacity, cursor-centered zoom, middle-button pan, and reverse wheel zoom flow through centralized settings into the existing viewport;
+- **App Theme and CAD Canvas Theme work independently**: App Theme changes the shell/control palette while Canvas Theme separately changes entity, preview, grid, and crosshair colors; canvas background remains independent;
+- grid visibility/opacity, cursor-centered zoom, middle-button pan, reverse wheel zoom, coordinate precision, and decimal formatting are wired to runtime behavior;
+- unsupported Restore Session, manual UI Scale, automatic update checking, and recent-history clearing are not presented as implemented behavior;
 - Fluent / WinUI icons for common actions and UCAD-style `PathIcon` geometry for CAD-specific symbols;
 - centralized `SettingsService` / `AppSettings` persistence at `%LOCALAPPDATA%\UCAD\settings.json`.
 
 ## Localization
 
-The application and repository use Simplified Chinese (zh-CN), Japanese (ja-JP), and English (en-US). v0.3.9 keeps Start and every Settings page on matching three-language resource keys.
+The application and repository use Simplified Chinese (zh-CN), Japanese (ja-JP), and English (en-US). v0.3.9 keeps Start and every Settings page on matching three-language resource keys. Display-language preference is applied before the next shell is created, avoiding a partially refreshed mixed-language session.
 
 ## Development
 
@@ -59,7 +61,9 @@ dotnet build src/UCAD.App/UCAD.App.csproj -c Debug -p:Platform=x64 -r win-x64
 dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release
 ```
 
-CI covers Core tests, app build, real startup smoke, MSIX/package validation, localization parity, version SSOT, PerMonitorV2, Unicode-placeholder scanning, and 1440×900 runtime UI screenshots.
+Required CI covers Core tests, app build, real startup smoke, MSIX/package validation, localization parity, version SSOT, PerMonitorV2, Unicode-placeholder scanning, Figma dimension/color-token contracts, and Start/Settings/Canvas behavior contracts.
+
+Pixel-level Figma comparison remains available as the manual `UI Fidelity Screenshots` workflow. It runs only when the runner exposes a real 1440×900 interactive desktop, so an unsuitable hosted desktop never blocks functional development or release.
 
 ## Documentation
 
