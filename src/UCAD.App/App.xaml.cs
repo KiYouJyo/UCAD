@@ -29,9 +29,10 @@ public partial class App : Application
             WriteStartupEvent("OnLaunched begin");
             LocalizationService.Current.ApplyFromSettings();
             var mainWindow = new MainWindow();
+            mainWindow.RefreshLocalization();
             mainWindow.ScheduleLocalizationSmoke();
             _window = mainWindow;
-            WriteStartupEvent("MainWindow constructed");
+            WriteStartupEvent("MainWindow constructed and localized");
             _window.Activate();
             WriteStartupEvent("MainWindow activated");
         }
