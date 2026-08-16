@@ -135,7 +135,7 @@ public sealed partial class CadViewport
         for (var i = 1; i < hatch.Boundary.Count; i++) builder.AddLine(WorldToScreen(hatch.Boundary[i]));
         builder.EndFigure(CanvasFigureLoop.Closed);
         using var geometry = CanvasGeometry.CreatePath(builder);
-        var fill = Color.FromArgb((byte)Math.Min(110, color.A), color.R, color.G, color.B);
+        var fill = Color.FromArgb((byte)Math.Min(110, (int)color.A), color.R, color.G, color.B);
         ds.FillGeometry(geometry, fill);
         ds.DrawGeometry(geometry, color, strokeWidth);
     }
