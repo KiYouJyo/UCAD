@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="File" xml:space="preserve"><value>File</value></data>
+  <data name="Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="View" xml:space="preserve"><value>View</value></data>
+  <data name="NewDrawing" xml:space="preserve"><value>New drawing</value></data>
+  <data name="CloseDrawing" xml:space="preserve"><value>Close current drawing</value></data>
+  <data name="Undo" xml:space="preserve"><value>Undo</value></data>
+  <data name="Redo" xml:space="preserve"><value>Redo</value></data>
+  <data name="Clear" xml:space="preserve"><value>Clear drawing</value></data>
+  <data name="ResetView" xml:space="preserve"><value>Reset view</value></data>
+  <data name="CategoryDraw" xml:space="preserve"><value>Draw</value></data>
+  <data name="CategoryModify" xml:space="preserve"><value>Modify</value></data>
+  <data name="CategoryAnnotate" xml:space="preserve"><value>Annotate</value></data>
+  <data name="CategoryLayers" xml:space="preserve"><value>Layers</value></data>
+  <data name="CategoryBlocks" xml:space="preserve"><value>Blocks</value></data>
+  <data name="CategoryMeasure" xml:space="preserve"><value>Measure</value></data>
+  <data name="CategoryView" xml:space="preserve"><value>View</value></data>
+  <data name="CommandSearchPlaceholder" xml:space="preserve"><value>Search commands</value></data>
+  <data name="ToolLine" xml:space="preserve"><value>Line</value></data>
+  <data name="ToolPolyline" xml:space="preserve"><value>Polyline</value></data>
+  <data name="ToolRectangle" xml:space="preserve"><value>Rectangle</value></data>
+  <data name="ToolCircle" xml:space="preserve"><value>Circle</value></data>
+  <data name="ToolArc" xml:space="preserve"><value>Arc</value></data>
+  <data name="ToolHatch" xml:space="preserve"><value>Hatch</value></data>
+  <data name="ToolBoundary" xml:space="preserve"><value>Boundary</value></data>
+  <data name="ToolRay" xml:space="preserve"><value>Ray</value></data>
+  <data name="ToolConstruction" xml:space="preserve"><value>XLine</value></data>
+  <data name="InspectorProperties" xml:space="preserve"><value>Properties</value></data>
+  <data name="InspectorLayers" xml:space="preserve"><value>Layers</value></data>
+  <data name="InspectorNoSelection" xml:space="preserve"><value>No selection</value></data>
+  <data name="InspectorSelectionUnavailable" xml:space="preserve"><value>Selection arrives in v0.4.0; this panel currently exposes active-document state.</value></data>
+  <data name="InspectorDocument" xml:space="preserve"><value>DOCUMENT</value></data>
+  <data name="InspectorEntityCount" xml:space="preserve"><value>Entities</value></data>
+  <data name="InspectorActiveCommand" xml:space="preserve"><value>Active command</value></data>
+  <data name="InspectorUndoAvailable" xml:space="preserve"><value>Undo available</value></data>
+  <data name="InspectorRedoAvailable" xml:space="preserve"><value>Redo available</value></data>
+  <data name="InspectorFoundationHint" xml:space="preserve"><value>The workspace and HiDPI foundation is in place; v0.4.0 will add selection, snapping, and ortho on the existing CadWorkspaceSession boundary.</value></data>
+  <data name="CommandPrompt" xml:space="preserve"><value>Command:</value></data>
+  <data name="CommandInputPlaceholder" xml:space="preserve"><value>Enter command, coordinate, or distance</value></data>
+  <data name="StatusSnap" xml:space="preserve"><value>SNAP</value></data>
+  <data name="StatusGrid" xml:space="preserve"><value>GRID</value></data>
+  <data name="StatusOrtho" xml:space="preserve"><value>ORTHO</value></data>
+  <data name="StatusPolar" xml:space="preserve"><value>POLAR</value></data>
+  <data name="StatusOsnap" xml:space="preserve"><value>OSNAP</value></data>
+  <data name="StatusOtrack" xml:space="preserve"><value>OTRACK</value></data>
+</root>
