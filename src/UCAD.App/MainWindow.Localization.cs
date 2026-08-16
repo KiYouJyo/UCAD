@@ -6,6 +6,75 @@ namespace UCAD;
 
 public sealed partial class MainWindow
 {
+    internal void ApplyLiveLocalizationFromSettings()
+    {
+        RootLayout.DispatcherQueue.TryEnqueue(() =>
+        {
+            var localization = LocalizationService.Current;
+            if (localization.IsSettingsLanguageApplied)
+            {
+                return;
+            }
+
+            if (localization.ApplyFromSettings())
+            {
+                RefreshLocalization();
+            }
+        });
+    }
+
+    internal void ScheduleLocalizationSmoke()
+    {
+        if (!string.Equals(Environment.GetEnvironmentVariable("UCAD_LOCALIZATION_SMOKE"), "1", StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        RootLayout.Loaded += RootLayout_LocalizationSmokeLoaded;
+    }
+
+    private void RootLayout_LocalizationSmokeLoaded(object sender, RoutedEventArgs e)
+    {
+        RootLayout.Loaded -= RootLayout_LocalizationSmokeLoaded;
+        RootLayout.DispatcherQueue.TryEnqueue(() =>
+        {
+            var localization = LocalizationService.Current;
+            var originalLanguage = SettingsService.Current.Settings.DisplayLanguage;
+            var originalFollowSystem = SettingsService.Current.Settings.FollowSystemLanguage;
+
+            try
+            {
+                foreach (var language in new[] { "zh-CN", "ja-JP", "en-US" })
+                {
+                    if (!localization.ApplyLanguagePreference(language, followSystemLanguage: false, writeLog: false))
+                    {
+                        throw new InvalidOperationException($"Could not apply {language} during localization smoke.");
+                    }
+
+                    RefreshLocalization();
+                    if (!ValidateCurrentLocalization(language))
+                    {
+                        throw new InvalidOperationException($"Live localization validation failed for {language}.");
+                    }
+                }
+
+                App.WriteStartupEvent("Localization smoke: zh-CN -> ja-JP -> en-US refreshed without restart");
+            }
+            catch (Exception ex)
+            {
+                App.WriteStartupFailure("LocalizationSmoke", ex);
+                throw;
+            }
+            finally
+            {
+                if (localization.ApplyLanguagePreference(originalLanguage, originalFollowSystem, writeLog: false))
+                {
+                    RefreshLocalization();
+                }
+            }
+        });
+    }
+
     /// <summary>
     /// Re-resolves every visible localized surface against the current MRT context.
     /// This intentionally keeps the Window, document tabs, CadDocument instances,
@@ -103,9 +172,6 @@ public sealed partial class MainWindow
             session.UpdateDisplayName(string.Format(GetString("Document_UntitledFormat"), session.Ordinal));
             UpdateTabHeader(pair.Key, session);
 
-            // A completed/idle session can be translated immediately. If a drawing
-            // command is in progress, preserve the exact prompt/state until the next
-            // command interaction rather than guessing its accepted-point count.
             if (!session.CommandSession.IsActive)
             {
                 session.StatusText = GetString("Status_Ready");
