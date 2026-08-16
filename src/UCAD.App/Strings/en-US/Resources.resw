@@ -58,7 +58,7 @@
   <data name="ActiveCommandLabel.Text" xml:space="preserve"><value>Active command</value></data>
   <data name="UndoAvailableLabel.Text" xml:space="preserve"><value>Undo available</value></data>
   <data name="RedoAvailableLabel.Text" xml:space="preserve"><value>Redo available</value></data>
-  <data name="V04FoundationHint.Text" xml:space="preserve"><value>v0.3.7 freezes the HiDPI and workspace visual foundation; v0.4.0 will add selection, snapping, and ortho on the existing CadWorkspaceSession boundary.</value></data>
+  <data name="V04FoundationHint.Text" xml:space="preserve"><value>The workspace and HiDPI foundation is in place; v0.4.0 will add selection, snapping, and ortho on the existing CadWorkspaceSession boundary.</value></data>
   <data name="Inspector_None" xml:space="preserve"><value>—</value></data>
   <data name="Inspector_Yes" xml:space="preserve"><value>Yes</value></data>
   <data name="Inspector_No" xml:space="preserve"><value>No</value></data>
