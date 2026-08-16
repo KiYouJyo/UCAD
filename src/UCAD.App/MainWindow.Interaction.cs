@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using UCAD.Core.Commands;
 using UCAD.Core.Entities;
+using UCAD.Core.Geometry;
 using UCAD.Core.Interaction;
 using UCAD.Services;
 using UCAD.Workspace;
@@ -38,6 +39,79 @@ public sealed partial class MainWindow
         RootLayout.LayoutUpdated += Interaction_LayoutUpdated;
 
         RefreshActiveInteractionUi();
+    }
+
+    internal void ScheduleInteractionSmoke()
+    {
+        if (!string.Equals(Environment.GetEnvironmentVariable("UCAD_INTERACTION_SMOKE"), "1", StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        RootLayout.Loaded += RootLayout_InteractionSmokeLoaded;
+    }
+
+    private void RootLayout_InteractionSmokeLoaded(object sender, RoutedEventArgs e)
+    {
+        RootLayout.Loaded -= RootLayout_InteractionSmokeLoaded;
+        RootLayout.DispatcherQueue.TryEnqueue(() =>
+        {
+            try
+            {
+                CreateNewWorkspace();
+                var session = ActiveSession ?? throw new InvalidOperationException("Interaction smoke could not create a Drawing workspace.");
+
+                var line = new LineEntity(new CadPoint(0, 0), new CadPoint(10, 0));
+                var circle = new CircleEntity(new CadPoint(20, 0), 5);
+                session.Document.Add(line);
+                session.Document.Add(circle);
+
+                session.Interaction.Selection.Replace(line.Id);
+                session.Interaction.Selection.Add(circle.Id);
+                if (session.Interaction.Selection.Count != 2)
+                {
+                    throw new InvalidOperationException("Interaction smoke additive selection failed.");
+                }
+
+                session.Interaction.ObjectSnapEnabled = true;
+                session.Interaction.ObjectSnapModes = ObjectSnapMode.Endpoint | ObjectSnapMode.Midpoint | ObjectSnapMode.Intersection;
+                var snap = ObjectSnapResolver.Resolve(
+                    session.Document.Entities,
+                    new CadPoint(0.1, 0.1),
+                    0.5,
+                    session.Interaction.ObjectSnapModes);
+                if (snap is null || snap.Kind != ObjectSnapKind.Endpoint || (snap.Point - new CadPoint(0, 0)).Length > 1e-8)
+                {
+                    throw new InvalidOperationException("Interaction smoke endpoint OSNAP failed.");
+                }
+
+                session.Interaction.OrthoEnabled = true;
+                var ortho = OrthoConstraint.Apply(new CadPoint(0, 0), new CadPoint(8, 2));
+                if ((ortho - new CadPoint(8, 0)).Length > 1e-8)
+                {
+                    throw new InvalidOperationException("Interaction smoke Ortho constraint failed.");
+                }
+
+                if (!DrawCategoryButton.IsEnabled || !ViewCategoryButton.IsEnabled || ModifyCategoryButton.IsEnabled)
+                {
+                    throw new InvalidOperationException("Interaction smoke capability-derived category state failed.");
+                }
+
+                RefreshInteractionUi(session);
+                if (NoSelectionText.Text.StartsWith("Inspector", StringComparison.Ordinal) ||
+                    EntityCountValue.Text != "2")
+                {
+                    throw new InvalidOperationException("Interaction smoke Inspector binding failed.");
+                }
+
+                App.WriteStartupEvent("Interaction smoke: Selection + OSNAP + ORTHO + Inspector initialized");
+            }
+            catch (Exception ex)
+            {
+                App.WriteStartupFailure("InteractionSmoke", ex);
+                throw;
+            }
+        });
     }
 
     private void ApplyRegisteredCapabilityState()
@@ -87,10 +161,16 @@ public sealed partial class MainWindow
         };
         session.CommandSession.Changed += (_, _) =>
         {
-            if (ReferenceEquals(ActiveSession, session))
+            // MainWindow's command-dispatch stack can still update legacy Inspector rows
+            // after CommandSession changes. Defer the v0.4 selection Inspector refresh so
+            // it wins after that synchronous stack without coupling Core back to WinUI.
+            RootLayout.DispatcherQueue.TryEnqueue(() =>
             {
-                RefreshInspectorSelection(session);
-            }
+                if (ReferenceEquals(ActiveSession, session))
+                {
+                    RefreshInspectorSelection(session);
+                }
+            });
         };
         session.Document.Changed += (_, _) =>
         {
