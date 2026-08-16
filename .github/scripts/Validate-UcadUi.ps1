@@ -103,7 +103,8 @@ $interaction = Get-Content src/UCAD.App/MainWindow.Interaction.cs -Raw
 Assert-Contains $interaction @(
   'VirtualKey.F3','VirtualKey.F8','VirtualKey.Delete','VirtualKey.Escape',
   'session.Viewport.CancelSelectionGesture()','ExecuteEraseSelection','RemoveRange(selectedIds)',
-  'Interaction smoke: Selection + ERASE + OSNAP + ORTHO + Inspector initialized'
+  'TransparentInputCursor.GetOrCreate()',
+  'Interaction smoke: Selection + ERASE + OSNAP + ORTHO + Inspector + transparent CAD cursor initialized'
 ) 'Shell interaction'
 
 $appSettings = Get-Content src/UCAD.App/Services/AppSettings.cs -Raw
