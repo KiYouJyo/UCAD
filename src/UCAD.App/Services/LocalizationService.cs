@@ -12,6 +12,7 @@ public sealed class LocalizationService
 {
     private const string DefaultMapName = "Resources";
     private const string V039MapName = "UcadV039";
+    private const string ShellLiveMapName = "ShellLive";
     private const string LiveReloadNoteKey = "Settings_Language_ReloadNote";
     private static readonly string[] SupportedLanguages = ["zh-CN", "ja-JP", "en-US"];
 
@@ -85,6 +86,8 @@ public sealed class LocalizationService
         var value = GetStringFromMap(key, DefaultMapName);
         return string.IsNullOrWhiteSpace(value) ? GetV039String(key) : value;
     }
+
+    public string GetShellString(string key) => GetStringFromMap(key, ShellLiveMapName);
 
     public string GetV039String(string key)
     {
