@@ -11,7 +11,7 @@ Lightweight 2D CAD for urban planning and architectural design.
 
 UCAD aims to be a Windows-native lightweight 2D CAD with familiar AutoCAD-style interaction and a deliberately bounded architecture/planning feature set. The project is DXF-first and 2D-first.
 
-**Current candidate: v0.3.9 — UI Completion / Figma Fidelity / Start & Settings Foundation.** This release adds no new CAD Core capability. Figma remains the visual SSOT while the production shell completes browser-style document tabs, Start Center, full Settings, three-language resources, Fluent icons, design tokens, version SSOT, and coherent page/settings behavior before v0.4.0 Selection / OSNAP / Inspector work.
+**Current candidate: v0.3.10 — Live Trilingual Localization Hotfix.** This release fixes the v0.3.9 regressions where Start / Settings could display resource identifiers and changing display language required a restart. An explicit MRT Core `ResourceContext` now switches Simplified Chinese, Japanese, and English inside the running process while preserving the v0.3.9 UI foundation and current CAD Core behavior.
 
 ## Installation
 
@@ -51,7 +51,7 @@ All working UI entry points route through `CommandRegistry → CommandSession �
 
 ## Localization
 
-The application and repository use Simplified Chinese (zh-CN), Japanese (ja-JP), and English (en-US). v0.3.9 keeps Start and every Settings page on matching three-language resource keys. Display-language preference is applied before the next shell is created, avoiding a partially refreshed mixed-language session.
+The application and repository use Simplified Chinese (zh-CN), Japanese (ja-JP), and English (en-US). v0.3.10 selects strings through an explicit MRT Core `ResourceContext`. After disabling Follow System Language in Settings, choosing any supported language **immediately relocalizes the current UCAD process without a restart**, including Window chrome content, Start, Settings, document tabs, menus, Inspector, command area, and status bar. Existing `CadWorkspaceSession` instances are not recreated, so geometry, Undo/Redo history, and viewport state remain intact.
 
 ## Development
 
@@ -61,7 +61,7 @@ dotnet build src/UCAD.App/UCAD.App.csproj -c Debug -p:Platform=x64 -r win-x64
 dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release
 ```
 
-Required CI covers Core tests, app build, real startup smoke, MSIX/package validation, localization parity, version SSOT, PerMonitorV2, Unicode-placeholder scanning, Figma dimension/color-token contracts, and Start/Settings/Canvas behavior contracts.
+Required CI covers Core tests, app build, real startup smoke, MSIX/package validation, localization parity, version SSOT, PerMonitorV2, Unicode-placeholder scanning, Figma dimension/color-token contracts, and Start/Settings/Canvas behavior contracts. v0.3.10 also has a Localization Smoke that switches zh-CN → ja-JP → en-US inside one running process and validates real translated strings.
 
 Pixel-level Figma comparison remains available as the manual `UI Fidelity Screenshots` workflow. It runs only when the runner exposes a real 1440×900 interactive desktop, so an unsuitable hosted desktop never blocks functional development or release.
 
@@ -70,7 +70,7 @@ Pixel-level Figma comparison remains available as the manual `UI Fidelity Screen
 - [Roadmap](ROADMAP.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Release process](docs/RELEASE-PROCESS.md)
-- [v0.3.9 Release Notes](docs/RELEASE-NOTES-v0.3.9.en.md)
+- [v0.3.10 Release Notes](docs/RELEASE-NOTES-v0.3.10.en.md)
 
 ## License
 
