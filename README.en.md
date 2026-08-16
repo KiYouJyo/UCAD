@@ -11,7 +11,7 @@ Lightweight 2D CAD for urban planning and architectural design.
 
 UCAD aims to be a Windows-native lightweight 2D CAD with familiar AutoCAD-style interaction and a deliberately bounded architecture/planning feature set. The project is DXF-first and 2D-first.
 
-**Current candidate: v0.3.7 — UI Fidelity & HiDPI Foundation.** Building on the multi-document workspace and UI↔Core state bridge established in v0.3.5/0.3.6, v0.3.7 restores PerMonitorV2 high-DPI behavior and brings the running WinUI 3 shell into high-fidelity alignment with the approved Figma v0.2 workspace: browser-like drawing tabs, a persistent category tool shelf, high-frequency left Tool Rail, Inspector, command line, and status bar. It adds no new CAD Core commands and freezes the shell before v0.4.0 Selection / OSNAP / Ortho work.
+**Current candidate: v0.3.9 — UI Completion / Figma Fidelity / Start & Settings Foundation.** This release adds no new CAD Core capability. Figma remains the visual SSOT while the production shell completes browser-style document tabs, Start Center, full Settings, three-language resources, Fluent icons, design tokens, version SSOT, and coherent page/settings behavior before v0.4.0 Selection / OSNAP / Inspector work.
 
 ## Installation
 
@@ -21,27 +21,37 @@ Download production builds from [GitHub Releases](https://github.com/KiYouJyo/UC
 - `UCAD_<packageVersion>_x64.msixbundle`: direct sideload package.
 - `SHA256SUMS.txt`: integrity manifest.
 
-## Workspace and commands
+## Workspace pages
 
-Each title-bar tab is an independent in-memory CAD session with its own geometry, Undo/Redo history, command state, and viewport state. File open/save is not implemented yet, so closing a tab with drawing content warns that the content will be discarded.
+UCAD has three explicit tab-content types:
 
-Available commands are `LINE/L`, `PLINE/PL`, `RECTANGLE/REC`, `CIRCLE/C`, `ARC/A`, `UNDO/U`, `REDO`, `CLEAR`, and `RESETVIEW/RV`.
+- **Drawing**: Category Bar, Tool Shelf, Tool Rail, CAD Canvas, Inspector, Command Line, and Status Bar.
+- **Start**: the CAD new-tab / Start Center. By default the title-bar `+` opens Start and a real `CadWorkspaceSession` is created only after New Drawing is chosen. If “show Start on new tab” is disabled, `+` creates a blank Drawing directly.
+- **Settings**: a single reusable settings tab, without the CAD Tool Rail, Inspector, Command Line, or Status Bar.
 
-The top tool shelf, left rail, command search, and bottom command line all route through the same `CommandRegistry` / `CommandSession` path. Mouse picks can be mixed with `x,y`, `@x,y`, and distance input. Enter / Space confirms, Esc cancels, and an empty confirmation repeats the previous command.
+Start includes New/Open entry points, an honest empty Recent state, Blank / Architecture / Urban Planning template information architecture, and Learn UCAD. Unsupported file I/O, recent-file storage, and template features are disabled or explicitly reported as unavailable rather than fabricated.
 
-Selection, MOVE/COPY/OFFSET/TRIM, layers, OSNAP, ORTHO, and other planned capabilities already occupy their intended information-architecture slots but are not exposed as working CAD commands until the matching Core capability exists.
+## Commands
 
-## Display and UI baseline
+Each Drawing tab is an independent in-memory CAD session with its own geometry, Undo/Redo history, command state, and viewport state. Available commands are `LINE/L`, `PLINE/PL`, `RECTANGLE/REC`, `CIRCLE/C`, `ARC/A`, `UNDO/U`, `REDO`, `CLEAR`, and `RESETVIEW/RV`.
 
-- Native WinUI 3 / Windows App SDK window;
-- `PerMonitorV2` high-DPI awareness;
-- approved 1440×900 Figma v0.2 frame as the current shell baseline;
-- 44 px title bar, 44 px category bar, 64 px tool shelf, 52 px Tool Rail, 304 px Inspector, 34 px command line, and 30 px status bar;
-- Fluent system icons for common actions, with a dedicated UCAD Fluent extension planned for CAD-specific symbols.
+All working UI entry points route through `CommandRegistry → CommandSession → CAD Core`. Selection, MOVE/COPY/OFFSET/TRIM, layers, OSNAP, ORTHO, and related planned capabilities retain UI slots but are not exposed as working commands until the matching Core capability exists.
+
+## Settings and display baseline
+
+- Native WinUI 3 / Windows App SDK window with `PerMonitorV2` high-DPI awareness;
+- 1440×900 Figma frames remain the UI visual SSOT;
+- 44 title bar, 44 category bar, 64 tool shelf, 52 Tool Rail, 304 Inspector, 34 command line, and 30 status bar DIP;
+- 228-DIP Settings navigation, 54-DIP content offset, 940×72 cards, and 35 / 12 / 8 / 30 DIP vertical rhythm;
+- **App Theme and CAD Canvas Theme work independently**: App Theme changes the shell/control palette while Canvas Theme separately changes entity, preview, grid, and crosshair colors; canvas background remains independent;
+- grid visibility/opacity, cursor-centered zoom, middle-button pan, reverse wheel zoom, coordinate precision, and decimal formatting are wired to runtime behavior;
+- unsupported Restore Session, manual UI Scale, automatic update checking, and recent-history clearing are not presented as implemented behavior;
+- Fluent / WinUI icons for common actions and UCAD-style `PathIcon` geometry for CAD-specific symbols;
+- centralized `SettingsService` / `AppSettings` persistence at `%LOCALAPPDATA%\UCAD\settings.json`.
 
 ## Localization
 
-The application and repository use Simplified Chinese (zh-CN), Japanese (ja-JP), and English (en-US) resources.
+The application and repository use Simplified Chinese (zh-CN), Japanese (ja-JP), and English (en-US). v0.3.9 keeps Start and every Settings page on matching three-language resource keys. Display-language preference is applied before the next shell is created, avoiding a partially refreshed mixed-language session.
 
 ## Development
 
@@ -51,12 +61,16 @@ dotnet build src/UCAD.App/UCAD.App.csproj -c Debug -p:Platform=x64 -r win-x64
 dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release
 ```
 
+Required CI covers Core tests, app build, real startup smoke, MSIX/package validation, localization parity, version SSOT, PerMonitorV2, Unicode-placeholder scanning, Figma dimension/color-token contracts, and Start/Settings/Canvas behavior contracts.
+
+Pixel-level Figma comparison remains available as the manual `UI Fidelity Screenshots` workflow. It runs only when the runner exposes a real 1440×900 interactive desktop, so an unsuitable hosted desktop never blocks functional development or release.
+
 ## Documentation
 
 - [Roadmap](ROADMAP.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Release process](docs/RELEASE-PROCESS.md)
-- [v0.3.7 Release Notes](docs/RELEASE-NOTES-v0.3.7.en.md)
+- [v0.3.9 Release Notes](docs/RELEASE-NOTES-v0.3.9.en.md)
 
 ## License
 

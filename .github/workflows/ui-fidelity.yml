@@ -1,0 +1,76 @@
+name: UI Fidelity Screenshots
+
+# Pixel-level Figma comparison is intentionally manual. GitHub-hosted Windows runners
+# do not guarantee the 1440x900 interactive desktop required by the design baseline,
+# so this workflow must never gate functional development or pull requests.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  capture-1440x900:
+    runs-on: windows-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.302'
+
+      - name: Build unsigned x64 MSIX layout source
+        shell: pwsh
+        run: |
+          $output = Join-Path $env:RUNNER_TEMP 'UCAD-UiPackages'
+          dotnet build src/UCAD.App/UCAD.App.csproj -c Release -p:Platform=x64 -r win-x64 -p:GenerateAppxPackageOnBuild=true -p:AppxPackageSigningEnabled=false -p:AppxBundle=Never -p:UapAppxPackageBuildMode=SideloadOnly -p:AppxPackageDir="$output\"
+          if ($LASTEXITCODE -ne 0) { throw "MSIX build failed: $LASTEXITCODE" }
+          $msix = @(Get-ChildItem $output -Recurse -Filter '*.msix') | Select-Object -First 1
+          if (-not $msix) { throw 'x64 MSIX was not produced.' }
+          "MSIX_PATH=$($msix.FullName)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Register loose packaged UCAD for UI capture
+        shell: pwsh
+        run: |
+          $appModelUnlock = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock'
+          New-Item -Path $appModelUnlock -Force | Out-Null
+          New-ItemProperty -Path $appModelUnlock -Name AllowDevelopmentWithoutDevLicense -PropertyType DWord -Value 1 -Force | Out-Null
+
+          $kitsRoot = [Environment]::GetEnvironmentVariable('ProgramFiles(x86)')
+          $makeappx = Get-ChildItem (Join-Path $kitsRoot 'Windows Kits\10\bin') -Recurse -Filter makeappx.exe | Where-Object FullName -match '\\x64\\makeappx.exe$' | Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $makeappx) { throw 'x64 makeappx.exe was not found.' }
+
+          $layout = Join-Path $env:RUNNER_TEMP 'UCAD-LooseLayout'
+          New-Item -ItemType Directory -Force -Path $layout | Out-Null
+          & $makeappx.FullName unpack /p $env:MSIX_PATH /d $layout /o
+          if ($LASTEXITCODE -ne 0) { throw "makeappx unpack failed: $LASTEXITCODE" }
+
+          $manifest = Join-Path $layout 'AppxManifest.xml'
+          Add-AppxPackage -Register $manifest
+          $package = Get-AppxPackage | Where-Object { $_.Name -eq 'F1BD5F25-4ED6-4037-B9FE-BB7D4B326E25' } | Select-Object -First 1
+          if (-not $package) { throw 'Loose-registered UCAD package was not found.' }
+          "INSTALLED_EXE=$(Join-Path $package.InstallLocation 'UCAD.App.exe')" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Require an actual 1440x900 desktop
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.Windows.Forms
+          $bounds = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+          Write-Output "Primary desktop: $($bounds.Width)x$($bounds.Height)"
+          if ($bounds.Width -lt 1440 -or $bounds.Height -lt 900) {
+            throw "Manual fidelity capture skipped: runner desktop is $($bounds.Width)x$($bounds.Height), below the 1440x900 Figma baseline."
+          }
+
+      - name: Capture Drawing, Start, and Settings screens
+        shell: pwsh
+        run: |
+          ./.github/scripts/Capture-UcadUi.ps1 -ExePath $env:INSTALLED_EXE -OutputDirectory "$env:RUNNER_TEMP\ucad-fidelity"
+
+      - name: Upload fidelity screenshots
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: ucad-v0.3.9-fidelity-1440x900
+          path: ${{ runner.temp }}\ucad-fidelity\*.png
+          if-no-files-found: ignore
+          retention-days: 14

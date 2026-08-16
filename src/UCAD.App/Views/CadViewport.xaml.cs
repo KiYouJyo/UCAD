@@ -3,11 +3,13 @@ using Microsoft.Graphics.Canvas.UI.Xaml;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using System.Globalization;
 using System.Numerics;
 using UCAD.Core;
 using UCAD.Core.Commands;
 using UCAD.Core.Entities;
 using UCAD.Core.Geometry;
+using UCAD.Services;
 using Windows.UI;
 
 namespace UCAD.Views;
@@ -23,6 +25,17 @@ public sealed partial class CadViewport : UserControl
     private bool _isPanning;
     private Vector2 _lastPanPointer;
     private DrawingCommandKind? _drawingCommand;
+    private Color _canvasBackground = ColorHelper.FromArgb(255, 14, 16, 18);
+    private Color _geometryColor = ColorHelper.FromArgb(255, 237, 237, 242);
+    private Color _transientColor = ColorHelper.FromArgb(255, 77, 173, 245);
+    private Color _gridBaseColor = ColorHelper.FromArgb(255, 90, 94, 101);
+    private Color _originColor = ColorHelper.FromArgb(180, 70, 70, 70);
+    private Color _crosshairColor = ColorHelper.FromArgb(110, 180, 180, 180);
+    private bool _showGrid = true;
+    private byte _gridAlpha = 56;
+    private bool _zoomAroundCursor = true;
+    private bool _middleMousePan = true;
+    private bool _reverseWheelZoom;
 
     public event Action<CadPoint>? PointerWorldPositionChanged;
     public event Action<DrawingCommandKind, int, CadPoint>? DrawingPointAccepted;
@@ -30,20 +43,61 @@ public sealed partial class CadViewport : UserControl
     public event Action<double>? ZoomChanged;
 
     public CadDocument Document => _document;
-
     public CadPoint CurrentPointerWorldPosition => ScreenToWorld(_pointerScreen);
-
     public double Zoom => _zoom;
 
-    public CadViewport()
-        : this(new CadDocument())
-    {
-    }
+    public CadViewport() : this(new CadDocument()) { }
 
     public CadViewport(CadDocument document)
     {
         _document = document ?? throw new ArgumentNullException(nameof(document));
         InitializeComponent();
+    }
+
+    public void ApplySettings(AppSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        var lightCanvas = string.Equals(settings.CanvasTheme, "Light", StringComparison.OrdinalIgnoreCase);
+        var fallbackBackground = lightCanvas
+            ? ColorHelper.FromArgb(255, 255, 255, 255)
+            : ColorHelper.FromArgb(255, 14, 16, 18);
+        _canvasBackground = TryParseColor(settings.CanvasBackground, out var color)
+            ? color
+            : fallbackBackground;
+
+        if (lightCanvas)
+        {
+            _geometryColor = ColorHelper.FromArgb(255, 31, 34, 38);
+            _transientColor = ColorHelper.FromArgb(255, 0, 95, 184);
+            _gridBaseColor = ColorHelper.FromArgb(255, 112, 116, 122);
+            _originColor = ColorHelper.FromArgb(180, 105, 105, 110);
+            _crosshairColor = ColorHelper.FromArgb(120, 75, 78, 82);
+        }
+        else
+        {
+            _geometryColor = ColorHelper.FromArgb(255, 237, 237, 242);
+            _transientColor = ColorHelper.FromArgb(255, 77, 173, 245);
+            _gridBaseColor = ColorHelper.FromArgb(255, 90, 94, 101);
+            _originColor = ColorHelper.FromArgb(180, 70, 70, 70);
+            _crosshairColor = ColorHelper.FromArgb(110, 180, 180, 180);
+        }
+
+        _showGrid = settings.ShowGrid;
+        _gridAlpha = (byte)Math.Clamp((int)Math.Round(settings.GridOpacity / 100.0 * 255), 0, 255);
+        _zoomAroundCursor = settings.ZoomAroundCursor;
+        _middleMousePan = settings.MiddleMousePan;
+        _reverseWheelZoom = settings.ReverseWheelZoom;
+        Canvas.Invalidate();
+    }
+
+    private static bool TryParseColor(string value, out Color color)
+    {
+        color = default;
+        if (string.IsNullOrWhiteSpace(value)) return false;
+        var text = value.Trim().TrimStart('#');
+        if (text.Length != 6 || !uint.TryParse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var rgb)) return false;
+        color = ColorHelper.FromArgb(255, (byte)(rgb >> 16), (byte)(rgb >> 8), (byte)rgb);
+        return true;
     }
 
     public void BeginDrawingCommand(DrawingCommandKind kind)
@@ -55,43 +109,26 @@ public sealed partial class CadViewport : UserControl
 
     public bool SubmitDrawingPoint(CadPoint world)
     {
-        if (_drawingCommand is not DrawingCommandKind kind)
-        {
-            return false;
-        }
-
+        if (_drawingCommand is not DrawingCommandKind kind) return false;
         switch (kind)
         {
-            case DrawingCommandKind.Line:
-                return SubmitLinePoint(world);
+            case DrawingCommandKind.Line: return SubmitLinePoint(world);
             case DrawingCommandKind.Polyline:
                 _inputPoints.Add(world);
                 DrawingPointAccepted?.Invoke(kind, _inputPoints.Count, world);
                 Canvas.Invalidate();
                 return true;
-            case DrawingCommandKind.Rectangle:
-                return SubmitRectanglePoint(world);
-            case DrawingCommandKind.Circle:
-                return SubmitCirclePoint(world);
-            case DrawingCommandKind.Arc:
-                return SubmitArcPoint(world);
-            default:
-                return false;
+            case DrawingCommandKind.Rectangle: return SubmitRectanglePoint(world);
+            case DrawingCommandKind.Circle: return SubmitCirclePoint(world);
+            case DrawingCommandKind.Arc: return SubmitArcPoint(world);
+            default: return false;
         }
     }
 
     public void CompleteDrawingCommand()
     {
-        if (_drawingCommand is not DrawingCommandKind kind)
-        {
-            return;
-        }
-
-        if (kind == DrawingCommandKind.Polyline && _inputPoints.Count >= 2)
-        {
-            _document.Add(new PolylineEntity(_inputPoints));
-        }
-
+        if (_drawingCommand is not DrawingCommandKind kind) return;
+        if (kind == DrawingCommandKind.Polyline && _inputPoints.Count >= 2) _document.Add(new PolylineEntity(_inputPoints));
         CompleteDrawingCommandCore(kind);
     }
 
@@ -138,14 +175,9 @@ public sealed partial class CadViewport : UserControl
         if (_inputPoints.Count > 0)
         {
             var start = _inputPoints[^1];
-            if ((world - start).Length < GeometryEpsilon)
-            {
-                return false;
-            }
-
+            if ((world - start).Length < GeometryEpsilon) return false;
             _document.Add(new LineEntity(start, world));
         }
-
         _inputPoints.Add(world);
         DrawingPointAccepted?.Invoke(DrawingCommandKind.Line, _inputPoints.Count, world);
         Canvas.Invalidate();
@@ -161,20 +193,9 @@ public sealed partial class CadViewport : UserControl
             Canvas.Invalidate();
             return true;
         }
-
         var first = _inputPoints[0];
-        if (Math.Abs(first.X - world.X) < GeometryEpsilon || Math.Abs(first.Y - world.Y) < GeometryEpsilon)
-        {
-            return false;
-        }
-
-        var corners = new[]
-        {
-            first,
-            new CadPoint(world.X, first.Y),
-            world,
-            new CadPoint(first.X, world.Y)
-        };
+        if (Math.Abs(first.X - world.X) < GeometryEpsilon || Math.Abs(first.Y - world.Y) < GeometryEpsilon) return false;
+        var corners = new[] { first, new CadPoint(world.X, first.Y), world, new CadPoint(first.X, world.Y) };
         _inputPoints.Add(world);
         DrawingPointAccepted?.Invoke(DrawingCommandKind.Rectangle, 2, world);
         _document.Add(new PolylineEntity(corners, closed: true));
@@ -191,14 +212,9 @@ public sealed partial class CadViewport : UserControl
             Canvas.Invalidate();
             return true;
         }
-
         var center = _inputPoints[0];
         var radius = (world - center).Length;
-        if (radius < GeometryEpsilon)
-        {
-            return false;
-        }
-
+        if (radius < GeometryEpsilon) return false;
         _inputPoints.Add(world);
         DrawingPointAccepted?.Invoke(DrawingCommandKind.Circle, 2, world);
         _document.Add(new CircleEntity(center, radius));
@@ -210,22 +226,13 @@ public sealed partial class CadViewport : UserControl
     {
         if (_inputPoints.Count < 2)
         {
-            if (_inputPoints.Count == 1 && (world - _inputPoints[0]).Length < GeometryEpsilon)
-            {
-                return false;
-            }
-
+            if (_inputPoints.Count == 1 && (world - _inputPoints[0]).Length < GeometryEpsilon) return false;
             _inputPoints.Add(world);
             DrawingPointAccepted?.Invoke(DrawingCommandKind.Arc, _inputPoints.Count, world);
             Canvas.Invalidate();
             return true;
         }
-
-        if (!ArcEntity.TryCreateFromThreePoints(_inputPoints[0], _inputPoints[1], world, out var arc) || arc is null)
-        {
-            return false;
-        }
-
+        if (!ArcEntity.TryCreateFromThreePoints(_inputPoints[0], _inputPoints[1], world, out var arc) || arc is null) return false;
         _inputPoints.Add(world);
         DrawingPointAccepted?.Invoke(DrawingCommandKind.Arc, 3, world);
         _document.Add(arc);
@@ -244,14 +251,9 @@ public sealed partial class CadViewport : UserControl
     private void Canvas_Draw(CanvasControl sender, CanvasDrawEventArgs args)
     {
         var ds = args.DrawingSession;
-        ds.Clear(Colors.Black);
-        DrawGrid(ds, sender.ActualWidth, sender.ActualHeight);
-
-        foreach (var entity in _document.Entities)
-        {
-            DrawEntity(ds, entity, Colors.White, 1.2f);
-        }
-
+        ds.Clear(_canvasBackground);
+        if (_showGrid) DrawGrid(ds, sender.ActualWidth, sender.ActualHeight);
+        foreach (var entity in _document.Entities) DrawEntity(ds, entity, _geometryColor, 1.2f);
         DrawTransientGeometry(ds);
         DrawCrosshair(ds, sender.ActualWidth, sender.ActualHeight);
     }
@@ -260,68 +262,45 @@ public sealed partial class CadViewport : UserControl
     {
         switch (entity)
         {
-            case LineEntity line:
-                ds.DrawLine(WorldToScreen(line.Start), WorldToScreen(line.End), color, strokeWidth);
-                break;
-            case PolylineEntity polyline:
-                DrawPointChain(ds, polyline.Points, polyline.Closed, color, strokeWidth);
-                break;
-            case CircleEntity circle:
-                ds.DrawCircle(WorldToScreen(circle.Center), (float)(circle.Radius * _zoom), color, strokeWidth);
-                break;
-            case ArcEntity arc:
-                DrawPointChain(ds, arc.SamplePoints(), false, color, strokeWidth);
-                break;
+            case LineEntity line: ds.DrawLine(WorldToScreen(line.Start), WorldToScreen(line.End), color, strokeWidth); break;
+            case PolylineEntity polyline: DrawPointChain(ds, polyline.Points, polyline.Closed, color, strokeWidth); break;
+            case CircleEntity circle: ds.DrawCircle(WorldToScreen(circle.Center), (float)(circle.Radius * _zoom), color, strokeWidth); break;
+            case ArcEntity arc: DrawPointChain(ds, arc.SamplePoints(), false, color, strokeWidth); break;
         }
     }
 
     private void DrawTransientGeometry(CanvasDrawingSession ds)
     {
-        if (_drawingCommand is not DrawingCommandKind kind)
-        {
-            return;
-        }
-
+        if (_drawingCommand is not DrawingCommandKind kind) return;
         var pointer = CurrentPointerWorldPosition;
         switch (kind)
         {
             case DrawingCommandKind.Line when _inputPoints.Count > 0:
-                ds.DrawLine(WorldToScreen(_inputPoints[^1]), _pointerScreen, Colors.DeepSkyBlue, 1.0f);
+                ds.DrawLine(WorldToScreen(_inputPoints[^1]), _pointerScreen, _transientColor, 1.0f);
                 break;
             case DrawingCommandKind.Polyline when _inputPoints.Count > 0:
-                DrawPointChain(ds, _inputPoints, false, Colors.DeepSkyBlue, 1.0f);
-                ds.DrawLine(WorldToScreen(_inputPoints[^1]), _pointerScreen, Colors.DeepSkyBlue, 1.0f);
+                DrawPointChain(ds, _inputPoints, false, _transientColor, 1.0f);
+                ds.DrawLine(WorldToScreen(_inputPoints[^1]), _pointerScreen, _transientColor, 1.0f);
                 break;
             case DrawingCommandKind.Rectangle when _inputPoints.Count == 1:
                 var first = _inputPoints[0];
-                var corners = new[]
-                {
-                    first,
-                    new CadPoint(pointer.X, first.Y),
-                    pointer,
-                    new CadPoint(first.X, pointer.Y)
-                };
-                DrawPointChain(ds, corners, true, Colors.DeepSkyBlue, 1.0f);
+                var corners = new[] { first, new CadPoint(pointer.X, first.Y), pointer, new CadPoint(first.X, pointer.Y) };
+                DrawPointChain(ds, corners, true, _transientColor, 1.0f);
                 break;
             case DrawingCommandKind.Circle when _inputPoints.Count == 1:
                 var radius = (pointer - _inputPoints[0]).Length;
-                if (radius > GeometryEpsilon)
-                {
-                    ds.DrawCircle(WorldToScreen(_inputPoints[0]), (float)(radius * _zoom), Colors.DeepSkyBlue, 1.0f);
-                }
+                if (radius > GeometryEpsilon) ds.DrawCircle(WorldToScreen(_inputPoints[0]), (float)(radius * _zoom), _transientColor, 1.0f);
                 break;
             case DrawingCommandKind.Arc when _inputPoints.Count == 1:
-                ds.DrawLine(WorldToScreen(_inputPoints[0]), _pointerScreen, Colors.DeepSkyBlue, 1.0f);
+                ds.DrawLine(WorldToScreen(_inputPoints[0]), _pointerScreen, _transientColor, 1.0f);
                 break;
             case DrawingCommandKind.Arc when _inputPoints.Count == 2:
                 if (ArcEntity.TryCreateFromThreePoints(_inputPoints[0], _inputPoints[1], pointer, out var previewArc) && previewArc is not null)
-                {
-                    DrawPointChain(ds, previewArc.SamplePoints(), false, Colors.DeepSkyBlue, 1.0f);
-                }
+                    DrawPointChain(ds, previewArc.SamplePoints(), false, _transientColor, 1.0f);
                 else
                 {
-                    DrawPointChain(ds, _inputPoints, false, Colors.DeepSkyBlue, 1.0f);
-                    ds.DrawLine(WorldToScreen(_inputPoints[^1]), _pointerScreen, Colors.DeepSkyBlue, 1.0f);
+                    DrawPointChain(ds, _inputPoints, false, _transientColor, 1.0f);
+                    ds.DrawLine(WorldToScreen(_inputPoints[^1]), _pointerScreen, _transientColor, 1.0f);
                 }
                 break;
         }
@@ -329,15 +308,8 @@ public sealed partial class CadViewport : UserControl
 
     private void DrawPointChain(CanvasDrawingSession ds, IReadOnlyList<CadPoint> points, bool closed, Color color, float strokeWidth)
     {
-        for (var i = 1; i < points.Count; i++)
-        {
-            ds.DrawLine(WorldToScreen(points[i - 1]), WorldToScreen(points[i]), color, strokeWidth);
-        }
-
-        if (closed && points.Count > 2)
-        {
-            ds.DrawLine(WorldToScreen(points[^1]), WorldToScreen(points[0]), color, strokeWidth);
-        }
+        for (var i = 1; i < points.Count; i++) ds.DrawLine(WorldToScreen(points[i - 1]), WorldToScreen(points[i]), color, strokeWidth);
+        if (closed && points.Count > 2) ds.DrawLine(WorldToScreen(points[^1]), WorldToScreen(points[0]), color, strokeWidth);
     }
 
     private void DrawGrid(CanvasDrawingSession ds, double width, double height)
@@ -345,55 +317,47 @@ public sealed partial class CadViewport : UserControl
         var worldSpacing = 50.0;
         while ((worldSpacing * _zoom) < 24) worldSpacing *= 2;
         while ((worldSpacing * _zoom) > 120) worldSpacing /= 2;
-
         var topLeft = ScreenToWorld(Vector2.Zero);
         var bottomRight = ScreenToWorld(new Vector2((float)width, (float)height));
         var startX = Math.Floor(topLeft.X / worldSpacing) * worldSpacing;
         var endX = Math.Ceiling(bottomRight.X / worldSpacing) * worldSpacing;
         var startY = Math.Floor(bottomRight.Y / worldSpacing) * worldSpacing;
         var endY = Math.Ceiling(topLeft.Y / worldSpacing) * worldSpacing;
-
+        var gridColor = ColorHelper.FromArgb(_gridAlpha, _gridBaseColor.R, _gridBaseColor.G, _gridBaseColor.B);
         for (var x = startX; x <= endX; x += worldSpacing)
         {
             var sx = WorldToScreen(new CadPoint(x, 0)).X;
-            ds.DrawLine(sx, 0, sx, (float)height, ColorHelper.FromArgb(255, 38, 38, 38), 1);
+            ds.DrawLine(sx, 0, sx, (float)height, gridColor, 1);
         }
-
         for (var y = startY; y <= endY; y += worldSpacing)
         {
             var sy = WorldToScreen(new CadPoint(0, y)).Y;
-            ds.DrawLine(0, sy, (float)width, sy, ColorHelper.FromArgb(255, 38, 38, 38), 1);
+            ds.DrawLine(0, sy, (float)width, sy, gridColor, 1);
         }
-
         var origin = WorldToScreen(new CadPoint(0, 0));
-        ds.DrawLine(0, origin.Y, (float)width, origin.Y, ColorHelper.FromArgb(255, 70, 70, 70), 1);
-        ds.DrawLine(origin.X, 0, origin.X, (float)height, ColorHelper.FromArgb(255, 70, 70, 70), 1);
+        ds.DrawLine(0, origin.Y, (float)width, origin.Y, _originColor, 1);
+        ds.DrawLine(origin.X, 0, origin.X, (float)height, _originColor, 1);
     }
 
     private void DrawCrosshair(CanvasDrawingSession ds, double width, double height)
     {
-        ds.DrawLine(0, _pointerScreen.Y, (float)width, _pointerScreen.Y, ColorHelper.FromArgb(110, 180, 180, 180), 0.7f);
-        ds.DrawLine(_pointerScreen.X, 0, _pointerScreen.X, (float)height, ColorHelper.FromArgb(110, 180, 180, 180), 0.7f);
+        ds.DrawLine(0, _pointerScreen.Y, (float)width, _pointerScreen.Y, _crosshairColor, 0.7f);
+        ds.DrawLine(_pointerScreen.X, 0, _pointerScreen.X, (float)height, _crosshairColor, 0.7f);
     }
 
-    private Vector2 WorldToScreen(CadPoint point) =>
-        new((float)(point.X * _zoom) + _pan.X, (float)(-point.Y * _zoom) + _pan.Y);
-
-    private CadPoint ScreenToWorld(Vector2 point) =>
-        new((point.X - _pan.X) / _zoom, -((point.Y - _pan.Y) / _zoom));
+    private Vector2 WorldToScreen(CadPoint point) => new((float)(point.X * _zoom) + _pan.X, (float)(-point.Y * _zoom) + _pan.Y);
+    private CadPoint ScreenToWorld(Vector2 point) => new((point.X - _pan.X) / _zoom, -((point.Y - _pan.Y) / _zoom));
 
     private void Canvas_PointerMoved(object sender, PointerRoutedEventArgs e)
     {
         var point = e.GetCurrentPoint(Canvas);
         _pointerScreen = new Vector2((float)point.Position.X, (float)point.Position.Y);
-
         if (_isPanning)
         {
             var delta = _pointerScreen - _lastPanPointer;
             _pan += delta;
             _lastPanPointer = _pointerScreen;
         }
-
         PointerWorldPositionChanged?.Invoke(CurrentPointerWorldPosition);
         Canvas.Invalidate();
     }
@@ -402,39 +366,41 @@ public sealed partial class CadViewport : UserControl
     {
         var point = e.GetCurrentPoint(Canvas);
         _pointerScreen = new Vector2((float)point.Position.X, (float)point.Position.Y);
-
-        if (point.Properties.IsMiddleButtonPressed)
+        if (_middleMousePan && point.Properties.IsMiddleButtonPressed)
         {
             _isPanning = true;
             _lastPanPointer = _pointerScreen;
             Canvas.CapturePointer(e.Pointer);
             return;
         }
-
-        if (point.Properties.IsLeftButtonPressed && _drawingCommand is not null)
-        {
-            SubmitDrawingPoint(CurrentPointerWorldPosition);
-        }
+        if (point.Properties.IsLeftButtonPressed && _drawingCommand is not null) SubmitDrawingPoint(CurrentPointerWorldPosition);
     }
 
     private void Canvas_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
-        if (_isPanning)
-        {
-            _isPanning = false;
-            Canvas.ReleasePointerCapture(e.Pointer);
-        }
+        if (!_isPanning) return;
+        _isPanning = false;
+        Canvas.ReleasePointerCapture(e.Pointer);
     }
 
     private void Canvas_PointerWheelChanged(object sender, PointerRoutedEventArgs e)
     {
         var point = e.GetCurrentPoint(Canvas);
         var screen = new Vector2((float)point.Position.X, (float)point.Position.Y);
-        var worldBefore = ScreenToWorld(screen);
-        var factor = point.Properties.MouseWheelDelta > 0 ? 1.12 : 1.0 / 1.12;
-        _zoom = Math.Clamp(_zoom * factor, 0.01, 1000.0);
-        var screenAfter = WorldToScreen(worldBefore);
-        _pan += screen - screenAfter;
+        var direction = Math.Sign(point.Properties.MouseWheelDelta);
+        if (_reverseWheelZoom) direction *= -1;
+        var factor = direction > 0 ? 1.12 : 1.0 / 1.12;
+        if (_zoomAroundCursor)
+        {
+            var worldBefore = ScreenToWorld(screen);
+            _zoom = Math.Clamp(_zoom * factor, 0.01, 1000.0);
+            var screenAfter = WorldToScreen(worldBefore);
+            _pan += screen - screenAfter;
+        }
+        else
+        {
+            _zoom = Math.Clamp(_zoom * factor, 0.01, 1000.0);
+        }
         ZoomChanged?.Invoke(_zoom);
         Canvas.Invalidate();
         e.Handled = true;

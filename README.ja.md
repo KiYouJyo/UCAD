@@ -11,7 +11,7 @@
 
 UCAD は Windows ネイティブで AutoCAD に近い操作感を持ち、建築・都市計画の高頻度な 2D 作図へ範囲を絞った軽量 CAD を目指します。DXF-first / 2D-first が基本方針です。
 
-**現在の候補バージョンは v0.3.7 — UI Fidelity & HiDPI Foundation。** v0.3.5/0.3.6 で構築した複数図面ワークスペースと UI↔Core 状態境界を維持しながら、PerMonitorV2 の高 DPI 対応を復元し、実際の WinUI 3 シェルを承認済み Figma v0.2 に高精度で合わせます。ブラウザー型図面タブ、常設カテゴリツール棚、左側高頻度 Tool Rail、Inspector、コマンドライン、ステータスバーを v0.4.0 の Selection / OSNAP / 直交に向けた安定基盤として固定します。本バージョンでは新しい CAD Core コマンドは追加しません。
+**現在の候補バージョンは v0.3.9 — UI Completion / Figma Fidelity / Start & Settings Foundation。** 本リリースでは CAD Core の新機能を追加せず、Figma をビジュアル SSOT として、ブラウザー型 Document Tabs、Start Center、全 Settings、3 言語リソース、Fluent アイコン、Design Tokens、バージョン SSOT、ページと設定の一貫した操作ロジックを完成させます。v0.4.0 の Selection / OSNAP / Inspector に向けた安定 UI 基盤です。
 
 ## インストール
 
@@ -21,27 +21,37 @@ UCAD は Windows ネイティブで AutoCAD に近い操作感を持ち、建築
 - `UCAD_<packageVersion>_x64.msixbundle`：直接サイドロード用。
 - `SHA256SUMS.txt`：整合性確認用。
 
-## ワークスペースとコマンド
+## ワークスペースページ
 
-タイトルバーの各タブは独立したインメモリ CAD セッションで、図形、Undo/Redo、コマンド状態、ビュー状態を個別に保持します。ファイルの保存/読み込みはまだ未実装のため、作図内容を含むタブを閉じる際は内容が失われることを確認します。
+UCAD は 3 種類のタブ内容を明確に区別します。
 
-利用可能なコマンドは `LINE/L`、`PLINE/PL`、`RECTANGLE/REC`、`CIRCLE/C`、`ARC/A`、`UNDO/U`、`REDO`、`CLEAR`、`RESETVIEW/RV` です。
+- **Drawing**：Category Bar、Tool Shelf、Tool Rail、CAD Canvas、Inspector、Command Line、Status Bar。
+- **Start**：CAD の新規タブ / Start Center。既定ではタイトルバーの `+` が Start を開き、「新規図面」を選んだ時だけ実際の `CadWorkspaceSession` を作成します。「新しいタブに Start を表示」を無効にすると、`+` は空白 Drawing を直接作成します。
+- **Settings**：単一の設定タブ。CAD Tool Rail / Inspector / Command Line / Status Bar と同時には表示しません。
 
-上部ツール棚、左側ツール、コマンド検索、下部コマンドラインはすべて同じ `CommandRegistry` / `CommandSession` 経路へ接続します。`x,y`、`@x,y`、距離入力とマウス指定を混在でき、Enter / Space で確定、Esc でキャンセル、空入力の確定で直前コマンドを繰り返します。
+Start には新規/開く、最近使用した項目の空状態、Blank / Architecture / Urban Planning テンプレートの情報構造、Learn UCAD を用意します。未実装のファイル I/O、最近使用したファイル、テンプレート機能は、利用可能に見せかけず無効化または未対応として明示します。
 
-選択、MOVE/COPY/OFFSET/TRIM、レイヤー、OSNAP、ORTHO などは UI の予定位置をすでに確保していますが、対応する CAD Core が完成するまでは実動コマンドとして扱いません。
+## コマンド
 
-## 表示・UI 基準
+各 Drawing タブは独立したインメモリ CAD セッションで、図形、Undo/Redo、コマンド状態、ビュー状態を個別に保持します。利用可能なコマンドは `LINE/L`、`PLINE/PL`、`RECTANGLE/REC`、`CIRCLE/C`、`ARC/A`、`UNDO/U`、`REDO`、`CLEAR`、`RESETVIEW/RV` です。
 
-- WinUI 3 / Windows App SDK のネイティブウィンドウ；
-- `PerMonitorV2` 高 DPI awareness；
-- 承認済み 1440×900 Figma v0.2 を現行 Shell の基準とする；
-- タイトルバー 44 px、カテゴリバー 44 px、ツール棚 64 px、Tool Rail 52 px、Inspector 304 px、コマンドライン 34 px、ステータスバー 30 px；
-- 一般操作には Fluent システムアイコンを優先し、CAD 固有記号は UCAD 専用 Fluent 拡張セットとして整備する。
+実動する UI 入口は `CommandRegistry → CommandSession → CAD Core` に統一されます。Selection、MOVE/COPY/OFFSET/TRIM、Layers、OSNAP、ORTHO などは UI 上の位置を確保していますが、対応する Core が完成するまでは実動コマンドとして扱いません。
+
+## Settings・表示基準
+
+- WinUI 3 / Windows App SDK のネイティブウィンドウと `PerMonitorV2` 高 DPI awareness；
+- 1440×900 Figma Frame を UI のビジュアル SSOT とする；
+- タイトルバー 44、カテゴリバー 44、ツール棚 64、Tool Rail 52、Inspector 304、コマンドライン 34、ステータスバー 30 DIP；
+- Settings ナビ 228 DIP、コンテンツ開始 54 DIP、カード 940×72 DIP、35 / 12 / 8 / 30 DIP の縦リズム；
+- **App Theme と CAD Canvas Theme は独立して実動**。App Theme は Shell/コントロールの明暗を切り替え、Canvas Theme は図形・プレビュー・グリッド・クロスヘアの配色を別に制御。Canvas 背景も独立して設定可能；
+- グリッド表示/強度、カーソル中心ズーム、中ボタンパン、ホイール反転、座標精度、小数形式は実行時ロジックに接続済み；
+- 未実装の Restore Session、手動 UI Scale、自動更新チェック、最近履歴の消去は「実装済み」として扱わない；
+- 一般操作は Fluent / WinUI アイコン、CAD 固有形状は UCAD スタイルの `PathIcon`；
+- `SettingsService` / `AppSettings` により `%LOCALAPPDATA%\UCAD\settings.json` へ集中保存。
 
 ## 3 言語対応
 
-アプリとリポジトリは簡体字中国語（zh-CN）、日本語（ja-JP）、英語（en-US）の三言語構成です。
+アプリとリポジトリは簡体字中国語（zh-CN）、日本語（ja-JP）、英語（en-US）の三言語構成です。v0.3.9 の Start と全 Settings ページは同一のリソースキー構成を保ちます。表示言語は次回 Shell 作成前にまとめて適用し、現在のセッションで一部だけ切り替わる混在状態を避けます。
 
 ## 開発
 
@@ -51,12 +61,16 @@ dotnet build src/UCAD.App/UCAD.App.csproj -c Debug -p:Platform=x64 -r win-x64
 dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release
 ```
 
+必須 CI は Core tests、app-build、実際の起動 smoke、MSIX/package validation、3 言語リソース一致、バージョン SSOT、PerMonitorV2、Unicode 仮アイコン検査、Figma の主要寸法/色 Token、Start/Settings/Canvas の動作契約を検証します。
+
+ピクセル単位の Figma 比較は手動の `UI Fidelity Screenshots` ワークフローとして残します。ランナーが実際の 1440×900 インタラクティブデスクトップを提供する場合のみ実行し、不適切なホスト画面が機能開発やリリースをブロックしないようにしています。
+
 ## ドキュメント
 
 - [Roadmap](ROADMAP.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Release process](docs/RELEASE-PROCESS.md)
-- [v0.3.7 Release Notes](docs/RELEASE-NOTES-v0.3.7.ja.md)
+- [v0.3.9 Release Notes](docs/RELEASE-NOTES-v0.3.9.ja.md)
 
 ## ライセンス
 

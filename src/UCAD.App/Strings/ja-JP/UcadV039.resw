@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="Start_TabTitle" xml:space="preserve"><value>スタート</value></data>
+  <data name="Settings_TabTitle" xml:space="preserve"><value>設定</value></data>
+  <data name="Common_Close" xml:space="preserve"><value>閉じる</value></data>
+  <data name="Feature_Files_Title" xml:space="preserve"><value>図面を開く</value></data>
+  <data name="Feature_Files_Message" xml:space="preserve"><value>ファイルの開閉・保存は今後のファイル層で実装します。本バージョンでは入口のみを用意し、未実装の機能は偽装しません。</value></data>
+  <data name="Feature_Updates_Title" xml:space="preserve"><value>更新を確認</value></data>
+  <data name="Feature_Updates_Message" xml:space="preserve"><value>更新サービスは v0.3.9 では未接続です。このページには安定した入口のみを用意しています。</value></data>
+  <data name="Feature_Learn_Title" xml:space="preserve"><value>UCAD を学ぶ</value></data>
+  <data name="Feature_Learn_Message" xml:space="preserve"><value>この学習コンテンツは今後のドキュメント体系で提供します。現在は未実装のチュートリアルを偽装しません。</value></data>
+  <data name="Start_Title.Text" xml:space="preserve"><value>UCAD を始める</value></data>
+  <data name="Start_Subtitle.Text" xml:space="preserve"><value>新しい図面を作成・開く、最近の作業を続ける、またはテンプレートから始めます。</value></data>
+  <data name="Start_NewDrawing_Title.Text" xml:space="preserve"><value>新規図面</value></data>
+  <data name="Start_NewDrawing_Description.Text" xml:space="preserve"><value>空の 2D CAD 図面を作成します</value></data>
+  <data name="Start_OpenDrawing_Title.Text" xml:space="preserve"><value>図面を開く</value></data>
+  <data name="Start_OpenDrawing_Description.Text" xml:space="preserve"><value>ファイルから既存の図面を開きます</value></data>
+  <data name="Start_Recent_Title.Text" xml:space="preserve"><value>最近使用したファイル</value></data>
+  <data name="Start_Recent_ShowAll.Content" xml:space="preserve"><value>すべて表示</value></data>
+  <data name="Start_Recent_EmptyTitle.Text" xml:space="preserve"><value>最近使用した図面はありません</value></data>
+  <data name="Start_Recent_EmptyDescription.Text" xml:space="preserve"><value>図面を開くか保存すると、ここに表示されます。</value></data>
+  <data name="Start_Templates_Title.Text" xml:space="preserve"><value>テンプレート</value></data>
+  <data name="Start_Template_Blank_Title.Text" xml:space="preserve"><value>空白</value></data>
+  <data name="Start_Template_Blank_Description.Text" xml:space="preserve"><value>標準の空白図面</value></data>
+  <data name="Start_Template_Architecture_Title.Text" xml:space="preserve"><value>建築設計</value></data>
+  <data name="Start_Template_Architecture_Description.Text" xml:space="preserve"><value>建築作図プリセット</value></data>
+  <data name="Start_Template_Urban_Title.Text" xml:space="preserve"><value>都市計画</value></data>
+  <data name="Start_Template_Urban_Description.Text" xml:space="preserve"><value>都市計画作図プリセット</value></data>
+  <data name="Common_ComingSoon.Text" xml:space="preserve"><value>近日対応</value></data>
+  <data name="Start_Learn_Title.Text" xml:space="preserve"><value>UCAD を学ぶ</value></data>
+  <data name="Start_Learn_Shortcuts.Text" xml:space="preserve"><value>ショートカット</value></data>
+  <data name="Start_Learn_BasicDrawing.Text" xml:space="preserve"><value>基本作図</value></data>
+  <data name="Start_Learn_Commands.Text" xml:space="preserve"><value>コマンドとエイリアス</value></data>
+  <data name="Start_Learn_Docs.Text" xml:space="preserve"><value>ドキュメントを見る</value></data>
+  <data name="Settings_Nav_Title" xml:space="preserve"><value>設定</value></data>
+  <data name="Settings_Nav_General" xml:space="preserve"><value>一般</value></data>
+  <data name="Settings_Nav_Appearance" xml:space="preserve"><value>外観</value></data>
+  <data name="Settings_Nav_Drafting" xml:space="preserve"><value>作図</value></data>
+  <data name="Settings_Nav_Input" xml:space="preserve"><value>入力と操作</value></data>
+  <data name="Settings_Nav_Files" xml:space="preserve"><value>ファイルと保存</value></data>
+  <data name="Settings_Nav_Language" xml:space="preserve"><value>言語と地域</value></data>
+  <data name="Settings_Nav_About" xml:space="preserve"><value>UCAD について</value></data>
+  <data name="Settings_Option_StartPage" xml:space="preserve"><value>スタートページを表示</value></data>
+  <data name="Settings_Option_BlankDrawing" xml:space="preserve"><value>空白図面を新規作成</value></data>
+  <data name="Settings_Option_RestoreSession" xml:space="preserve"><value>前回のセッションを復元</value></data>
+  <data name="Settings_Option_System" xml:space="preserve"><value>システムに従う</value></data>
+  <data name="Settings_Option_Dark" xml:space="preserve"><value>ダーク</value></data>
+  <data name="Settings_Option_Light" xml:space="preserve"><value>ライト</value></data>
+  <data name="Settings_Option_CanvasBlack" xml:space="preserve"><value>ブラック · #0E1012</value></data>
+  <data name="Settings_Option_CanvasGraphite" xml:space="preserve"><value>グラファイト · #18181A</value></data>
+  <data name="Settings_Option_CanvasWhite" xml:space="preserve"><value>ホワイト · #FFFFFF</value></data>
+  <data name="Settings_Option_Opacity10" xml:space="preserve"><value>10%</value></data>
+  <data name="Settings_Option_Opacity22" xml:space="preserve"><value>22%</value></data>
+  <data name="Settings_Option_Opacity50" xml:space="preserve"><value>50%</value></data>
+  <data name="Settings_Option_Opacity75" xml:space="preserve"><value>75%</value></data>
+  <data name="Settings_Option_Scale100" xml:space="preserve"><value>100%</value></data>
+  <data name="Settings_Option_Scale125" xml:space="preserve"><value>125%</value></data>
+  <data name="Settings_Option_Scale150" xml:space="preserve"><value>150%</value></data>
+  <data name="Settings_Option_Millimeters" xml:space="preserve"><value>ミリメートル</value></data>
+  <data name="Settings_Option_Meters" xml:space="preserve"><value>メートル</value></data>
+  <data name="Settings_Option_Inches" xml:space="preserve"><value>インチ</value></data>
+  <data name="Settings_Option_Precision0" xml:space="preserve"><value>0</value></data>
+  <data name="Settings_Option_Precision1" xml:space="preserve"><value>0.0</value></data>
+  <data name="Settings_Option_Precision2" xml:space="preserve"><value>0.00</value></data>
+  <data name="Settings_Option_Precision3" xml:space="preserve"><value>0.000</value></data>
+  <data name="Settings_Option_DecimalDegrees" xml:space="preserve"><value>十進角度</value></data>
+  <data name="Settings_Option_Radians" xml:space="preserve"><value>ラジアン</value></data>
+  <data name="Settings_Option_SnapCore" xml:space="preserve"><value>端点 / 中点 / 交点</value></data>
+  <data name="Settings_Option_SnapBasic" xml:space="preserve"><value>端点 / 中点</value></data>
+  <data name="Settings_Option_CadStandard" xml:space="preserve"><value>標準 Window / Crossing</value></data>
+  <data name="Settings_Option_Minutes5" xml:space="preserve"><value>5 分</value></data>
+  <data name="Settings_Option_Minutes10" xml:space="preserve"><value>10 分</value></data>
+  <data name="Settings_Option_Minutes15" xml:space="preserve"><value>15 分</value></data>
+  <data name="Settings_Option_Minutes30" xml:space="preserve"><value>30 分</value></data>
+  <data name="Settings_Option_Count10" xml:space="preserve"><value>10</value></data>
+  <data name="Settings_Option_Count20" xml:space="preserve"><value>20</value></data>
+  <data name="Settings_Option_Count30" xml:space="preserve"><value>30</value></data>
+  <data name="Settings_Option_SystemLanguage" xml:space="preserve"><value>システム言語</value></data>
+  <data name="Settings_Option_Chinese" xml:space="preserve"><value>簡体字中国語</value></data>
+  <data name="Settings_Option_Japanese" xml:space="preserve"><value>日本語</value></data>
+  <data name="Settings_Option_English" xml:space="preserve"><value>English</value></data>
+  <data name="Settings_Option_SystemRegion" xml:space="preserve"><value>システムの地域形式</value></data>
+  <data name="Settings_Option_InvariantRegion" xml:space="preserve"><value>固定形式</value></data>
+  <data name="Settings_Option_Metric" xml:space="preserve"><value>メートル法</value></data>
+  <data name="Settings_Option_Imperial" xml:space="preserve"><value>ヤード・ポンド法</value></data>
+  <data name="Settings_Option_Automatic" xml:space="preserve"><value>自動</value></data>
+  <data name="Settings_Option_DecimalDot" xml:space="preserve"><value>小数点（.）</value></data>
+  <data name="Settings_Option_DecimalComma" xml:space="preserve"><value>小数カンマ（,）</value></data>
+  <data name="Settings_Action_CheckNow" xml:space="preserve"><value>今すぐ確認</value></data>
+  <data name="Settings_Action_Clear" xml:space="preserve"><value>消去</value></data>
+  <data name="Settings_Action_Open" xml:space="preserve"><value>開く</value></data>
+  <data name="Settings_Action_View" xml:space="preserve"><value>表示</value></data>
+  <data name="Settings_General_Title" xml:space="preserve"><value>一般</value></data>
+  <data name="Settings_General_Subtitle" xml:space="preserve"><value>UCAD の起動方法、タブ動作、更新設定を調整します。</value></data>
+  <data name="Settings_General_StartupSection" xml:space="preserve"><value>起動とセッション</value></data>
+  <data name="Settings_General_StartupBehavior_Title" xml:space="preserve"><value>UCAD 起動時</value></data>
+  <data name="Settings_General_StartupBehavior_Description" xml:space="preserve"><value>起動後に最初に表示する内容を選択します。</value></data>
+  <data name="Settings_General_NewTab_Title" xml:space="preserve"><value>新しいタブでスタートページを表示</value></data>
+  <data name="Settings_General_NewTab_Description" xml:space="preserve"><value>タイトルバーの + で図面を直接作らず Start を開きます。</value></data>
+  <data name="Settings_General_CloseUnsaved_Title" xml:space="preserve"><value>未保存図面を閉じる前に確認</value></data>
+  <data name="Settings_General_CloseUnsaved_Description" xml:space="preserve"><value>未保存内容を含む図面を閉じる前に確認します。</value></data>
+  <data name="Settings_General_UpdatesSection" xml:space="preserve"><value>更新</value></data>
+  <data name="Settings_General_AutoUpdate_Title" xml:space="preserve"><value>更新を自動確認</value></data>
+  <data name="Settings_General_AutoUpdate_Description" xml:space="preserve"><value>UCAD 起動後に利用可能な更新を自動確認します。</value></data>
+  <data name="Settings_General_CheckUpdate_Title" xml:space="preserve"><value>更新を確認</value></data>
+  <data name="Settings_General_CheckUpdate_Description" xml:space="preserve"><value>UCAD の最新バージョンを手動で確認します。</value></data>
+  <data name="Settings_Appearance_Title" xml:space="preserve"><value>外観</value></data>
+  <data name="Settings_Appearance_Subtitle" xml:space="preserve"><value>アプリ UI と CAD キャンバスの外観を個別に設定します。</value></data>
+  <data name="Settings_Appearance_ThemeSection" xml:space="preserve"><value>テーマ</value></data>
+  <data name="Settings_Appearance_AppTheme_Title" xml:space="preserve"><value>アプリテーマ</value></data>
+  <data name="Settings_Appearance_AppTheme_Description" xml:space="preserve"><value>UCAD のウィンドウとコントロールの明暗を設定します。</value></data>
+  <data name="Settings_Appearance_CanvasTheme_Title" xml:space="preserve"><value>キャンバステーマ</value></data>
+  <data name="Settings_Appearance_CanvasTheme_Description" xml:space="preserve"><value>CAD キャンバスをアプリテーマとは独立して設定します。</value></data>
+  <data name="Settings_Appearance_CanvasBackground_Title" xml:space="preserve"><value>キャンバス背景</value></data>
+  <data name="Settings_Appearance_CanvasBackground_Description" xml:space="preserve"><value>CAD ワークスペースの背景色を選択します。</value></data>
+  <data name="Settings_Appearance_CanvasSection" xml:space="preserve"><value>キャンバス</value></data>
+  <data name="Settings_Appearance_ShowGrid_Title" xml:space="preserve"><value>グリッドを表示</value></data>
+  <data name="Settings_Appearance_ShowGrid_Description" xml:space="preserve"><value>CAD キャンバスに参照グリッドを表示します。</value></data>
+  <data name="Settings_Appearance_GridOpacity_Title" xml:space="preserve"><value>グリッド不透明度</value></data>
+  <data name="Settings_Appearance_GridOpacity_Description" xml:space="preserve"><value>参照グリッドの表示強度を調整します。</value></data>
+  <data name="Settings_Appearance_UiScale_Title" xml:space="preserve"><value>UI スケール</value></data>
+  <data name="Settings_Appearance_UiScale_Description" xml:space="preserve"><value>UCAD UI のスケール設定です。システム DPI は PerMonitorV2 が処理します。</value></data>
+  <data name="Settings_Drafting_Title" xml:space="preserve"><value>作図</value></data>
+  <data name="Settings_Drafting_Subtitle" xml:space="preserve"><value>新規図面の単位、精度、作図補助の既定値を設定します。</value></data>
+  <data name="Settings_Drafting_DefaultsSection" xml:space="preserve"><value>単位と精度</value></data>
+  <data name="Settings_Drafting_LengthUnit_Title" xml:space="preserve"><value>長さの単位</value></data>
+  <data name="Settings_Drafting_LengthUnit_Description" xml:space="preserve"><value>新規図面の既定の長さ単位を設定します。</value></data>
+  <data name="Settings_Drafting_Precision_Title" xml:space="preserve"><value>精度</value></data>
+  <data name="Settings_Drafting_Precision_Description" xml:space="preserve"><value>長さの既定の小数表示桁数を設定します。</value></data>
+  <data name="Settings_Drafting_AngleUnit_Title" xml:space="preserve"><value>角度単位</value></data>
+  <data name="Settings_Drafting_AngleUnit_Description" xml:space="preserve"><value>角度入力・表示の既定単位を設定します。</value></data>
+  <data name="Settings_Drafting_AidsSection" xml:space="preserve"><value>作図補助</value></data>
+  <data name="Settings_Drafting_ObjectSnap_Title" xml:space="preserve"><value>既定のオブジェクトスナップ</value></data>
+  <data name="Settings_Drafting_ObjectSnap_Description" xml:space="preserve"><value>新規図面のオブジェクトスナップ既定状態を保存します。</value></data>
+  <data name="Settings_Drafting_SnapTypes_Title" xml:space="preserve"><value>既定のスナップ種類</value></data>
+  <data name="Settings_Drafting_SnapTypes_Description" xml:space="preserve"><value>端点・中点・交点などの既定値を設定します。</value></data>
+  <data name="Settings_Drafting_Ortho_Title" xml:space="preserve"><value>既定の直交</value></data>
+  <data name="Settings_Drafting_Ortho_Description" xml:space="preserve"><value>新規図面の直交モード既定状態を保存します。</value></data>
+  <data name="Settings_Drafting_PendingNote" xml:space="preserve"><value>オブジェクトスナップと直交 Core は未接続です。v0.3.9 は設定モデルのみを保存し、作図動作を偽装しません。</value></data>
+  <data name="Settings_Input_Title" xml:space="preserve"><value>入力と操作</value></data>
+  <data name="Settings_Input_Subtitle" xml:space="preserve"><value>マウス、選択、コマンド入力の操作方法を調整します。</value></data>
+  <data name="Settings_Input_MouseSection" xml:space="preserve"><value>マウスとビュー</value></data>
+  <data name="Settings_Input_ZoomCursor_Title" xml:space="preserve"><value>カーソル位置を中心にズーム</value></data>
+  <data name="Settings_Input_ZoomCursor_Description" xml:space="preserve"><value>ホイールズーム時にカーソル位置のワールド座標を維持します。</value></data>
+  <data name="Settings_Input_MiddlePan_Title" xml:space="preserve"><value>中ボタンでパン</value></data>
+  <data name="Settings_Input_MiddlePan_Description" xml:space="preserve"><value>マウス中ボタンを押しながら CAD ビューを移動します。</value></data>
+  <data name="Settings_Input_ReverseWheel_Title" xml:space="preserve"><value>ホイールズームを反転</value></data>
+  <data name="Settings_Input_ReverseWheel_Description" xml:space="preserve"><value>ホイール上下のズーム方向を入れ替えます。</value></data>
+  <data name="Settings_Input_SelectionSection" xml:space="preserve"><value>選択</value></data>
+  <data name="Settings_Input_WindowCrossing_Title" xml:space="preserve"><value>Window / Crossing 選択</value></data>
+  <data name="Settings_Input_WindowCrossing_Description" xml:space="preserve"><value>CAD 標準の方向付きボックス選択を使用します。</value></data>
+  <data name="Settings_Input_SelectionPreview_Title" xml:space="preserve"><value>選択プレビュー</value></data>
+  <data name="Settings_Input_SelectionPreview_Description" xml:space="preserve"><value>選択可能なオブジェクトにカーソルを合わせるとプレビューします。</value></data>
+  <data name="Settings_Input_CommandSection" xml:space="preserve"><value>コマンド</value></data>
+  <data name="Settings_Input_CommandSuggestions_Title" xml:space="preserve"><value>コマンド候補</value></data>
+  <data name="Settings_Input_CommandSuggestions_Description" xml:space="preserve"><value>コマンド入力時に名称とエイリアス候補を表示します。</value></data>
+  <data name="Settings_Files_Title" xml:space="preserve"><value>ファイルと保存</value></data>
+  <data name="Settings_Files_Subtitle" xml:space="preserve"><value>自動保存、バックアップ、最近使用した項目を設定します。</value></data>
+  <data name="Settings_Files_AutoSaveSection" xml:space="preserve"><value>自動保存とバックアップ</value></data>
+  <data name="Settings_Files_AutoSave_Title" xml:space="preserve"><value>自動保存</value></data>
+  <data name="Settings_Files_AutoSave_Description" xml:space="preserve"><value>今後のファイル層向けに自動保存設定を保存します。</value></data>
+  <data name="Settings_Files_AutoSaveInterval_Title" xml:space="preserve"><value>自動保存間隔</value></data>
+  <data name="Settings_Files_AutoSaveInterval_Description" xml:space="preserve"><value>自動保存の目標間隔を設定します。</value></data>
+  <data name="Settings_Files_Backup_Title" xml:space="preserve"><value>保存時にバックアップを作成</value></data>
+  <data name="Settings_Files_Backup_Description" xml:space="preserve"><value>今後の保存処理向けにバックアップ設定を保存します。</value></data>
+  <data name="Settings_Files_RecentSection" xml:space="preserve"><value>最近使用したファイル</value></data>
+  <data name="Settings_Files_ShowRecent_Title" xml:space="preserve"><value>最近使用した図面を表示</value></data>
+  <data name="Settings_Files_ShowRecent_Description" xml:space="preserve"><value>Start ページに最近使用した項目を表示します。</value></data>
+  <data name="Settings_Files_RecentCount_Title" xml:space="preserve"><value>最近のファイル数</value></data>
+  <data name="Settings_Files_RecentCount_Description" xml:space="preserve"><value>Start ページに表示する将来の最大件数を設定します。</value></data>
+  <data name="Settings_Files_ClearRecent_Title" xml:space="preserve"><value>最近の履歴を消去</value></data>
+  <data name="Settings_Files_ClearRecent_Description" xml:space="preserve"><value>最近のファイル履歴を消去します。架空のサンプルファイルは作成しません。</value></data>
+  <data name="Settings_Language_Title" xml:space="preserve"><value>言語と地域</value></data>
+  <data name="Settings_Language_Subtitle" xml:space="preserve"><value>表示言語、数値形式、単位表示を設定します。</value></data>
+  <data name="Settings_Language_LanguageSection" xml:space="preserve"><value>言語</value></data>
+  <data name="Settings_Language_Display_Title" xml:space="preserve"><value>表示言語</value></data>
+  <data name="Settings_Language_Display_Description" xml:space="preserve"><value>UCAD UI で使用する言語を選択します。</value></data>
+  <data name="Settings_Language_FollowSystem_Title" xml:space="preserve"><value>システム言語に従う</value></data>
+  <data name="Settings_Language_FollowSystem_Description" xml:space="preserve"><value>Windows の言語設定に基づいて UCAD の表示言語を選びます。</value></data>
+  <data name="Settings_Language_RegionalSection" xml:space="preserve"><value>地域形式</value></data>
+  <data name="Settings_Language_NumberFormat_Title" xml:space="preserve"><value>数値形式</value></data>
+  <data name="Settings_Language_NumberFormat_Description" xml:space="preserve"><value>数値の区切りと地域形式を設定します。</value></data>
+  <data name="Settings_Language_UnitDisplay_Title" xml:space="preserve"><value>単位表示</value></data>
+  <data name="Settings_Language_UnitDisplay_Description" xml:space="preserve"><value>UI に表示する単位系を設定します。</value></data>
+  <data name="Settings_Language_AngleDecimal_Title" xml:space="preserve"><value>角度 / 小数形式</value></data>
+  <data name="Settings_Language_AngleDecimal_Description" xml:space="preserve"><value>小数区切りと角度値の形式を設定します。</value></data>
+  <data name="Settings_Language_ReloadNote" xml:space="preserve"><value>表示言語の変更は次回の UCAD 起動時に完全適用され、現在のセッションで言語が混在するのを防ぎます。</value></data>
+  <data name="Settings_About_Title" xml:space="preserve"><value>UCAD について</value></data>
+  <data name="Settings_About_Subtitle" xml:space="preserve"><value>バージョン、プロジェクトリンク、オープンソース情報。</value></data>
+  <data name="Settings_About_AppInfoSection" xml:space="preserve"><value>アプリ情報</value></data>
+  <data name="Settings_About_AppDescription" xml:space="preserve"><value>都市計画・建築設計向けの軽量 2D CAD</value></data>
+  <data name="Settings_About_Preview" xml:space="preserve"><value>プレビュー</value></data>
+  <data name="Settings_About_ProjectSection" xml:space="preserve"><value>プロジェクト</value></data>
+  <data name="Settings_About_GitHub_Title" xml:space="preserve"><value>GitHub リポジトリ</value></data>
+  <data name="Settings_About_GitHub_Description" xml:space="preserve"><value>UCAD の公開ソースコードと開発履歴を表示します。</value></data>
+  <data name="Settings_About_Releases_Title" xml:space="preserve"><value>Releases</value></data>
+  <data name="Settings_About_Releases_Description" xml:space="preserve"><value>公開済みバージョンとインストーラーを表示します。</value></data>
+  <data name="Settings_About_Issue_Title" xml:space="preserve"><value>問題を報告</value></data>
+  <data name="Settings_About_Issue_Description" xml:space="preserve"><value>GitHub Issues で不具合や提案を報告します。</value></data>
+  <data name="Settings_About_OpenSourceSection" xml:space="preserve"><value>オープンソースとクレジット</value></data>
+  <data name="Settings_About_OpenSource_Title" xml:space="preserve"><value>オープンソース情報</value></data>
+  <data name="Settings_About_OpenSource_Description" xml:space="preserve"><value>UCAD のソース、ライセンス、サードパーティ依存関係。</value></data>
+  <data name="Settings_About_Credits_Title" xml:space="preserve"><value>クレジット</value></data>
+  <data name="Settings_About_Credits_Description" xml:space="preserve"><value>WinUI 3、Windows App SDK、Win2D、オープンソースコミュニティ。</value></data>
+</root>

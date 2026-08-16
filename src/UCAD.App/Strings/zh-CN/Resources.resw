@@ -58,7 +58,7 @@
   <data name="ActiveCommandLabel.Text" xml:space="preserve"><value>活动命令</value></data>
   <data name="UndoAvailableLabel.Text" xml:space="preserve"><value>可撤销</value></data>
   <data name="RedoAvailableLabel.Text" xml:space="preserve"><value>可重做</value></data>
-  <data name="V04FoundationHint.Text" xml:space="preserve"><value>v0.3.7 已冻结高 DPI 与工作区视觉基础；v0.4.0 将在现有 CadWorkspaceSession 边界上接入选择、捕捉与正交。</value></data>
+  <data name="V04FoundationHint.Text" xml:space="preserve"><value>高 DPI 与工作区视觉基础已经就绪；v0.4.0 将在现有 CadWorkspaceSession 边界上接入选择、捕捉与正交。</value></data>
   <data name="Inspector_None" xml:space="preserve"><value>—</value></data>
   <data name="Inspector_Yes" xml:space="preserve"><value>是</value></data>
   <data name="Inspector_No" xml:space="preserve"><value>否</value></data>

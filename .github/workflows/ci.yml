@@ -2,7 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - 'codex/**'
   pull_request:
     branches: [ main ]
 
@@ -41,46 +43,9 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.302'
-      - name: Validate HiDPI and shell fidelity contract
+      - name: Validate Figma, localization, version, icon, and HiDPI contracts
         shell: pwsh
-        run: |
-          $manifest = Get-Content src/UCAD.App/app.manifest -Raw
-          if ($manifest -notmatch 'PerMonitorV2') {
-            throw 'UCAD must declare PerMonitorV2 in the application manifest.'
-          }
-          $xaml = Get-Content src/UCAD.App/MainWindow.xaml -Raw
-          if ($xaml -match 'UCAD v0\.3\.\d') {
-            throw 'The shell must not hardcode a v0.3.x display version; use runtime assembly metadata.'
-          }
-          $code = Get-Content src/UCAD.App/MainWindow.xaml.cs -Raw
-          if ($code -match 'AppTitleBar\.Title\s*=') {
-            throw 'The browser-like title strip must not inject a separate TitleBar.Title label.'
-          }
-          $tokens = Get-Content src/UCAD.App/Styles/UcadDesignTokens.xaml -Raw
-          foreach ($required in @('UcadTitleBarBrush','UcadCategoryBarBrush','UcadToolShelfBrush','UcadCanvasBrush','UcadPanelBrush','UcadStatusBarBrush')) {
-            if ($tokens -notmatch [regex]::Escape($required)) {
-              throw "Missing UCAD design token: $required"
-            }
-          }
-          Write-Output 'Validated PerMonitorV2, runtime versioning, browser-title contract, and core shell design tokens.'
-      - name: Validate runtime resource keys
-        shell: pwsh
-        run: |
-          $code = Get-Content src/UCAD.App/MainWindow.xaml.cs -Raw
-          $keys = [regex]::Matches($code, 'GetString\("([^"]+)"\)') | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
-          $propertyKeys = @($keys | Where-Object { $_ -match '\.' })
-          if ($propertyKeys.Count -gt 0) {
-            throw "Runtime ResourceLoader keys must be plain named resources, not x:Uid property keys: $($propertyKeys -join ', ')"
-          }
-          foreach ($file in Get-ChildItem src/UCAD.App/Strings -Recurse -Filter Resources.resw) {
-            [xml]$xml = Get-Content $file.FullName -Raw
-            $names = @($xml.root.data | ForEach-Object { [string]$_.name })
-            $missing = @($keys | Where-Object { $_ -notin $names })
-            if ($missing.Count -gt 0) {
-              throw "Missing runtime resources in $($file.FullName): $($missing -join ', ')"
-            }
-          }
-          Write-Output "Validated $($keys.Count) runtime ResourceLoader keys across all locales."
+        run: ./.github/scripts/Validate-UcadUi.ps1
       - name: Build app for startup smoke test
         shell: pwsh
         run: |
@@ -88,36 +53,26 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Restore failed: $LASTEXITCODE" }
           dotnet build src/UCAD.App/UCAD.App.csproj -c Release --no-restore -p:Platform=x64 -r win-x64
           if ($LASTEXITCODE -ne 0) { throw "Build failed: $LASTEXITCODE" }
-      - name: Launch UCAD and verify it stays alive
+      - name: Launch UCAD and initialize Start plus Settings
         shell: pwsh
         run: |
           $log = Join-Path $env:LOCALAPPDATA 'UCAD\Logs\startup.log'
           Remove-Item -LiteralPath $log -Force -ErrorAction SilentlyContinue
           $exe = Get-ChildItem src/UCAD.App/bin -Recurse -Filter 'UCAD.App.exe' | Where-Object FullName -match '\\Release\\' | Select-Object -First 1
           if (-not $exe) { throw 'UCAD.App.exe was not found after build.' }
-          Write-Output "Launching $($exe.FullName)"
+          $env:UCAD_STARTUP_SMOKE = '1'
           $process = Start-Process -FilePath $exe.FullName -WorkingDirectory $exe.DirectoryName -PassThru
           Start-Sleep -Seconds 8
           $process.Refresh()
           if ($process.HasExited) {
-            if (Test-Path -LiteralPath $log) {
-              Write-Output '--- UCAD startup.log ---'
-              Get-Content -LiteralPath $log -Raw
-              Write-Output '--- end startup.log ---'
-            }
+            if (Test-Path $log) { Get-Content $log -Raw }
             throw "UCAD exited during startup smoke test with code $($process.ExitCode)."
           }
-          if (Test-Path -LiteralPath $log) {
-            $startupLog = Get-Content -LiteralPath $log -Raw
-            if ($startupLog -match 'MissingResource:') {
-              Write-Output '--- UCAD startup.log ---'
-              Write-Output $startupLog
-              Write-Output '--- end startup.log ---'
-              Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
-              throw 'UCAD remained alive but reported a missing runtime resource.'
-            }
-          }
-          Write-Output "UCAD remained alive for 8 seconds (PID $($process.Id))."
+          if (-not (Test-Path $log)) { Stop-Process -Id $process.Id -Force; throw 'startup.log was not created.' }
+          $startupLog = Get-Content $log -Raw
+          if ($startupLog -notmatch 'Startup smoke: Start and Settings initialized') { Stop-Process -Id $process.Id -Force; throw 'Start/Settings smoke marker was not written.' }
+          if ($startupLog -match 'MissingResource:|UnhandledException|CreateInitialPage') { Write-Output $startupLog; Stop-Process -Id $process.Id -Force; throw 'UCAD reported a startup/resource exception.' }
+          Write-Output "UCAD Start and Settings remained alive for 8 seconds (PID $($process.Id))."
           Stop-Process -Id $process.Id -Force
 
   package-validation:
@@ -219,11 +174,12 @@ jobs:
             '5. If UCAD still does not open, send %LOCALAPPDATA%\UCAD\Logs\startup.log.'
           ) | Set-Content -LiteralPath (Join-Path $root 'README-ACCEPTANCE.txt') -Encoding UTF8
           "ACCEPTANCE_PACKAGE_PATH=$root" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "ACCEPTANCE_ARTIFACT_NAME=UCAD-v$($release.product.version)-x64-PR-acceptance" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Upload PR acceptance package
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
-          name: UCAD-v0.3.7-x64-PR-acceptance
+          name: ${{ env.ACCEPTANCE_ARTIFACT_NAME }}
           path: ${{ env.ACCEPTANCE_PACKAGE_PATH }}
           if-no-files-found: error
           retention-days: 7

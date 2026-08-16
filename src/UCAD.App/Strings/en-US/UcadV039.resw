@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="Start_TabTitle" xml:space="preserve"><value>Start</value></data>
+  <data name="Settings_TabTitle" xml:space="preserve"><value>Settings</value></data>
+  <data name="Common_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Feature_Files_Title" xml:space="preserve"><value>Open Drawing</value></data>
+  <data name="Feature_Files_Message" xml:space="preserve"><value>File open/save will be connected by the future file layer. This release keeps the entry point without pretending unsupported file I/O exists.</value></data>
+  <data name="Feature_Updates_Title" xml:space="preserve"><value>Check for updates</value></data>
+  <data name="Feature_Updates_Message" xml:space="preserve"><value>The update service is not connected in v0.3.9 yet. This page keeps a stable entry point.</value></data>
+  <data name="Feature_Learn_Title" xml:space="preserve"><value>Learn UCAD</value></data>
+  <data name="Feature_Learn_Message" xml:space="preserve"><value>This learning content will be connected to the future documentation system. No fake tutorial flow is shown.</value></data>
+  <data name="Start_Title.Text" xml:space="preserve"><value>Start with UCAD</value></data>
+  <data name="Start_Subtitle.Text" xml:space="preserve"><value>Create or open a drawing, continue recent work, or start from a template.</value></data>
+  <data name="Start_NewDrawing_Title.Text" xml:space="preserve"><value>New Drawing</value></data>
+  <data name="Start_NewDrawing_Description.Text" xml:space="preserve"><value>Create a blank 2D CAD drawing</value></data>
+  <data name="Start_OpenDrawing_Title.Text" xml:space="preserve"><value>Open Drawing</value></data>
+  <data name="Start_OpenDrawing_Description.Text" xml:space="preserve"><value>Open an existing drawing from a file</value></data>
+  <data name="Start_Recent_Title.Text" xml:space="preserve"><value>Recent</value></data>
+  <data name="Start_Recent_ShowAll.Content" xml:space="preserve"><value>Show all</value></data>
+  <data name="Start_Recent_EmptyTitle.Text" xml:space="preserve"><value>No recent drawings yet</value></data>
+  <data name="Start_Recent_EmptyDescription.Text" xml:space="preserve"><value>Opened or saved drawings will appear here.</value></data>
+  <data name="Start_Templates_Title.Text" xml:space="preserve"><value>Templates</value></data>
+  <data name="Start_Template_Blank_Title.Text" xml:space="preserve"><value>Blank</value></data>
+  <data name="Start_Template_Blank_Description.Text" xml:space="preserve"><value>Standard blank drawing</value></data>
+  <data name="Start_Template_Architecture_Title.Text" xml:space="preserve"><value>Architecture</value></data>
+  <data name="Start_Template_Architecture_Description.Text" xml:space="preserve"><value>Architectural drafting preset</value></data>
+  <data name="Start_Template_Urban_Title.Text" xml:space="preserve"><value>Urban Planning</value></data>
+  <data name="Start_Template_Urban_Description.Text" xml:space="preserve"><value>Planning drafting preset</value></data>
+  <data name="Common_ComingSoon.Text" xml:space="preserve"><value>Coming Soon</value></data>
+  <data name="Start_Learn_Title.Text" xml:space="preserve"><value>Learn UCAD</value></data>
+  <data name="Start_Learn_Shortcuts.Text" xml:space="preserve"><value>Shortcuts</value></data>
+  <data name="Start_Learn_BasicDrawing.Text" xml:space="preserve"><value>Basic Drawing</value></data>
+  <data name="Start_Learn_Commands.Text" xml:space="preserve"><value>Commands &amp; Aliases</value></data>
+  <data name="Start_Learn_Docs.Text" xml:space="preserve"><value>View Documentation</value></data>
+  <data name="Settings_Nav_Title" xml:space="preserve"><value>Settings</value></data>
+  <data name="Settings_Nav_General" xml:space="preserve"><value>General</value></data>
+  <data name="Settings_Nav_Appearance" xml:space="preserve"><value>Appearance</value></data>
+  <data name="Settings_Nav_Drafting" xml:space="preserve"><value>Drafting</value></data>
+  <data name="Settings_Nav_Input" xml:space="preserve"><value>Input &amp; Interaction</value></data>
+  <data name="Settings_Nav_Files" xml:space="preserve"><value>Files &amp; Save</value></data>
+  <data name="Settings_Nav_Language" xml:space="preserve"><value>Language &amp; Region</value></data>
+  <data name="Settings_Nav_About" xml:space="preserve"><value>About UCAD</value></data>
+  <data name="Settings_Option_StartPage" xml:space="preserve"><value>Show Start page</value></data>
+  <data name="Settings_Option_BlankDrawing" xml:space="preserve"><value>Create blank drawing</value></data>
+  <data name="Settings_Option_RestoreSession" xml:space="preserve"><value>Restore last session</value></data>
+  <data name="Settings_Option_System" xml:space="preserve"><value>System</value></data>
+  <data name="Settings_Option_Dark" xml:space="preserve"><value>Dark</value></data>
+  <data name="Settings_Option_Light" xml:space="preserve"><value>Light</value></data>
+  <data name="Settings_Option_CanvasBlack" xml:space="preserve"><value>Black · #0E1012</value></data>
+  <data name="Settings_Option_CanvasGraphite" xml:space="preserve"><value>Graphite · #18181A</value></data>
+  <data name="Settings_Option_CanvasWhite" xml:space="preserve"><value>White · #FFFFFF</value></data>
+  <data name="Settings_Option_Opacity10" xml:space="preserve"><value>10%</value></data>
+  <data name="Settings_Option_Opacity22" xml:space="preserve"><value>22%</value></data>
+  <data name="Settings_Option_Opacity50" xml:space="preserve"><value>50%</value></data>
+  <data name="Settings_Option_Opacity75" xml:space="preserve"><value>75%</value></data>
+  <data name="Settings_Option_Scale100" xml:space="preserve"><value>100%</value></data>
+  <data name="Settings_Option_Scale125" xml:space="preserve"><value>125%</value></data>
+  <data name="Settings_Option_Scale150" xml:space="preserve"><value>150%</value></data>
+  <data name="Settings_Option_Millimeters" xml:space="preserve"><value>Millimeters</value></data>
+  <data name="Settings_Option_Meters" xml:space="preserve"><value>Meters</value></data>
+  <data name="Settings_Option_Inches" xml:space="preserve"><value>Inches</value></data>
+  <data name="Settings_Option_Precision0" xml:space="preserve"><value>0</value></data>
+  <data name="Settings_Option_Precision1" xml:space="preserve"><value>0.0</value></data>
+  <data name="Settings_Option_Precision2" xml:space="preserve"><value>0.00</value></data>
+  <data name="Settings_Option_Precision3" xml:space="preserve"><value>0.000</value></data>
+  <data name="Settings_Option_DecimalDegrees" xml:space="preserve"><value>Decimal degrees</value></data>
+  <data name="Settings_Option_Radians" xml:space="preserve"><value>Radians</value></data>
+  <data name="Settings_Option_SnapCore" xml:space="preserve"><value>Endpoint / Midpoint / Intersection</value></data>
+  <data name="Settings_Option_SnapBasic" xml:space="preserve"><value>Endpoint / Midpoint</value></data>
+  <data name="Settings_Option_CadStandard" xml:space="preserve"><value>Standard Window / Crossing</value></data>
+  <data name="Settings_Option_Minutes5" xml:space="preserve"><value>5 minutes</value></data>
+  <data name="Settings_Option_Minutes10" xml:space="preserve"><value>10 minutes</value></data>
+  <data name="Settings_Option_Minutes15" xml:space="preserve"><value>15 minutes</value></data>
+  <data name="Settings_Option_Minutes30" xml:space="preserve"><value>30 minutes</value></data>
+  <data name="Settings_Option_Count10" xml:space="preserve"><value>10</value></data>
+  <data name="Settings_Option_Count20" xml:space="preserve"><value>20</value></data>
+  <data name="Settings_Option_Count30" xml:space="preserve"><value>30</value></data>
+  <data name="Settings_Option_SystemLanguage" xml:space="preserve"><value>System language</value></data>
+  <data name="Settings_Option_Chinese" xml:space="preserve"><value>Simplified Chinese</value></data>
+  <data name="Settings_Option_Japanese" xml:space="preserve"><value>Japanese</value></data>
+  <data name="Settings_Option_English" xml:space="preserve"><value>English</value></data>
+  <data name="Settings_Option_SystemRegion" xml:space="preserve"><value>System regional format</value></data>
+  <data name="Settings_Option_InvariantRegion" xml:space="preserve"><value>Invariant format</value></data>
+  <data name="Settings_Option_Metric" xml:space="preserve"><value>Metric</value></data>
+  <data name="Settings_Option_Imperial" xml:space="preserve"><value>Imperial</value></data>
+  <data name="Settings_Option_Automatic" xml:space="preserve"><value>Automatic</value></data>
+  <data name="Settings_Option_DecimalDot" xml:space="preserve"><value>Decimal point (.)</value></data>
+  <data name="Settings_Option_DecimalComma" xml:space="preserve"><value>Decimal comma (,)</value></data>
+  <data name="Settings_Action_CheckNow" xml:space="preserve"><value>Check now</value></data>
+  <data name="Settings_Action_Clear" xml:space="preserve"><value>Clear</value></data>
+  <data name="Settings_Action_Open" xml:space="preserve"><value>Open</value></data>
+  <data name="Settings_Action_View" xml:space="preserve"><value>View</value></data>
+  <data name="Settings_General_Title" xml:space="preserve"><value>General</value></data>
+  <data name="Settings_General_Subtitle" xml:space="preserve"><value>Configure UCAD startup, tab behavior, and update preferences.</value></data>
+  <data name="Settings_General_StartupSection" xml:space="preserve"><value>Startup &amp; Session</value></data>
+  <data name="Settings_General_StartupBehavior_Title" xml:space="preserve"><value>When UCAD starts</value></data>
+  <data name="Settings_General_StartupBehavior_Description" xml:space="preserve"><value>Choose what is shown first after launch.</value></data>
+  <data name="Settings_General_NewTab_Title" xml:space="preserve"><value>Show Start page in new tabs</value></data>
+  <data name="Settings_General_NewTab_Description" xml:space="preserve"><value>Open Start when the title-bar + button is used instead of creating a drawing.</value></data>
+  <data name="Settings_General_CloseUnsaved_Title" xml:space="preserve"><value>Confirm before closing unsaved drawings</value></data>
+  <data name="Settings_General_CloseUnsaved_Description" xml:space="preserve"><value>Ask for confirmation before closing a drawing with unsaved content.</value></data>
+  <data name="Settings_General_UpdatesSection" xml:space="preserve"><value>Updates</value></data>
+  <data name="Settings_General_AutoUpdate_Title" xml:space="preserve"><value>Automatically check for updates</value></data>
+  <data name="Settings_General_AutoUpdate_Description" xml:space="preserve"><value>Check for available updates automatically after UCAD starts.</value></data>
+  <data name="Settings_General_CheckUpdate_Title" xml:space="preserve"><value>Check for updates</value></data>
+  <data name="Settings_General_CheckUpdate_Description" xml:space="preserve"><value>Manually check for the latest UCAD version.</value></data>
+  <data name="Settings_Appearance_Title" xml:space="preserve"><value>Appearance</value></data>
+  <data name="Settings_Appearance_Subtitle" xml:space="preserve"><value>Configure the app UI and CAD canvas appearance independently.</value></data>
+  <data name="Settings_Appearance_ThemeSection" xml:space="preserve"><value>Theme</value></data>
+  <data name="Settings_Appearance_AppTheme_Title" xml:space="preserve"><value>App Theme</value></data>
+  <data name="Settings_Appearance_AppTheme_Description" xml:space="preserve"><value>Controls the light/dark appearance of UCAD windows and controls.</value></data>
+  <data name="Settings_Appearance_CanvasTheme_Title" xml:space="preserve"><value>Canvas Theme</value></data>
+  <data name="Settings_Appearance_CanvasTheme_Description" xml:space="preserve"><value>Controls the CAD canvas independently from the app theme.</value></data>
+  <data name="Settings_Appearance_CanvasBackground_Title" xml:space="preserve"><value>Canvas Background</value></data>
+  <data name="Settings_Appearance_CanvasBackground_Description" xml:space="preserve"><value>Choose the CAD workspace background color.</value></data>
+  <data name="Settings_Appearance_CanvasSection" xml:space="preserve"><value>Canvas</value></data>
+  <data name="Settings_Appearance_ShowGrid_Title" xml:space="preserve"><value>Show Grid</value></data>
+  <data name="Settings_Appearance_ShowGrid_Description" xml:space="preserve"><value>Show a reference grid on the CAD canvas.</value></data>
+  <data name="Settings_Appearance_GridOpacity_Title" xml:space="preserve"><value>Grid Opacity</value></data>
+  <data name="Settings_Appearance_GridOpacity_Description" xml:space="preserve"><value>Adjust the visual strength of the reference grid.</value></data>
+  <data name="Settings_Appearance_UiScale_Title" xml:space="preserve"><value>UI Scale</value></data>
+  <data name="Settings_Appearance_UiScale_Description" xml:space="preserve"><value>Set UCAD UI scale preference; system DPI remains handled by PerMonitorV2.</value></data>
+  <data name="Settings_Drafting_Title" xml:space="preserve"><value>Drafting</value></data>
+  <data name="Settings_Drafting_Subtitle" xml:space="preserve"><value>Configure default units, precision, and drafting aids for new drawings.</value></data>
+  <data name="Settings_Drafting_DefaultsSection" xml:space="preserve"><value>Units &amp; Precision</value></data>
+  <data name="Settings_Drafting_LengthUnit_Title" xml:space="preserve"><value>Length Unit</value></data>
+  <data name="Settings_Drafting_LengthUnit_Description" xml:space="preserve"><value>Set the default length unit for new drawings.</value></data>
+  <data name="Settings_Drafting_Precision_Title" xml:space="preserve"><value>Precision</value></data>
+  <data name="Settings_Drafting_Precision_Description" xml:space="preserve"><value>Set the default number of decimal places shown for lengths.</value></data>
+  <data name="Settings_Drafting_AngleUnit_Title" xml:space="preserve"><value>Angle Unit</value></data>
+  <data name="Settings_Drafting_AngleUnit_Description" xml:space="preserve"><value>Set the default unit for angle input and display.</value></data>
+  <data name="Settings_Drafting_AidsSection" xml:space="preserve"><value>Drafting Aids</value></data>
+  <data name="Settings_Drafting_ObjectSnap_Title" xml:space="preserve"><value>Default Object Snap</value></data>
+  <data name="Settings_Drafting_ObjectSnap_Description" xml:space="preserve"><value>Store the default object-snap state for new drawings.</value></data>
+  <data name="Settings_Drafting_SnapTypes_Title" xml:space="preserve"><value>Default Snap Types</value></data>
+  <data name="Settings_Drafting_SnapTypes_Description" xml:space="preserve"><value>Preset endpoint, midpoint, intersection and related snap types.</value></data>
+  <data name="Settings_Drafting_Ortho_Title" xml:space="preserve"><value>Default Ortho</value></data>
+  <data name="Settings_Drafting_Ortho_Description" xml:space="preserve"><value>Store the default Ortho state for new drawings.</value></data>
+  <data name="Settings_Drafting_PendingNote" xml:space="preserve"><value>Object Snap and Ortho Core are not connected yet. v0.3.9 persists their settings model without faking drafting behavior.</value></data>
+  <data name="Settings_Input_Title" xml:space="preserve"><value>Input &amp; Interaction</value></data>
+  <data name="Settings_Input_Subtitle" xml:space="preserve"><value>Adjust mouse, selection, and command-input behavior.</value></data>
+  <data name="Settings_Input_MouseSection" xml:space="preserve"><value>Mouse &amp; View</value></data>
+  <data name="Settings_Input_ZoomCursor_Title" xml:space="preserve"><value>Zoom around cursor</value></data>
+  <data name="Settings_Input_ZoomCursor_Description" xml:space="preserve"><value>Keep the world point under the cursor stable while zooming.</value></data>
+  <data name="Settings_Input_MiddlePan_Title" xml:space="preserve"><value>Middle mouse pan</value></data>
+  <data name="Settings_Input_MiddlePan_Description" xml:space="preserve"><value>Pan the CAD view by dragging with the middle mouse button.</value></data>
+  <data name="Settings_Input_ReverseWheel_Title" xml:space="preserve"><value>Reverse wheel zoom</value></data>
+  <data name="Settings_Input_ReverseWheel_Description" xml:space="preserve"><value>Swap the zoom direction for mouse-wheel up and down.</value></data>
+  <data name="Settings_Input_SelectionSection" xml:space="preserve"><value>Selection</value></data>
+  <data name="Settings_Input_WindowCrossing_Title" xml:space="preserve"><value>Window / Crossing selection</value></data>
+  <data name="Settings_Input_WindowCrossing_Description" xml:space="preserve"><value>Use standard CAD directional box-selection semantics.</value></data>
+  <data name="Settings_Input_SelectionPreview_Title" xml:space="preserve"><value>Selection preview</value></data>
+  <data name="Settings_Input_SelectionPreview_Description" xml:space="preserve"><value>Preview selectable objects while hovering.</value></data>
+  <data name="Settings_Input_CommandSection" xml:space="preserve"><value>Command</value></data>
+  <data name="Settings_Input_CommandSuggestions_Title" xml:space="preserve"><value>Command suggestions</value></data>
+  <data name="Settings_Input_CommandSuggestions_Description" xml:space="preserve"><value>Show command-name and alias suggestions while typing.</value></data>
+  <data name="Settings_Files_Title" xml:space="preserve"><value>Files &amp; Save</value></data>
+  <data name="Settings_Files_Subtitle" xml:space="preserve"><value>Configure auto save, backup, and recent-file behavior.</value></data>
+  <data name="Settings_Files_AutoSaveSection" xml:space="preserve"><value>Auto Save &amp; Backup</value></data>
+  <data name="Settings_Files_AutoSave_Title" xml:space="preserve"><value>Auto Save</value></data>
+  <data name="Settings_Files_AutoSave_Description" xml:space="preserve"><value>Store the auto-save preference for the future file layer.</value></data>
+  <data name="Settings_Files_AutoSaveInterval_Title" xml:space="preserve"><value>Auto Save Interval</value></data>
+  <data name="Settings_Files_AutoSaveInterval_Description" xml:space="preserve"><value>Set the target interval for automatic saving.</value></data>
+  <data name="Settings_Files_Backup_Title" xml:space="preserve"><value>Backup on save</value></data>
+  <data name="Settings_Files_Backup_Description" xml:space="preserve"><value>Store the backup preference for the future save flow.</value></data>
+  <data name="Settings_Files_RecentSection" xml:space="preserve"><value>Recent Files</value></data>
+  <data name="Settings_Files_ShowRecent_Title" xml:space="preserve"><value>Show recent drawings</value></data>
+  <data name="Settings_Files_ShowRecent_Description" xml:space="preserve"><value>Show the recent list on the Start page.</value></data>
+  <data name="Settings_Files_RecentCount_Title" xml:space="preserve"><value>Recent file count</value></data>
+  <data name="Settings_Files_RecentCount_Description" xml:space="preserve"><value>Set the future maximum number of items shown on Start.</value></data>
+  <data name="Settings_Files_ClearRecent_Title" xml:space="preserve"><value>Clear recent history</value></data>
+  <data name="Settings_Files_ClearRecent_Description" xml:space="preserve"><value>Clear recent-file history; no fabricated sample files are created.</value></data>
+  <data name="Settings_Language_Title" xml:space="preserve"><value>Language &amp; Region</value></data>
+  <data name="Settings_Language_Subtitle" xml:space="preserve"><value>Configure display language, number format, and unit presentation.</value></data>
+  <data name="Settings_Language_LanguageSection" xml:space="preserve"><value>Language</value></data>
+  <data name="Settings_Language_Display_Title" xml:space="preserve"><value>Display Language</value></data>
+  <data name="Settings_Language_Display_Description" xml:space="preserve"><value>Choose the language used by the UCAD interface.</value></data>
+  <data name="Settings_Language_FollowSystem_Title" xml:space="preserve"><value>Follow system language</value></data>
+  <data name="Settings_Language_FollowSystem_Description" xml:space="preserve"><value>Allow UCAD to choose the interface language from Windows preferences.</value></data>
+  <data name="Settings_Language_RegionalSection" xml:space="preserve"><value>Regional Format</value></data>
+  <data name="Settings_Language_NumberFormat_Title" xml:space="preserve"><value>Number Format</value></data>
+  <data name="Settings_Language_NumberFormat_Description" xml:space="preserve"><value>Set numeric grouping and regional-format preference.</value></data>
+  <data name="Settings_Language_UnitDisplay_Title" xml:space="preserve"><value>Unit Display</value></data>
+  <data name="Settings_Language_UnitDisplay_Description" xml:space="preserve"><value>Set the preferred unit system for interface display.</value></data>
+  <data name="Settings_Language_AngleDecimal_Title" xml:space="preserve"><value>Angle / Decimal format</value></data>
+  <data name="Settings_Language_AngleDecimal_Description" xml:space="preserve"><value>Set decimal-separator and angle-value formatting preferences.</value></data>
+  <data name="Settings_Language_ReloadNote" xml:space="preserve"><value>Display-language changes apply fully on the next UCAD launch to avoid mixed-language UI in the current session.</value></data>
+  <data name="Settings_About_Title" xml:space="preserve"><value>About UCAD</value></data>
+  <data name="Settings_About_Subtitle" xml:space="preserve"><value>Version, project links, and open-source information.</value></data>
+  <data name="Settings_About_AppInfoSection" xml:space="preserve"><value>Application</value></data>
+  <data name="Settings_About_AppDescription" xml:space="preserve"><value>Lightweight 2D CAD for urban planning and architectural design</value></data>
+  <data name="Settings_About_Preview" xml:space="preserve"><value>Preview</value></data>
+  <data name="Settings_About_ProjectSection" xml:space="preserve"><value>Project</value></data>
+  <data name="Settings_About_GitHub_Title" xml:space="preserve"><value>GitHub repository</value></data>
+  <data name="Settings_About_GitHub_Description" xml:space="preserve"><value>View UCAD source code and development history.</value></data>
+  <data name="Settings_About_Releases_Title" xml:space="preserve"><value>Releases</value></data>
+  <data name="Settings_About_Releases_Description" xml:space="preserve"><value>View published versions and installers.</value></data>
+  <data name="Settings_About_Issue_Title" xml:space="preserve"><value>Report an issue</value></data>
+  <data name="Settings_About_Issue_Description" xml:space="preserve"><value>Submit a bug report or suggestion in GitHub Issues.</value></data>
+  <data name="Settings_About_OpenSourceSection" xml:space="preserve"><value>Open source &amp; Credits</value></data>
+  <data name="Settings_About_OpenSource_Title" xml:space="preserve"><value>Open-source information</value></data>
+  <data name="Settings_About_OpenSource_Description" xml:space="preserve"><value>UCAD source, licensing, and third-party dependency information.</value></data>
+  <data name="Settings_About_Credits_Title" xml:space="preserve"><value>Credits</value></data>
+  <data name="Settings_About_Credits_Description" xml:space="preserve"><value>WinUI 3, Windows App SDK, Win2D, and the open-source community.</value></data>
+</root>

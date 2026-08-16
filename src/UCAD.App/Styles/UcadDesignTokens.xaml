@@ -3,32 +3,98 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- UCAD v0.3.7 dark-workspace baseline, translated from the Figma v0.2 desktop frame. -->
+    <!-- UCAD v0.3.9 visual contract. Figma frame 1440x900 is the visual SSOT. -->
+    <!-- Surfaces -->
     <SolidColorBrush x:Key="UcadAppBackgroundBrush" Color="#18181A" />
     <SolidColorBrush x:Key="UcadTitleBarBrush" Color="#202022" />
     <SolidColorBrush x:Key="UcadCategoryBarBrush" Color="#252528" />
     <SolidColorBrush x:Key="UcadToolShelfBrush" Color="#1D1D20" />
+    <SolidColorBrush x:Key="UcadNavigationBrush" Color="#1D1D20" />
+    <SolidColorBrush x:Key="UcadCardBrush" Color="#222225" />
+    <SolidColorBrush x:Key="UcadAboutCardBrush" Color="#202023" />
     <SolidColorBrush x:Key="UcadPanelBrush" Color="#1F1F22" />
+    <SolidColorBrush x:Key="UcadOverlayBrush" Color="#18181A" />
     <SolidColorBrush x:Key="UcadStatusBarBrush" Color="#222225" />
     <SolidColorBrush x:Key="UcadCanvasBrush" Color="#0E1012" />
-    <SolidColorBrush x:Key="UcadControlFillBrush" Color="#2E2E32" />
-    <SolidColorBrush x:Key="UcadControlFillSubtleBrush" Color="#212124" />
+    <SolidColorBrush x:Key="UcadControlFillBrush" Color="#2E2E33" />
+    <SolidColorBrush x:Key="UcadControlFillSubtleBrush" Color="#28282C" />
     <SolidColorBrush x:Key="UcadControlFillStrongBrush" Color="#252528" />
 
-    <SolidColorBrush x:Key="UcadTextPrimaryBrush" Color="#EDEDF0" />
-    <SolidColorBrush x:Key="UcadTextSecondaryBrush" Color="#999CA3" />
+    <!-- Text -->
+    <SolidColorBrush x:Key="UcadTextPrimaryBrush" Color="#EDEDF2" />
+    <SolidColorBrush x:Key="UcadTextSecondaryBrush" Color="#9E9EAB" />
+    <SolidColorBrush x:Key="UcadTextTertiaryBrush" Color="#7E8189" />
     <SolidColorBrush x:Key="UcadTextDisabledBrush" Color="#686872" />
-    <SolidColorBrush x:Key="UcadDividerBrush" Color="#404045" />
-    <SolidColorBrush x:Key="UcadDividerSoftBrush" Color="#2E3236" />
 
+    <!-- Accent -->
     <SolidColorBrush x:Key="UcadAccentBrush" Color="#1F5275" />
+    <SolidColorBrush x:Key="UcadAccentSelectedBrush" Color="#1F5275" />
+    <SolidColorBrush x:Key="UcadAboutMarkBrush" Color="#21618A" />
+    <SolidColorBrush x:Key="UcadAccentHoverBrush" Color="#2C759F" />
+    <SolidColorBrush x:Key="UcadAccentTextBrush" Color="#60B7F0" />
     <SolidColorBrush x:Key="UcadAccentStrokeBrush" Color="#594DADF5" />
     <SolidColorBrush x:Key="UcadCategorySelectedBrush" Color="#1C4257" />
     <SolidColorBrush x:Key="UcadAccentBrightBrush" Color="#4DADF5" />
 
+    <!-- Native ToggleButton checked states otherwise inject the system accent blue over
+         the programmatic CAD category / Inspector backgrounds. Keep Fluent interaction
+         behavior but align its checked visual state with the Figma CAD navigation tone. -->
+    <SolidColorBrush x:Key="ToggleButtonBackgroundChecked" Color="#1C4257" />
+    <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPointerOver" Color="#24516A" />
+    <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPressed" Color="#173749" />
+    <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedDisabled" Color="#661C4257" />
+    <SolidColorBrush x:Key="ToggleButtonForegroundChecked" Color="#EDEDF2" />
+    <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPointerOver" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="ToggleButtonForegroundCheckedPressed" Color="#EDEDF2" />
+    <SolidColorBrush x:Key="ToggleButtonForegroundCheckedDisabled" Color="#686872" />
+    <SolidColorBrush x:Key="ToggleButtonBorderBrushChecked" Color="Transparent" />
+    <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPointerOver" Color="Transparent" />
+    <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPressed" Color="Transparent" />
+    <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedDisabled" Color="Transparent" />
+
+    <!-- Strokes -->
+    <SolidColorBrush x:Key="UcadDividerBrush" Color="#404047" />
+    <!-- Settings cards: Figma #404047 at 60%. -->
+    <SolidColorBrush x:Key="UcadCardBorderBrush" Color="#99404047" />
+    <!-- Start quick actions: Figma #404047 at 75%; templates at 50%. -->
+    <SolidColorBrush x:Key="UcadStartActionBorderBrush" Color="#BF404047" />
+    <SolidColorBrush x:Key="UcadStartTemplateBorderBrush" Color="#80404047" />
+    <!-- About cards: Figma #40404A at full opacity. -->
+    <SolidColorBrush x:Key="UcadAboutCardBorderBrush" Color="#40404A" />
+    <SolidColorBrush x:Key="UcadControlBorderBrush" Color="#40404A" />
+    <SolidColorBrush x:Key="UcadDividerSoftBrush" Color="#2E3236" />
+
+    <!-- Canvas -->
     <SolidColorBrush x:Key="UcadGridBrush" Color="#382E383D" />
     <SolidColorBrush x:Key="UcadGeometryBrush" Color="#E69ED9F2" />
     <SolidColorBrush x:Key="UcadGeometrySecondaryBrush" Color="#949ED9F2" />
+
+    <!-- Figma geometry / spacing contract. GridLength is required for Grid rows/columns at runtime. -->
+    <GridLength x:Key="UcadTitleBarHeight">44</GridLength>
+    <GridLength x:Key="UcadCategoryBarHeight">44</GridLength>
+    <x:Double x:Key="UcadToolShelfHeight">64</x:Double>
+    <GridLength x:Key="UcadCommandLineHeight">34</GridLength>
+    <GridLength x:Key="UcadStatusBarHeight">30</GridLength>
+    <x:Double x:Key="UcadDocumentTabWidth">190</x:Double>
+    <x:Double x:Key="UcadDocumentTabHeight">34</x:Double>
+    <x:Double x:Key="UcadCommandSearchWidth">172</x:Double>
+    <x:Double x:Key="UcadSettingsButtonWidth">36</x:Double>
+    <GridLength x:Key="UcadToolRailWidth">52</GridLength>
+    <GridLength x:Key="UcadInspectorWidth">304</GridLength>
+    <GridLength x:Key="UcadSettingsNavWidth">228</GridLength>
+    <x:Double x:Key="UcadSettingsContentPadding">54</x:Double>
+    <x:Double x:Key="UcadSettingsContentTopPadding">42</x:Double>
+    <x:Double x:Key="UcadSettingsCardWidth">940</x:Double>
+    <x:Double x:Key="UcadSettingsCardHeight">72</x:Double>
+    <x:Double x:Key="UcadSettingsAboutCardHeight">128</x:Double>
+    <x:Double x:Key="UcadSettingsTitleToSectionSpacing">35</x:Double>
+    <x:Double x:Key="UcadSettingsSectionToCardSpacing">12</x:Double>
+    <x:Double x:Key="UcadSettingsCardSpacing">8</x:Double>
+    <x:Double x:Key="UcadSettingsSectionSpacing">30</x:Double>
+    <CornerRadius x:Key="UcadRadiusSmall">4</CornerRadius>
+    <CornerRadius x:Key="UcadRadiusMedium">5</CornerRadius>
+    <CornerRadius x:Key="UcadRadiusCard">7</CornerRadius>
+    <CornerRadius x:Key="UcadRadiusAboutCard">6</CornerRadius>
 
     <Style x:Key="UcadShellMenuButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="Transparent" />
@@ -92,5 +158,26 @@
         <Setter Property="MinWidth" Value="0" />
         <Setter Property="Padding" Value="8,4" />
         <Setter Property="FontSize" Value="10" />
+    </Style>
+
+    <Style x:Key="UcadSettingsNavButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource UcadTextSecondaryBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="5" />
+        <Setter Property="Width" Value="196" />
+        <Setter Property="Height" Value="36" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="Padding" Value="12,0" />
+        <Setter Property="FontSize" Value="11" />
+    </Style>
+
+    <Style x:Key="UcadSettingComboBoxStyle" TargetType="ComboBox">
+        <Setter Property="Height" Value="30" />
+        <Setter Property="MinWidth" Value="90" />
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="Background" Value="{StaticResource UcadControlFillSubtleBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource UcadControlBorderBrush}" />
+        <Setter Property="CornerRadius" Value="4" />
     </Style>
 </ResourceDictionary>

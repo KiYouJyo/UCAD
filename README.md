@@ -11,7 +11,7 @@
 
 UCAD 目标是建立一套 Windows 原生、接近 AutoCAD 操作习惯、面向建筑与规划高频二维制图任务的轻量 CAD。坚持 DXF-first、2D-first，不以复制完整 AutoCAD 为目标。
 
-**当前候选版本 v0.3.7 — UI Fidelity & HiDPI Foundation。** 在 v0.3.5/0.3.6 已建立的多文档工作区与 UI↔Core 状态桥之上，v0.3.7 恢复 PerMonitorV2 高 DPI 支持，并将实际 WinUI 3 Shell 高保真对齐已确认的 Figma v0.2：浏览器式图纸标签、持久分类工具架、左侧高频 Tool Rail、Inspector、命令行与状态栏。此版本不新增 CAD Core 命令，为 v0.4.0 的 Selection / OSNAP / Ortho 奠定稳定显示与交互壳层。
+**当前候选版本 v0.3.9 — UI Completion / Figma Fidelity / Start & Settings Foundation。** 本版本不增加新的 CAD Core 能力，而是以 Figma 为视觉 SSOT，完成浏览器式文档标签、Start Center、完整 Settings、三语资源、Fluent 图标、设计 Token、版本 SSOT 与 Shell 操作逻辑，为 v0.4.0 的 Selection / OSNAP / Inspector 继续开发冻结一套稳定 UI 基础。
 
 ## 安装
 
@@ -23,9 +23,19 @@ UCAD 目标是建立一套 Windows 原生、接近 AutoCAD 操作习惯、面向
 
 首次 one-click 安装仅在建立 `LocalMachine\TrustedPeople` 公钥信任时触发一次 UAC；MSIX 本体仍在当前用户上下文安装。
 
-## 当前工作区与命令
+## 工作区与页面
 
-每个顶部标签都是独立的内存 CAD 会话，分别保存自己的图形、Undo/Redo、命令状态和视图状态。当前尚未实现文件保存/打开，因此关闭含有绘图内容的标签会先提示内容将丢失。
+UCAD 当前明确区分三种标签内容：
+
+- **Drawing**：显示 Category Bar、Tool Shelf、Tool Rail、CAD Canvas、Inspector、Command Line 与 Status Bar。
+- **Start**：作为 CAD 新标签页 / Start Center。默认情况下标题栏 `+` 进入 Start，只有点击“新建图纸”才创建真正的 `CadWorkspaceSession`；如果关闭“新标签页显示开始页”，`+` 会直接创建空白 Drawing。
+- **Settings**：作为单例设置标签；不与 CAD Tool Rail / Inspector / Command Line / Status Bar 同时出现。
+
+Start 提供新建、打开入口、最近使用空状态、Blank / Architecture / Urban Planning 模板信息架构和 Learn UCAD。文件打开/保存、最近文件、专业模板等尚未实现的业务不会伪造为可用功能；相应入口会明确禁用或提示尚未支持。
+
+## 当前命令
+
+每个 Drawing 标签都是独立的内存 CAD 会话，分别保存自己的图形、Undo/Redo、命令状态和视图状态。当前尚未实现文件保存/打开，因此关闭含有绘图内容的标签会先提示内容将丢失。
 
 | 命令 | 别名 | 功能 |
 | --- | --- | --- |
@@ -39,32 +49,34 @@ UCAD 目标是建立一套 Windows 原生、接近 AutoCAD 操作习惯、面向
 | `CLEAR` | — | 清空图形 |
 | `RESETVIEW` | `RV` | 重置视图 |
 
-同一命令可从顶部工具架、左侧高频栏、命令搜索或底部命令行进入，最终统一路由到 `CommandRegistry` / `CommandSession`。点输入支持 `x,y`、`@x,y` 与已有基点后的距离；Enter / Space 确认，Esc 取消，空输入确认可重复上一命令。
+所有入口最终统一路由到 `CommandRegistry → CommandSession → CAD Core`。选择、MOVE/COPY/OFFSET/TRIM、图层、OSNAP、ORTHO 等规划中的能力已经预留在 UI 信息架构中，但对应 CAD Core 未实现前不会伪装成可用命令。
 
-选择、MOVE/COPY/OFFSET/TRIM、图层、OSNAP、ORTHO 等规划中的能力已经预留在 UI 信息架构中，但对应 CAD Core 未实现前不会伪装成可用命令。
+## Settings 与显示基线
 
-## 显示与界面基线
-
-- WinUI 3 / Windows App SDK 原生窗口；
-- `PerMonitorV2` 高 DPI awareness；
-- 1440×900 Figma v0.2 为当前 Shell 视觉基线；
-- 标题栏 44 px、分类栏 44 px、工具架 64 px、Tool Rail 52 px、Inspector 304 px、命令行 34 px、状态栏 30 px；
-- 通用动作优先使用 Fluent 系统图标，CAD 专业图标逐步建立 UCAD 自有 Fluent 扩展集。
+- WinUI 3 / Windows App SDK 原生窗口，`PerMonitorV2` 高 DPI awareness；
+- Figma 1440×900 Frame 为 UI 视觉 SSOT；
+- 标题栏 44、分类栏 44、工具架 64、Tool Rail 52、Inspector 304、命令行 34、状态栏 30 DIP；
+- Settings 左侧导航 228 DIP、内容起点 54 DIP、卡片 940×72 DIP，采用 35 / 12 / 8 / 30 DIP 纵向节奏；
+- **App Theme 与 CAD Canvas Theme 独立生效**：App Theme 会切换 Shell/控件明暗，Canvas Theme 独立控制几何、预览、栅格和十字光标调色板；画布背景也可独立设置；
+- 栅格显示/强度、光标中心缩放、中键平移、滚轮方向和坐标精度/小数格式会实时进入现有运行时逻辑；
+- 尚无底层能力的 Restore Session、手动 UI Scale、自动更新、最近文件清理等不会显示成“已实现”；
+- 通用动作优先使用 Fluent / WinUI 原生图标，CAD 专业图标使用 UCAD Fluent 风格 `PathIcon`；
+- 设置集中由 `SettingsService` / `AppSettings` 管理，并保存到 `%LOCALAPPDATA%\UCAD\settings.json`。
 
 ## 三语支持
 
-应用与仓库使用简体中文（zh-CN）、日本語（ja-JP）、English（en-US）三语资源。
+应用与仓库使用简体中文（zh-CN）、日本語（ja-JP）、English（en-US）三语资源。v0.3.9 的 Start 与全部 Settings 页面保持三语 key 一一对应。显示语言在下次启动创建 Shell 前统一应用，避免当前会话局部刷新后出现混语。
 
 ## 仓库结构
 
 ```text
 src/UCAD.Core/          几何、实体、文档历史与命令核心
-src/UCAD.App/           WinUI 3 / Win2D 工作区、交互、渲染与 MSIX
+src/UCAD.App/           WinUI 3 / Win2D Shell、页面、交互、渲染与 MSIX
 tests/                  自动化测试
 packaging/              一键安装与发布校验
 release/                发布 SSOT 元数据
 docs/                   架构与三语 Release Notes
-.github/workflows/       CI 与签名 GitHub Release
+.github/workflows/       CI 与发布工作流
 ```
 
 ## 开发
@@ -75,13 +87,17 @@ dotnet build src/UCAD.App/UCAD.App.csproj -c Debug -p:Platform=x64 -r win-x64
 dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release
 ```
 
+CI 强制覆盖 Core tests、app-build、真实启动 smoke、MSIX/package validation、三语资源契约、版本 SSOT、PerMonitorV2、Unicode 占位图标扫描、Figma 关键尺寸/颜色 Token 与 Start/Settings/Canvas 的行为契约。
+
+像素级 Figma 对照保留在手动 `UI Fidelity Screenshots` 工作流中；只有当运行器提供真实的 1440×900 交互桌面时才执行截图，因此它不会阻塞功能开发或发布。
+
 ## 文档
 
 - [路线图](ROADMAP.md)
 - [架构说明](docs/ARCHITECTURE.md)
 - [发布流程](docs/RELEASE-PROCESS.md)
 - [打包说明](packaging/README.md)
-- [v0.3.7 发布说明](docs/RELEASE-NOTES-v0.3.7.md)
+- [v0.3.9 发布说明](docs/RELEASE-NOTES-v0.3.9.md)
 
 ## 许可证
 
