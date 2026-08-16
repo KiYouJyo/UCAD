@@ -100,16 +100,31 @@ foreach ($contract in @(
 
 $interactionCode = Get-Content src/UCAD.App/MainWindow.Interaction.cs -Raw
 foreach ($contract in @(
-  'EnsureInteractionUiInitialized','VirtualKey.F3','VirtualKey.F8',
-  'ObjectSnapEnabled','OrthoEnabled','RefreshInspectorSelection',
-  'HasRegisteredCategory','CadCommandCategory.Modify','CadCommandCategory.View'
+  'EnsureInteractionUiInitialized','ScheduleInteractionSmoke',
+  'VirtualKey.F3','VirtualKey.F8','VirtualKey.Delete',
+  'ObjectSnapEnabled','OrthoEnabled','ObjectSnapKind.Center',
+  'RefreshInspectorSelection','ExecuteEraseSelection','RemoveRange(selectedIds)',
+  'HasRegisteredCategory','CadCommandCategory.Modify','CadCommandCategory.View',
+  'Interaction smoke: Selection + OSNAP + ORTHO + Inspector initialized'
 )) {
   if (-not $interactionCode.Contains($contract)) { throw "v0.4 shell interaction contract missing: $contract" }
 }
 
 $workspaceCode = Get-Content src/UCAD.App/Workspace/CadWorkspaceSession.cs -Raw
-foreach ($contract in @('CadInteractionState','ApplyDraftingDefaults','DefaultObjectSnap','DefaultSnapTypes','DefaultOrtho')) {
+foreach ($contract in @(
+  'CadInteractionState','ApplyDraftingDefaults','DefaultObjectSnap','DefaultSnapTypes','DefaultOrtho','ObjectSnapMode.Center'
+)) {
   if (-not $workspaceCode.Contains($contract)) { throw "Workspace drafting-state contract missing: $contract" }
+}
+
+$commandRegistryCode = Get-Content src/UCAD.Core/Commands/CommandRegistry.cs -Raw
+foreach ($contract in @('"ERASE"','"E"','"DELETE"','CadCommandCategory.Edit')) {
+  if (-not $commandRegistryCode.Contains($contract)) { throw "ERASE command registration contract missing: $contract" }
+}
+
+$documentCode = Get-Content src/UCAD.Core/CadDocument.cs -Raw
+foreach ($contract in @('RemoveRange(IEnumerable<Guid> ids)','CadDocumentChangeKind.RemoveRange','RecordMutation()')) {
+  if (-not $documentCode.Contains($contract)) { throw "One-step ERASE document contract missing: $contract" }
 }
 
 $commandSessionCode = Get-Content src/UCAD.Core/Commands/CommandSession.cs -Raw
@@ -150,9 +165,13 @@ foreach ($contract in @(
   'ResolveSystemLanguage()',
   'ApplyLanguagePreference',
   'ShellLiveMapName',
-  'GetShellString'
+  'GetShellString',
+  'CoreSnapOptionKey',
+  'Endpoint / Midpoint / Center / Intersection',
+  'StatusEraseNothing',
+  'StatusEraseCountFormat'
 )) {
-  if (-not $localizationCode.Contains($contract)) { throw "Missing explicit ResourceContext localization contract: $contract" }
+  if (-not $localizationCode.Contains($contract)) { throw "Missing explicit ResourceContext/v0.4 localization contract: $contract" }
 }
 if ($localizationCode -match 'PrimaryLanguageOverride\s*=') {
   throw 'Live localization must not mutate the process-global PrimaryLanguageOverride.'
@@ -175,7 +194,8 @@ if ($liveUiCode -match 'GetString\("[^"]+\.(Content|Text|PlaceholderText)"\)') {
 $appCode = Get-Content src/UCAD.App/App.xaml.cs -Raw
 foreach ($contract in @(
   'SettingsService.Current.SettingsChanged','ApplyLiveLocalizationFromSettings',
-  'mainWindow.RefreshLocalization()','EnsureInteractionUiInitialized','ScheduleLocalizationSmoke'
+  'mainWindow.RefreshLocalization()','EnsureInteractionUiInitialized',
+  'ScheduleLocalizationSmoke','ScheduleInteractionSmoke'
 )) {
   if (-not $appCode.Contains($contract)) { throw "App does not wire required shell service: $contract" }
 }
@@ -236,4 +256,4 @@ foreach ($locale in $locales) {
   }
 }
 
-Write-Output "Validated v0.4.0 interaction/core contracts, PMv2, version SSOT, frozen Figma tokens, live trilingual MRT resources, $($v039Baseline.Count) Start/Settings keys, and $($keySets['ShellLive']['zh-CN'].Count) ShellLive keys in zh-CN/ja-JP/en-US."
+Write-Output "Validated v0.4.0 Selection/ERASE/OSNAP/Ortho/Inspector contracts, PMv2, version SSOT, frozen Figma tokens, live trilingual MRT resources, $($v039Baseline.Count) Start/Settings keys, and $($keySets['ShellLive']['zh-CN'].Count) ShellLive keys in zh-CN/ja-JP/en-US."
