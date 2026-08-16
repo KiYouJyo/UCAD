@@ -7,6 +7,11 @@ public sealed class PolylineEntity : ICadEntity
     private readonly IReadOnlyList<CadPoint> _points;
 
     public PolylineEntity(IEnumerable<CadPoint> points, bool closed = false)
+        : this(points, closed, Guid.NewGuid())
+    {
+    }
+
+    internal PolylineEntity(IEnumerable<CadPoint> points, bool closed, Guid id)
     {
         ArgumentNullException.ThrowIfNull(points);
         var snapshot = points.ToArray();
@@ -17,9 +22,10 @@ public sealed class PolylineEntity : ICadEntity
 
         _points = Array.AsReadOnly(snapshot);
         Closed = closed;
+        Id = id;
     }
 
-    public Guid Id { get; } = Guid.NewGuid();
+    public Guid Id { get; }
 
     public IReadOnlyList<CadPoint> Points => _points;
 
