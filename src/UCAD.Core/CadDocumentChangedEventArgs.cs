@@ -6,6 +6,8 @@ public enum CadDocumentChangeKind
     AddRange,
     Remove,
     RemoveRange,
+    Replace,
+    ReplaceRange,
     Clear,
     Undo,
     Redo
