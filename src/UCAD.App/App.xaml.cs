@@ -30,6 +30,7 @@ public partial class App : Application
             LocalizationService.Current.ApplyFromSettings();
             var mainWindow = new MainWindow();
             mainWindow.RefreshLocalization();
+            mainWindow.EnsureInteractionUiInitialized();
             mainWindow.ScheduleLocalizationSmoke();
             _window = mainWindow;
             WriteStartupEvent("MainWindow constructed and localized");
