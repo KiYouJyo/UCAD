@@ -1,5 +1,5 @@
 using Microsoft.Windows.ApplicationModel.Resources;
-using Windows.Globalization;
+using Microsoft.Windows.Globalization;
 
 namespace UCAD.Services;
 
@@ -11,6 +11,7 @@ public sealed class LocalizationService
 {
     private const string DefaultMapName = "Resources";
     private const string V039MapName = "UcadV039";
+    private const string LiveReloadNoteKey = "Settings_Language_ReloadNote";
     private static readonly HashSet<string> SupportedLanguages = new(StringComparer.OrdinalIgnoreCase)
     {
         "zh-CN",
@@ -99,17 +100,26 @@ public sealed class LocalizationService
         return true;
     }
 
-    /// <summary>
-    /// Resolves a key from the default Resources map first, then from the v0.3.9
-    /// Start/Settings map. This keeps existing shell call sites stable.
-    /// </summary>
     public string GetString(string key)
     {
         var value = GetStringFromMap(key, DefaultMapName);
-        return string.IsNullOrWhiteSpace(value) ? GetStringFromMap(key, V039MapName) : value;
+        return string.IsNullOrWhiteSpace(value) ? GetV039String(key) : value;
     }
 
-    public string GetV039String(string key) => GetStringFromMap(key, V039MapName);
+    public string GetV039String(string key)
+    {
+        if (string.Equals(key, LiveReloadNoteKey, StringComparison.Ordinal))
+        {
+            return CurrentLanguageTag switch
+            {
+                "ja-JP" => "表示言語は現在のウィンドウ、Start、Settings、既存の図面タブへすぐに反映されます。UCAD の再起動は不要です。",
+                "en-US" => "Display-language changes apply immediately to the current window, Start, Settings, and existing drawing tabs. No UCAD restart is required.",
+                _ => "显示语言会立即应用到当前窗口、Start、Settings 与现有图纸标签，无需重启 UCAD。"
+            };
+        }
+
+        return GetStringFromMap(key, V039MapName);
+    }
 
     public string GetStringFromMap(string key, string mapName)
     {
@@ -142,8 +152,9 @@ public sealed class LocalizationService
             return new ResourceLoader();
         }
 
-        // ResourceLoader(string) is a PRI file-path constructor. Named .resw maps
-        // require the two-argument overload with the default PRI resource file.
+        // For a named .resw resource subtree, Windows App SDK requires the default
+        // PRI path plus the map name. ResourceLoader(string) treats its argument as
+        // the resource file/PRI path on current WinUI 3 localization guidance.
         return new ResourceLoader(ResourceLoader.GetDefaultResourceFilePath(), mapName);
     }
 
