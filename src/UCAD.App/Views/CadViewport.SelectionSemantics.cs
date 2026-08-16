@@ -1,69 +1,88 @@
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 using System.Numerics;
+using UCAD.Core.Geometry;
 using UCAD.Core.Interaction;
+using Windows.System;
 
 namespace UCAD.Views;
 
 public sealed partial class CadViewport
 {
-    private Guid[] _selectionPriorIds = [];
-    private Vector2 _selectionSemanticStartScreen;
-    private bool _selectionSemanticArmed;
-
     private void CadViewport_Loaded(object sender, RoutedEventArgs e)
     {
         Loaded -= CadViewport_Loaded;
 
-        // The primary pointer handlers own hit testing, capture and window rendering.
-        // These handled-events-too hooks add AutoCAD-style PICKADD semantics without
-        // duplicating selection ownership outside the document-scoped SelectionSet.
-        Canvas.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler(SelectionSemantic_PointerPressed), true);
-        Canvas.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(SelectionSemantic_PointerReleased), true);
+        // Keep the native arrow out of the drawing surface. The Win2D viewport draws
+        // the adjustable CAD crosshair/pickbox; the system cross is a small fallback
+        // at the hardware-pointer hotspot rather than a desktop arrow.
+        ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.Cross);
     }
 
-    private void SelectionSemantic_PointerPressed(object sender, PointerRoutedEventArgs e)
-    {
-        var point = e.GetCurrentPoint(Canvas);
-        if (_drawingCommand is not null || !point.Properties.IsLeftButtonPressed || point.Properties.IsMiddleButtonPressed)
-        {
-            _selectionSemanticArmed = false;
-            return;
-        }
+    private static bool ShiftSelection(PointerRoutedEventArgs e) =>
+        (e.KeyModifiers & VirtualKeyModifiers.Shift) != 0;
 
-        _selectionPriorIds = _interaction.Selection.SelectedIds.ToArray();
-        _selectionSemanticStartScreen = new Vector2((float)point.Position.X, (float)point.Position.Y);
-        _selectionSemanticArmed = true;
+    private void ArmTwoClickSelectionWindow(Vector2 screen, CadPoint world)
+    {
+        _selectionStartScreen = screen;
+        _selectionStartWorld = world;
+        _selectionWindowArmed = true;
+        _selectionPointerDown = false;
+        _selectionDragging = false;
+        _hoverEntityId = null;
+        Canvas.Invalidate();
     }
 
-    private void SelectionSemantic_PointerReleased(object sender, PointerRoutedEventArgs e)
+    private void CommitSelectionWindow(CadPoint endWorld, bool remove)
     {
-        if (!_selectionSemanticArmed)
-        {
-            return;
-        }
-        _selectionSemanticArmed = false;
+        var startScreen = WorldToScreen(_selectionStartWorld);
+        var rectangle = CadRect.FromPoints(_selectionStartWorld, endWorld);
+        var crossing = _pointerScreen.X < startScreen.X;
+        var ids = CadSelectionQuery.QueryWindow(_document.Entities, rectangle, crossing)
+            .Select(entity => entity.Id)
+            .ToArray();
 
-        var point = e.GetCurrentPoint(Canvas);
-        var releaseScreen = new Vector2((float)point.Position.X, (float)point.Position.Y);
-        var wasWindow = Vector2.Distance(_selectionSemanticStartScreen, releaseScreen) >= SelectionDragThresholdPixels;
-        var clickedEntity = wasWindow
-            ? null
-            : CadSelectionQuery.HitTestNearest(
-                _document.Entities,
-                ScreenToWorld(releaseScreen),
-                ClickSelectionAperturePixels / _zoom);
-
-        // Run after the primary release handler has committed the click/window result.
-        // Blank clicks deliberately keep the primary handler's Clear() behavior.
-        if (wasWindow || clickedEntity is not null)
+        if (remove)
         {
-            var previous = _selectionPriorIds;
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                _interaction.Selection.Add(previous);
-                Canvas.Invalidate();
-            });
+            _interaction.Selection.Remove(ids);
         }
+        else
+        {
+            _interaction.Selection.Add(ids);
+        }
+
+        _selectionWindowArmed = false;
+        _selectionPointerDown = false;
+        _selectionDragging = false;
+        Canvas.Invalidate();
+    }
+
+    private void ApplyPointSelection(Guid entityId, bool remove)
+    {
+        if (remove)
+        {
+            _interaction.Selection.Remove(entityId);
+        }
+        else
+        {
+            // AutoCAD-style PICKADD behavior: each new pick joins the current set.
+            _interaction.Selection.Add(entityId);
+        }
+    }
+
+    public bool CancelSelectionGesture()
+    {
+        if (!_selectionWindowArmed && !_selectionPointerDown && !_selectionDragging)
+        {
+            return false;
+        }
+
+        _selectionWindowArmed = false;
+        _selectionPointerDown = false;
+        _selectionDragging = false;
+        _hoverEntityId = null;
+        Canvas.Invalidate();
+        return true;
     }
 }
