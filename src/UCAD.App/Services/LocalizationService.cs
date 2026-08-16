@@ -15,6 +15,7 @@ public sealed class LocalizationService
     private const string ShellLiveMapName = "ShellLive";
     private const string LiveReloadNoteKey = "Settings_Language_ReloadNote";
     private const string DraftingInteractionNoteKey = "Settings_Drafting_PendingNote";
+    private const string CoreSnapOptionKey = "Settings_Option_SnapCore";
     private static readonly string[] SupportedLanguages = ["zh-CN", "ja-JP", "en-US"];
 
     private readonly Dictionary<string, ResourceMap?> _maps = new(StringComparer.OrdinalIgnoreCase);
@@ -111,6 +112,18 @@ public sealed class LocalizationService
                 "ja-JP" => "v0.4.0 では OSNAP と直交が実際の作図入力へ接続されています。ここで設定した既定値は新しい図面に適用され、作図中は F3 / F8 でも切り替えられます。",
                 "en-US" => "In v0.4.0, OSNAP and Ortho are connected to real drawing input. These defaults apply to new drawings and can be toggled during drafting with F3 / F8.",
                 _ => "v0.4.0 已将对象捕捉与正交接入真实绘图输入；此处默认值用于新图纸，绘图时也可通过 F3 / F8 随时切换。"
+            };
+        }
+
+        // v0.4.0 promotes Center to the complete foundational OSNAP set. Keep the
+        // historic resource ID so saved Settings values and the Figma contract remain stable.
+        if (string.Equals(key, CoreSnapOptionKey, StringComparison.Ordinal))
+        {
+            return CurrentLanguageTag switch
+            {
+                "ja-JP" => "端点 / 中点 / 中心 / 交点",
+                "en-US" => "Endpoint / Midpoint / Center / Intersection",
+                _ => "端点 / 中点 / 圆心 / 交点"
             };
         }
 
