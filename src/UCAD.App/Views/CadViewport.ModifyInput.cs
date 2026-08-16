@@ -123,7 +123,7 @@ public sealed partial class CadViewport
         if (_modifyPointInputActive && _interaction.ObjectSnapEnabled)
         {
             _activeSnap = ObjectSnapResolver.Resolve(
-                _document.Entities,
+                _document.VisibleEntities,
                 RawPointerWorldPosition,
                 _objectSnapAperturePixels / _zoom,
                 _interaction.ObjectSnapModes);
@@ -154,7 +154,7 @@ public sealed partial class CadViewport
         }
 
         var hit = CadSelectionQuery.HitTestNearest(
-            _document.Entities,
+            _document.SelectableEntities,
             RawPointerWorldPosition,
             _pickboxSizePixels / _zoom);
         if (hit is not null)
@@ -174,7 +174,7 @@ public sealed partial class CadViewport
         }
         _activeSnap = null;
         _hoverEntityId = CadSelectionQuery.HitTestNearest(
-            _document.Entities,
+            _document.SelectableEntities,
             RawPointerWorldPosition,
             _pickboxSizePixels / _zoom)?.Id;
     }
@@ -271,7 +271,7 @@ public sealed partial class CadViewport
         }
     }
 
-    private void DrawModifySnapMarker(CanvasDrawingSession drawingSession)
+    internal void DrawModifySnapMarker(CanvasDrawingSession drawingSession)
     {
         if (!_modifyPointInputActive || _activeSnap is null)
         {
