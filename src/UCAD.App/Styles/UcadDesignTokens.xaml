@@ -27,7 +27,7 @@
 
     <!-- Accent -->
     <SolidColorBrush x:Key="UcadAccentBrush" Color="#1F5275" />
-    <SolidColorBrush x:Key="UcadAccentSelectedBrush" Color="#266B96" />
+    <SolidColorBrush x:Key="UcadAccentSelectedBrush" Color="#1F5275" />
     <SolidColorBrush x:Key="UcadAccentHoverBrush" Color="#2C759F" />
     <SolidColorBrush x:Key="UcadAccentTextBrush" Color="#60B7F0" />
     <SolidColorBrush x:Key="UcadAccentStrokeBrush" Color="#594DADF5" />
