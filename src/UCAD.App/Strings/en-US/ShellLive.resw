@@ -70,4 +70,31 @@
   <data name="StatusOsnapOffMessage" xml:space="preserve"><value>Object snap off (F3)</value></data>
   <data name="StatusOrthoOnMessage" xml:space="preserve"><value>Ortho mode on (F8)</value></data>
   <data name="StatusOrthoOffMessage" xml:space="preserve"><value>Ortho mode off (F8)</value></data>
+  <data name="ModifySelectObjects" xml:space="preserve"><value>Select objects, then press Enter.</value></data>
+  <data name="ModifyBasePoint" xml:space="preserve"><value>Specify base point.</value></data>
+  <data name="ModifyPointRequired" xml:space="preserve"><value>Specify a valid point.</value></data>
+  <data name="ModifyMoveTarget" xml:space="preserve"><value>Specify second point or displacement.</value></data>
+  <data name="ModifyCopyTarget" xml:space="preserve"><value>Specify second point for the copy.</value></data>
+  <data name="ModifyRotationAngle" xml:space="preserve"><value>Specify rotation angle in degrees or pick a point.</value></data>
+  <data name="ModifyScaleFactor" xml:space="preserve"><value>Specify a positive scale factor or pick a point.</value></data>
+  <data name="ModifyMirrorFirstPoint" xml:space="preserve"><value>Specify first point of mirror line.</value></data>
+  <data name="ModifyMirrorSecondPoint" xml:space="preserve"><value>Specify second point of mirror line.</value></data>
+  <data name="ModifyMirrorEraseSource" xml:space="preserve"><value>Erase source objects? [Yes/No] &lt;No&gt;:</value></data>
+  <data name="ModifyOffsetDistance" xml:space="preserve"><value>Specify offset distance.</value></data>
+  <data name="ModifyOffsetPickEntity" xml:space="preserve"><value>Select object to offset.</value></data>
+  <data name="ModifyOffsetSidePoint" xml:space="preserve"><value>Specify point on side to offset.</value></data>
+  <data name="ModifyTrimPick" xml:space="preserve"><value>Select object segment to trim; press Enter to finish.</value></data>
+  <data name="ModifyExtendPick" xml:space="preserve"><value>Select object end to extend; press Enter to finish.</value></data>
+  <data name="ModifyComplete" xml:space="preserve"><value>Modify command completed.</value></data>
+  <data name="ModifyTrimContinue" xml:space="preserve"><value>Trimmed. Select another segment or press Enter to finish.</value></data>
+  <data name="ModifyTrimNoBoundary" xml:space="preserve"><value>No valid trimming boundary found at that pick.</value></data>
+  <data name="ModifyExtendContinue" xml:space="preserve"><value>Extended. Select another end or press Enter to finish.</value></data>
+  <data name="ModifyExtendNoBoundary" xml:space="preserve"><value>No valid extension boundary found in that direction.</value></data>
+  <data name="ModifyMoveComplete" xml:space="preserve"><value>Move completed.</value></data>
+  <data name="ModifyCopyComplete" xml:space="preserve"><value>Copy completed.</value></data>
+  <data name="ModifyRotateComplete" xml:space="preserve"><value>Rotate completed.</value></data>
+  <data name="ModifyScaleComplete" xml:space="preserve"><value>Scale completed.</value></data>
+  <data name="ModifyMirrorComplete" xml:space="preserve"><value>Mirror completed.</value></data>
+  <data name="ModifyOffsetInvalid" xml:space="preserve"><value>Offset could not be created on that side.</value></data>
+  <data name="ModifyOffsetComplete" xml:space="preserve"><value>Offset completed.</value></data>
 </root>
