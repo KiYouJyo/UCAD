@@ -14,6 +14,11 @@ foreach ($fake in @('╱','⌁','▭','○','◜','↖','✥','⧉','▧','⬚',
   if ($allXaml.Contains($fake)) { throw "Unicode placeholder icon remains in production XAML: $fake" }
 }
 
+$productionUiText = (Get-ChildItem src/UCAD.App -Recurse -File | Where-Object Extension -in @('.xaml','.resw','.cs') | ForEach-Object { Get-Content $_.FullName -Raw }) -join "`n"
+if ($productionUiText -match 'v0\.3\.[0-8]') {
+  throw "Stale pre-v0.3.9 version literal remains in production UI/source: $($Matches[0])"
+}
+
 $tokens = Get-Content src/UCAD.App/Styles/UcadDesignTokens.xaml -Raw
 foreach ($required in @('UcadTitleBarHeight','UcadCategoryBarHeight','UcadToolShelfHeight','UcadDocumentTabWidth','UcadSettingsNavWidth','UcadSettingsCardWidth','UcadSettingsCardHeight','UcadSettingsTitleToSectionSpacing','UcadSettingsSectionToCardSpacing','UcadSettingsCardSpacing','UcadSettingsSectionSpacing')) {
   if ($tokens -notmatch [regex]::Escape($required)) { throw "Missing Figma design token: $required" }
@@ -29,7 +34,9 @@ foreach ($visualContract in @(
   '<SolidColorBrush x:Key="UcadNavigationBrush" Color="#1D1D20" />',
   '<SolidColorBrush x:Key="UcadCardBrush" Color="#222225" />',
   '<SolidColorBrush x:Key="UcadCardBorderBrush" Color="#99404047" />',
-  '<SolidColorBrush x:Key="UcadAccentSelectedBrush" Color="#1F5275" />'
+  '<SolidColorBrush x:Key="UcadAccentSelectedBrush" Color="#1F5275" />',
+  '<SolidColorBrush x:Key="UcadCategorySelectedBrush" Color="#1C4257" />',
+  '<SolidColorBrush x:Key="ToggleButtonBackgroundChecked" Color="#1C4257" />'
 )) {
   if (-not $tokens.Contains($visualContract)) { throw "Figma visual token mismatch: $visualContract" }
 }
@@ -84,4 +91,4 @@ foreach ($required in @('Start_TabTitle','Settings_TabTitle','Settings_General_T
   if ($required -notin $v039Baseline) { throw "Missing required localized UI key: $required" }
 }
 
-Write-Output "Validated UI fidelity, PMv2, version SSOT, icon rules, exact Figma surface tokens, and $($v039Baseline.Count) v0.3.9 keys in zh-CN/ja-JP/en-US."
+Write-Output "Validated UI fidelity, PMv2, version SSOT, icon rules, stale-version hygiene, exact Figma surface/toggle tokens, and $($v039Baseline.Count) v0.3.9 keys in zh-CN/ja-JP/en-US."
