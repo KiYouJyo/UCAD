@@ -19,6 +19,20 @@ public sealed class CommandSystemTests
     }
 
     [Fact]
+    public void RegistryExposesEraseThroughCadStyleTokens()
+    {
+        var registry = CommandRegistry.CreateDefault();
+
+        Assert.True(registry.TryResolve("ERASE", out var canonical));
+        Assert.True(registry.TryResolve("E", out var alias));
+        Assert.True(registry.TryResolve("DELETE", out var deleteToken));
+        Assert.NotNull(canonical);
+        Assert.Same(canonical, alias);
+        Assert.Same(canonical, deleteToken);
+        Assert.Equal(CadCommandCategory.Edit, canonical!.Category);
+    }
+
+    [Fact]
     public void RegistryRejectsDuplicateTokens()
     {
         var registry = new CommandRegistry();
