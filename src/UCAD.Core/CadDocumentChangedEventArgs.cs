@@ -9,6 +9,10 @@ public enum CadDocumentChangeKind
     Replace,
     ReplaceRange,
     Clear,
+    LayerTable,
+    CurrentLayer,
+    EntityProperties,
+    BlockTable,
     Undo,
     Redo
 }
@@ -23,8 +27,6 @@ public sealed class CadDocumentChangedEventArgs : EventArgs
     }
 
     public CadDocumentChangeKind Kind { get; }
-
     public int EntityCount { get; }
-
     public long Revision { get; }
 }
