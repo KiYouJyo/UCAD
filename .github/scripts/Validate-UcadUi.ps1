@@ -44,6 +44,7 @@ if ($project -match '<Version>|<AssemblyVersion>|<FileVersion>|<InformationalVer
 }
 
 foreach ($path in @(
+  'src/UCAD.App/Interop/TransparentInputCursor.cs',
   'src/UCAD.App/MainWindow.Interaction.cs',
   'src/UCAD.App/MainWindow.Localization.cs',
   'src/UCAD.App/Services/AppSettings.cs',
@@ -71,19 +72,29 @@ Assert-Contains $viewport @(
   'settings.CrosshairSizePercent','settings.PickboxSize','settings.ObjectSnapAperture'
 ) 'Viewport interaction'
 
-# AutoCAD-style selection semantics and the clean custom CAD pointer live in a separate partial.
+# The native Windows pointer must be suppressed through the XAML cursor system itself,
+# not by racing WinUI with SetCursor/WM_SETCURSOR hooks.
 $selectionSemantics = Get-Content src/UCAD.App/Views/CadViewport.SelectionSemantics.cs -Raw
 Assert-Contains $selectionSemantics @(
-  'SetCursor(IntPtr.Zero)','Canvas.PointerEntered += Canvas_HideNativeCursor',
-  'Canvas.PointerMoved += Canvas_HideNativeCursor','Canvas.PointerExited += Canvas_RestoreNativeCursor',
+  'ProtectedCursor = TransparentInputCursor.GetOrCreate()',
   'VirtualKeyModifiers.Shift','CadSelectionQuery.QueryWindow',
   'ArmTwoClickSelectionWindow','CommitSelectionWindow',
   '_interaction.Selection.Add(ids)','_interaction.Selection.Remove(ids)',
   'ApplyPointSelection','CancelSelectionGesture'
 ) 'CAD selection/cursor semantics'
-if ($selectionSemantics.Contains('InputSystemCursorShape.Cross')) {
-  throw 'The native Windows cross cursor must not be layered over the Win2D CAD cursor.'
+if ($selectionSemantics -match 'SetCursor\(|WM_SETCURSOR|InputSystemCursorShape\.Cross') {
+  throw 'CAD viewport must not layer or race a native system cursor over the Win2D CAD cursor.'
 }
+if (Test-Path 'src/UCAD.App/Views/CadViewport.NativeCursorWindowSubclass.cs') {
+  throw 'Obsolete WM_SETCURSOR subclass workaround must remain removed.'
+}
+
+$transparentCursor = Get-Content src/UCAD.App/Interop/TransparentInputCursor.cs -Raw
+Assert-Contains $transparentCursor @(
+  'CreateCursor(','IInputCursorStaticsInterop','CreateFromHCursor',
+  'WinRT.MarshalInspectable<InputCursor>.FromAbi','Array.Fill(andPlane, (byte)0xFF)',
+  'DestroyCursor(hCursor)'
+) 'Transparent WinUI InputCursor'
 
 $selectionSet = Get-Content src/UCAD.Core/Interaction/SelectionSet.cs -Raw
 Assert-Contains $selectionSet @('Remove(IEnumerable<Guid> ids)','_selectedIds.Remove(id)') 'Shift-style selection removal'
@@ -163,4 +174,4 @@ foreach ($mapName in @('Resources','UcadV039','ShellLive')) {
   }
 }
 
-Write-Output 'Validated v0.4.1 two-click Window/Crossing, Shift removal, clean Win2D CAD cursor, adjustable pickbox/aperture, v0.4 interaction foundation, PMv2, version SSOT, frozen Figma tokens, and live trilingual resources.'
+Write-Output 'Validated v0.4.1 two-click Window/Crossing, Shift removal, transparent WinUI ProtectedCursor + Win2D CAD cursor, adjustable pickbox/aperture, v0.4 interaction foundation, PMv2, version SSOT, frozen Figma tokens, and live trilingual resources.'
