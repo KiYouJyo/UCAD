@@ -18,9 +18,20 @@ $tokens = Get-Content src/UCAD.App/Styles/UcadDesignTokens.xaml -Raw
 foreach ($required in @('UcadTitleBarHeight','UcadCategoryBarHeight','UcadToolShelfHeight','UcadDocumentTabWidth','UcadSettingsNavWidth','UcadSettingsCardWidth','UcadSettingsCardHeight','UcadSettingsTitleToSectionSpacing','UcadSettingsSectionToCardSpacing','UcadSettingsCardSpacing','UcadSettingsSectionSpacing')) {
   if ($tokens -notmatch [regex]::Escape($required)) { throw "Missing Figma design token: $required" }
 }
-foreach ($pair in @(@('UcadDocumentTabWidth','190'),@('UcadSettingsNavWidth','228'),@('UcadSettingsCardWidth','940'),@('UcadSettingsCardHeight','72'),@('UcadSettingsTitleToSectionSpacing','35'),@('UcadSettingsSectionToCardSpacing','12'),@('UcadSettingsCardSpacing','8'),@('UcadSettingsSectionSpacing','30'))) {
+foreach ($pair in @(@('UcadDocumentTabWidth','190'),@('UcadSettingsNavWidth','228'),@('UcadSettingsCardWidth','940'),@('UcadSettingsCardHeight','72'),@('UcadSettingsTitleToSectionSpacing','35'),@('UcadSettingsSectionToCardSpacing','12'),@('UcadSettingsCardSpacing','8'),@('UcadSettingsSectionSpacing','30'),@('UcadRadiusCard','7'))) {
   $needle = ('x:Key="{0}">{1}<' -f $pair[0], $pair[1])
   if (-not $tokens.Contains($needle)) { throw "Figma token mismatch: $($pair[0])" }
+}
+foreach ($visualContract in @(
+  '<SolidColorBrush x:Key="UcadAppBackgroundBrush" Color="#18181A" />',
+  '<SolidColorBrush x:Key="UcadTitleBarBrush" Color="#202022" />',
+  '<SolidColorBrush x:Key="UcadCategoryBarBrush" Color="#252528" />',
+  '<SolidColorBrush x:Key="UcadNavigationBrush" Color="#1D1D20" />',
+  '<SolidColorBrush x:Key="UcadCardBrush" Color="#222225" />',
+  '<SolidColorBrush x:Key="UcadCardBorderBrush" Color="#99404047" />',
+  '<SolidColorBrush x:Key="UcadAccentSelectedBrush" Color="#1F5275" />'
+)) {
+  if (-not $tokens.Contains($visualContract)) { throw "Figma visual token mismatch: $visualContract" }
 }
 
 $version = (Get-Content VERSION -Raw).Trim()
@@ -73,4 +84,4 @@ foreach ($required in @('Start_TabTitle','Settings_TabTitle','Settings_General_T
   if ($required -notin $v039Baseline) { throw "Missing required localized UI key: $required" }
 }
 
-Write-Output "Validated UI fidelity, PMv2, version SSOT, icon rules, and $($v039Baseline.Count) v0.3.9 keys in zh-CN/ja-JP/en-US."
+Write-Output "Validated UI fidelity, PMv2, version SSOT, icon rules, exact Figma surface tokens, and $($v039Baseline.Count) v0.3.9 keys in zh-CN/ja-JP/en-US."
