@@ -19,7 +19,7 @@ public sealed class CadWorkspaceSession
 
     public int Ordinal { get; }
 
-    public string DisplayName { get; }
+    public string DisplayName { get; private set; }
 
     public CadDocument Document { get; }
 
@@ -36,4 +36,12 @@ public sealed class CadWorkspaceSession
     public long SavedRevision { get; set; }
 
     public bool IsDirty => Document.Revision != SavedRevision;
+
+    public void UpdateDisplayName(string displayName)
+    {
+        if (!string.IsNullOrWhiteSpace(displayName))
+        {
+            DisplayName = displayName;
+        }
+    }
 }
