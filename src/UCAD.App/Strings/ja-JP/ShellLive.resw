@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="File" xml:space="preserve"><value>ファイル</value></data>
+  <data name="Edit" xml:space="preserve"><value>編集</value></data>
+  <data name="View" xml:space="preserve"><value>表示</value></data>
+  <data name="NewDrawing" xml:space="preserve"><value>新しい図面</value></data>
+  <data name="CloseDrawing" xml:space="preserve"><value>現在の図面を閉じる</value></data>
+  <data name="Undo" xml:space="preserve"><value>元に戻す</value></data>
+  <data name="Redo" xml:space="preserve"><value>やり直し</value></data>
+  <data name="Clear" xml:space="preserve"><value>図面を全消去</value></data>
+  <data name="ResetView" xml:space="preserve"><value>ビューをリセット</value></data>
+  <data name="CategoryDraw" xml:space="preserve"><value>作図</value></data>
+  <data name="CategoryModify" xml:space="preserve"><value>修正</value></data>
+  <data name="CategoryAnnotate" xml:space="preserve"><value>注釈</value></data>
+  <data name="CategoryLayers" xml:space="preserve"><value>レイヤー</value></data>
+  <data name="CategoryBlocks" xml:space="preserve"><value>ブロック</value></data>
+  <data name="CategoryMeasure" xml:space="preserve"><value>計測</value></data>
+  <data name="CategoryView" xml:space="preserve"><value>表示</value></data>
+  <data name="CommandSearchPlaceholder" xml:space="preserve"><value>コマンドを検索</value></data>
+  <data name="ToolLine" xml:space="preserve"><value>線分</value></data>
+  <data name="ToolPolyline" xml:space="preserve"><value>ポリライン</value></data>
+  <data name="ToolRectangle" xml:space="preserve"><value>長方形</value></data>
+  <data name="ToolCircle" xml:space="preserve"><value>円</value></data>
+  <data name="ToolArc" xml:space="preserve"><value>円弧</value></data>
+  <data name="ToolHatch" xml:space="preserve"><value>ハッチ</value></data>
+  <data name="ToolBoundary" xml:space="preserve"><value>境界</value></data>
+  <data name="ToolRay" xml:space="preserve"><value>放射線</value></data>
+  <data name="ToolConstruction" xml:space="preserve"><value>構築線</value></data>
+  <data name="InspectorProperties" xml:space="preserve"><value>プロパティ</value></data>
+  <data name="InspectorLayers" xml:space="preserve"><value>レイヤー</value></data>
+  <data name="InspectorNoSelection" xml:space="preserve"><value>選択なし</value></data>
+  <data name="InspectorSelectionUnavailable" xml:space="preserve"><value>選択機能は v0.4.0 で接続します。現在はアクティブ図面の状態を表示します。</value></data>
+  <data name="InspectorDocument" xml:space="preserve"><value>図面</value></data>
+  <data name="InspectorEntityCount" xml:space="preserve"><value>エンティティ数</value></data>
+  <data name="InspectorActiveCommand" xml:space="preserve"><value>実行中コマンド</value></data>
+  <data name="InspectorUndoAvailable" xml:space="preserve"><value>元に戻せる</value></data>
+  <data name="InspectorRedoAvailable" xml:space="preserve"><value>やり直せる</value></data>
+  <data name="InspectorFoundationHint" xml:space="preserve"><value>HiDPI とワークスペースの視覚基盤は整備済みです。v0.4.0 では既存の CadWorkspaceSession 境界に選択・スナップ・直交を接続します。</value></data>
+  <data name="CommandPrompt" xml:space="preserve"><value>コマンド:</value></data>
+  <data name="CommandInputPlaceholder" xml:space="preserve"><value>コマンド、座標、距離を入力</value></data>
+  <data name="StatusSnap" xml:space="preserve"><value>スナップ</value></data>
+  <data name="StatusGrid" xml:space="preserve"><value>グリッド</value></data>
+  <data name="StatusOrtho" xml:space="preserve"><value>直交</value></data>
+  <data name="StatusPolar" xml:space="preserve"><value>極軸</value></data>
+  <data name="StatusOsnap" xml:space="preserve"><value>OSNAP</value></data>
+  <data name="StatusOtrack" xml:space="preserve"><value>OTRACK</value></data>
+</root>
