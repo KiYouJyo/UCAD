@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using UCAD.Core.Commands;
 using UCAD.Core.Entities;
 using UCAD.Core.Interaction;
 using UCAD.Services;
@@ -24,6 +25,7 @@ public sealed partial class MainWindow
         }
 
         _interactionUiInitialized = true;
+        ApplyRegisteredCapabilityState();
 
         // v0.4.0 activates only the drafting aids that have real interaction logic.
         // SNAP (grid snap), POLAR and OTRACK remain reserved rather than becoming no-op buttons.
@@ -37,6 +39,20 @@ public sealed partial class MainWindow
 
         RefreshActiveInteractionUi();
     }
+
+    private void ApplyRegisteredCapabilityState()
+    {
+        DrawCategoryButton.IsEnabled = HasRegisteredCategory(CadCommandCategory.Draw);
+        ModifyCategoryButton.IsEnabled = HasRegisteredCategory(CadCommandCategory.Modify);
+        AnnotateCategoryButton.IsEnabled = HasRegisteredCategory(CadCommandCategory.Annotate);
+        LayersCategoryButton.IsEnabled = HasRegisteredCategory(CadCommandCategory.Layer);
+        BlocksCategoryButton.IsEnabled = HasRegisteredCategory(CadCommandCategory.Block);
+        MeasureCategoryButton.IsEnabled = HasRegisteredCategory(CadCommandCategory.Measure);
+        ViewCategoryButton.IsEnabled = HasRegisteredCategory(CadCommandCategory.View);
+    }
+
+    private bool HasRegisteredCategory(CadCommandCategory category) =>
+        _commandRegistry.Commands.Any(command => command.Category == category);
 
     private void Interaction_DocumentTabsSelectionChanged(object sender, Microsoft.UI.Xaml.Controls.SelectionChangedEventArgs e)
     {
