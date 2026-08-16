@@ -30,6 +30,7 @@ public sealed class AppSettings
 
     // CAD pointer/selection defaults intentionally mirror familiar AutoCAD-style concepts:
     // CURSORSIZE is a drawing-area percentage; PICKBOX and APERTURE are screen-space sizes.
+    public int CadPointerSettingsRevision { get; set; }
     public int CrosshairSizePercent { get; set; } = 100;
     public int PickboxSize { get; set; } = 10;
     public int ObjectSnapAperture { get; set; } = 10;
