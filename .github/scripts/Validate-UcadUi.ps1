@@ -6,7 +6,7 @@ function Assert-Contains([string]$Text, [string[]]$Needles, [string]$Scope) {
   }
 }
 
-# v0.4.0 deliberately freezes the v0.3.x shell geometry while interaction work proceeds.
+# v0.4.1 deliberately freezes the v0.3.x shell geometry while CAD interaction work proceeds.
 $manifest = Get-Content src/UCAD.App/app.manifest -Raw
 if ($manifest -notmatch 'PerMonitorV2') { throw 'UCAD must declare PerMonitorV2.' }
 
@@ -39,7 +39,7 @@ Assert-Contains $tokens @(
 $version = (Get-Content VERSION -Raw).Trim()
 $release = Get-Content release/release.json -Raw | ConvertFrom-Json
 [xml]$package = Get-Content src/UCAD.App/Package.appxmanifest -Raw
-if ($version -ne '0.4.0') { throw "Expected VERSION 0.4.0, got $version" }
+if ($version -ne '0.4.1') { throw "Expected VERSION 0.4.1, got $version" }
 if ($release.product.version -ne $version) { throw 'release.json version must match VERSION.' }
 if ($release.product.packageVersion -ne "$version.0") { throw 'release packageVersion must be VERSION + .0.' }
 if ($package.Package.Identity.Version -ne "$version.0") { throw 'MSIX Identity.Version must match VERSION + .0.' }
@@ -54,6 +54,7 @@ foreach ($path in @(
   'src/UCAD.App/MainWindow.Localization.cs',
   'src/UCAD.App/Services/LocalizationService.cs',
   'src/UCAD.App/Views/CadViewport.SelectionSemantics.cs',
+  'src/UCAD.App/Views/UcadSettingsPage.CadPointer.cs',
   'src/UCAD.Core/Geometry/CadRect.cs',
   'src/UCAD.Core/Interaction/CadEntityGeometry.cs',
   'src/UCAD.Core/Interaction/CadInteractionState.cs',
@@ -69,20 +70,31 @@ $viewport = Get-Content src/UCAD.App/Views/CadViewport.xaml.cs -Raw
 Assert-Contains $viewport @(
   'CadSelectionQuery.HitTestNearest','CadSelectionQuery.QueryWindow','ObjectSnapResolver.Resolve',
   'OrthoConstraint.Apply','_interaction.Selection','DrawSelectionGrips','DrawSelectionWindow','DrawSnapMarker',
-  'settings.SelectionPreview','ObjectSnapAperturePixels / _zoom'
+  'settings.SelectionPreview','_objectSnapAperturePixels / _zoom',
+  '_selectionWindowArmed','ArmTwoClickSelectionWindow','CommitSelectionWindow',
+  'DrawCadCursor','_crosshairSizePercent','_pickboxSizePixels','settings.CrosshairSizePercent',
+  'settings.PickboxSize','settings.ObjectSnapAperture'
 ) 'Viewport interaction'
 
 $selectionSemantics = Get-Content src/UCAD.App/Views/CadViewport.SelectionSemantics.cs -Raw
-Assert-Contains $selectionSemantics @('SelectedIds.ToArray()','Selection.Add(previous)','PointerReleasedEvent') 'Additive selection'
+Assert-Contains $selectionSemantics @(
+  'InputSystemCursorShape.Cross','VirtualKeyModifiers.Shift',
+  'ArmTwoClickSelectionWindow','CommitSelectionWindow',
+  '_interaction.Selection.Add(ids)','_interaction.Selection.Remove(ids)',
+  'ApplyPointSelection','CancelSelectionGesture'
+) 'AutoCAD-style selection/cursor semantics'
+
+$selectionSet = Get-Content src/UCAD.Core/Interaction/SelectionSet.cs -Raw
+Assert-Contains $selectionSet @('Remove(IEnumerable<Guid> ids)','_selectedIds.Remove(id)') 'Shift-style selection removal'
 
 $interaction = Get-Content src/UCAD.App/MainWindow.Interaction.cs -Raw
 Assert-Contains $interaction @(
   'EnsureInteractionUiInitialized','ScheduleInteractionSmoke',
-  'VirtualKey.F3','VirtualKey.F8','VirtualKey.Delete','FocusManager.GetFocusedElement',
+  'VirtualKey.F3','VirtualKey.F8','VirtualKey.Delete','VirtualKey.Escape','FocusManager.GetFocusedElement',
   'ObjectSnapEnabled','OrthoEnabled','ObjectSnapKind.Center',
   'RefreshInspectorSelection','ExecuteEraseSelection','RemoveRange(selectedIds)',
   'HasRegisteredCategory','CadCommandCategory.Modify','CadCommandCategory.View',
-  'CommandSession.ActiveCommand?.Name == "ERASE"',
+  'CommandSession.ActiveCommand?.Name == "ERASE"','session.Viewport.CancelSelectionGesture()',
   'Interaction smoke: Selection + ERASE + OSNAP + ORTHO + Inspector initialized'
 ) 'Shell interaction'
 
@@ -100,7 +112,7 @@ Assert-Contains $document @('RemoveRange(IEnumerable<Guid> ids)','CadDocumentCha
 $commandSession = Get-Content src/UCAD.Core/Commands/CommandSession.cs -Raw
 Assert-Contains $commandSession @('event EventHandler? Changed','Changed?.Invoke') 'Observable CommandSession'
 
-# Settings remain honest while the three drafting defaults now initialize real v0.4 state.
+# Settings remain honest while drafting and cursor defaults initialize real runtime state.
 $startXaml = Get-Content src/UCAD.App/Views/StartPage.xaml -Raw
 if ($startXaml -notmatch 'x:Name="RecentShowAllButton"[^>]*IsEnabled="False"') {
   throw 'Recent Show All must remain disabled until real recent-file storage exists.'
@@ -111,6 +123,19 @@ Assert-Contains $settings @(
   'disabledValues: new HashSet<string>(StringComparer.Ordinal) { "RestoreSession" }',
   'displayLanguage.IsEnabled = !value','TokenDouble("UcadSettingsCardWidth")'
 ) 'Settings'
+
+$cursorSettings = Get-Content src/UCAD.App/Views/UcadSettingsPage.CadPointer.cs -Raw
+Assert-Contains $cursorSettings @(
+  'CrosshairSizePercent','PickboxSize','ObjectSnapAperture',
+  'NumericSlider','5,','100,','CAD カーソル','CAD cursor','CAD 光标'
+) 'CAD cursor settings'
+
+$appSettings = Get-Content src/UCAD.App/Services/AppSettings.cs -Raw
+Assert-Contains $appSettings @(
+  'CrosshairSizePercent { get; set; } = 100',
+  'PickboxSize { get; set; } = 6',
+  'ObjectSnapAperture { get; set; } = 10'
+) 'CAD pointer defaults'
 
 # v0.3.10 no-restart localization must survive v0.4 interaction changes.
 $localization = Get-Content src/UCAD.App/Services/LocalizationService.cs -Raw
@@ -184,4 +209,4 @@ foreach ($locale in $locales) {
   }
 }
 
-Write-Output "Validated v0.4.0 Selection/ERASE/OSNAP/Ortho/Inspector contracts, PMv2, version SSOT, frozen Figma tokens, and live zh-CN/ja-JP/en-US resources."
+Write-Output "Validated v0.4.1 two-click Window/Crossing + Shift removal + CAD cursor + ERASE/OSNAP/Ortho/Inspector contracts, PMv2, version SSOT, frozen Figma tokens, and live zh-CN/ja-JP/en-US resources."
