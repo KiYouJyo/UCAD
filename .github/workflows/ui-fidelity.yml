@@ -23,29 +23,42 @@ jobs:
         with:
           dotnet-version: '10.0.302'
 
-      - name: Build unsigned x64 MSIX bundle
+      - name: Build unsigned x64 MSIX layout source
         shell: pwsh
         run: |
           $output = Join-Path $env:RUNNER_TEMP 'UCAD-UiPackages'
           dotnet build src/UCAD.App/UCAD.App.csproj -c Release -p:Platform=x64 -r win-x64 -p:GenerateAppxPackageOnBuild=true -p:AppxPackageSigningEnabled=false -p:AppxBundle=Always -p:AppxBundlePlatforms=x64 -p:UapAppxPackageBuildMode=SideloadOnly -p:AppxPackageDir="$output\"
           if ($LASTEXITCODE -ne 0) { throw "MSIX build failed: $LASTEXITCODE" }
-          $bundle = @(Get-ChildItem $output -Recurse -Filter '*.msixbundle') | Select-Object -First 1
-          if (-not $bundle) { throw 'MSIX bundle was not produced.' }
-          "BUNDLE_PATH=$($bundle.FullName)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          $msix = @(Get-ChildItem $output -Recurse -Filter '*.msix' | Where-Object { $_.Name -notlike '*.msixbundle' }) | Select-Object -First 1
+          if (-not $msix) { throw 'x64 MSIX was not produced.' }
+          "MSIX_PATH=$($msix.FullName)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
 
-      - name: Install unsigned packaged UCAD for UI capture
+      - name: Register loose packaged UCAD for UI capture
         shell: pwsh
         run: |
           $appModelUnlock = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock'
           New-Item -Path $appModelUnlock -Force | Out-Null
           New-ItemProperty -Path $appModelUnlock -Name AllowDevelopmentWithoutDevLicense -PropertyType DWord -Value 1 -Force | Out-Null
-          Add-AppxPackage -Path $env:BUNDLE_PATH -AllowUnsigned
+
+          $kitsRoot = [Environment]::GetEnvironmentVariable('ProgramFiles(x86)')
+          $makeappx = Get-ChildItem (Join-Path $kitsRoot 'Windows Kits\10\bin') -Recurse -Filter makeappx.exe | Where-Object FullName -match '\\x64\\makeappx.exe$' | Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $makeappx) { throw 'x64 makeappx.exe was not found.' }
+
+          $layout = Join-Path $env:RUNNER_TEMP 'UCAD-LooseLayout'
+          New-Item -ItemType Directory -Force -Path $layout | Out-Null
+          & $makeappx.FullName unpack /p $env:MSIX_PATH /d $layout /o
+          if ($LASTEXITCODE -ne 0) { throw "makeappx unpack failed: $LASTEXITCODE" }
+
+          $manifest = Join-Path $layout 'AppxManifest.xml'
+          if (-not (Test-Path $manifest)) { throw 'Loose AppxManifest.xml was not produced.' }
+          Add-AppxPackage -Register $manifest
+
           $package = Get-AppxPackage | Where-Object { $_.Name -eq 'F1BD5F25-4ED6-4037-B9FE-BB7D4B326E25' } | Select-Object -First 1
-          if (-not $package) { throw 'Installed UCAD package was not found.' }
+          if (-not $package) { throw 'Loose-registered UCAD package was not found.' }
           $exe = Join-Path $package.InstallLocation 'UCAD.App.exe'
-          if (-not (Test-Path $exe)) { throw "Installed executable was not found: $exe" }
+          if (-not (Test-Path $exe)) { throw "Registered executable was not found: $exe" }
           "INSTALLED_EXE=$exe" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
-          Write-Output "Installed unsigned packaged UCAD at $($package.InstallLocation)"
+          Write-Output "Loose-registered packaged UCAD at $($package.InstallLocation)"
 
       - name: Capture Drawing, Start, and Settings screens
         shell: pwsh
