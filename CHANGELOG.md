@@ -10,17 +10,20 @@
 - Completed General, Appearance, Drafting, Input & Interaction, Files & Save, Language & Region, and About UCAD Settings pages using the Figma 228 px navigation, 940×72 cards, and 35 / 12 / 8 / 30 px vertical rhythm.
 - Replaced Unicode placeholder glyphs with Fluent / WinUI icons or UCAD-style `PathIcon` geometry.
 
-### Settings, localization, and versioning
+### Settings, behavior, localization, and versioning
 - Added centralized `AppSettings` / `SettingsService` persistence under `%LOCALAPPDATA%\UCAD\settings.json`.
-- Kept App Theme and CAD Canvas state independent; existing canvas background/grid and mouse zoom/pan options now flow into `CadViewport` without adding new CAD Core features.
-- Added complete Start/Settings resource maps for zh-CN, ja-JP, and en-US with CI key-parity validation.
+- Made the new-tab preference functional: `+` opens Start by default and creates a blank Drawing when “show Start on new tab” is disabled.
+- Made App Theme and CAD Canvas Theme independently effective at runtime; the shell palette and Win2D drawing palette no longer depend on each other.
+- Wired canvas background/grid, cursor-centered zoom, middle-button pan, reverse wheel zoom, coordinate precision, and decimal-format preferences to runtime behavior.
+- Kept unsupported Restore Session, manual UI Scale, automatic-update checking, and recent-history clearing disabled/reserved instead of presenting no-op controls as completed features.
+- Added complete Start/Settings resource maps for zh-CN, ja-JP, and en-US with CI key-parity validation; display-language preference is applied before the next shell is created to avoid partial mixed-language refreshes.
 - Made root `VERSION` the product version SSOT and aligned assembly metadata, runtime UI, release metadata, and MSIX package identity to 0.3.9 / 0.3.9.0.
 - Preserved `PerMonitorV2` and XAML DIP layout behavior.
 
 ### Validation
-- Kept Core tests, WinUI app build, runtime startup smoke, and MSIX / one-click package validation.
-- Expanded UI contracts to cover Figma dimensions, page/section existence, version SSOT, localization parity, PerMonitorV2, and removal of Unicode fake icons.
-- Added a real 1440×900 runtime screenshot workflow for Drawing, Start, Settings General, Appearance, Input & Interaction, and About.
+- Kept Core tests, WinUI app build, runtime startup smoke, and MSIX / one-click package validation as required CI.
+- Expanded UI/behavior contracts to cover Figma dimensions/colors, page/section existence, Start/Settings/Canvas behavior, version SSOT, localization parity, PerMonitorV2, and removal of Unicode fake icons.
+- Kept pixel-level 1440×900 comparison as a manual, non-gating workflow that runs only when the runner exposes a real 1440×900 interactive desktop.
 
 ## 0.3.7 — 2026-08-16
 
