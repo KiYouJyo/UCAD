@@ -11,6 +11,7 @@
     <SolidColorBrush x:Key="UcadToolShelfBrush" Color="#1D1D20" />
     <SolidColorBrush x:Key="UcadNavigationBrush" Color="#1D1D20" />
     <SolidColorBrush x:Key="UcadCardBrush" Color="#222225" />
+    <SolidColorBrush x:Key="UcadAboutCardBrush" Color="#202023" />
     <SolidColorBrush x:Key="UcadPanelBrush" Color="#1F1F22" />
     <SolidColorBrush x:Key="UcadOverlayBrush" Color="#18181A" />
     <SolidColorBrush x:Key="UcadStatusBarBrush" Color="#222225" />
@@ -28,6 +29,7 @@
     <!-- Accent -->
     <SolidColorBrush x:Key="UcadAccentBrush" Color="#1F5275" />
     <SolidColorBrush x:Key="UcadAccentSelectedBrush" Color="#1F5275" />
+    <SolidColorBrush x:Key="UcadAboutMarkBrush" Color="#21618A" />
     <SolidColorBrush x:Key="UcadAccentHoverBrush" Color="#2C759F" />
     <SolidColorBrush x:Key="UcadAccentTextBrush" Color="#60B7F0" />
     <SolidColorBrush x:Key="UcadAccentStrokeBrush" Color="#594DADF5" />
@@ -50,9 +52,15 @@
     <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPressed" Color="Transparent" />
     <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedDisabled" Color="Transparent" />
 
-    <!-- Strokes. Figma card stroke is #404047 at 60% opacity. -->
+    <!-- Strokes -->
     <SolidColorBrush x:Key="UcadDividerBrush" Color="#404047" />
+    <!-- Settings cards: Figma #404047 at 60%. -->
     <SolidColorBrush x:Key="UcadCardBorderBrush" Color="#99404047" />
+    <!-- Start quick actions: Figma #404047 at 75%; templates at 50%. -->
+    <SolidColorBrush x:Key="UcadStartActionBorderBrush" Color="#BF404047" />
+    <SolidColorBrush x:Key="UcadStartTemplateBorderBrush" Color="#80404047" />
+    <!-- About cards: Figma #40404A at full opacity. -->
+    <SolidColorBrush x:Key="UcadAboutCardBorderBrush" Color="#40404A" />
     <SolidColorBrush x:Key="UcadControlBorderBrush" Color="#40404A" />
     <SolidColorBrush x:Key="UcadDividerSoftBrush" Color="#2E3236" />
 
@@ -78,6 +86,7 @@
     <x:Double x:Key="UcadSettingsContentTopPadding">42</x:Double>
     <x:Double x:Key="UcadSettingsCardWidth">940</x:Double>
     <x:Double x:Key="UcadSettingsCardHeight">72</x:Double>
+    <x:Double x:Key="UcadSettingsAboutCardHeight">128</x:Double>
     <x:Double x:Key="UcadSettingsTitleToSectionSpacing">35</x:Double>
     <x:Double x:Key="UcadSettingsSectionToCardSpacing">12</x:Double>
     <x:Double x:Key="UcadSettingsCardSpacing">8</x:Double>
@@ -85,6 +94,7 @@
     <CornerRadius x:Key="UcadRadiusSmall">4</CornerRadius>
     <CornerRadius x:Key="UcadRadiusMedium">5</CornerRadius>
     <CornerRadius x:Key="UcadRadiusCard">7</CornerRadius>
+    <CornerRadius x:Key="UcadRadiusAboutCard">6</CornerRadius>
 
     <Style x:Key="UcadShellMenuButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="Transparent" />
