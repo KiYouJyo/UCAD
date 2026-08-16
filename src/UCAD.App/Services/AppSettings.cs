@@ -5,7 +5,7 @@ public sealed class AppSettings
     public string StartupBehavior { get; set; } = "StartPage";
     public bool ShowStartOnNewTab { get; set; } = true;
     public bool ConfirmUnsaved { get; set; } = true;
-    public bool AutoCheckUpdates { get; set; } = true;
+    public bool AutoCheckUpdates { get; set; }
 
     public string AppTheme { get; set; } = "System";
     public string CanvasTheme { get; set; } = "Dark";
