@@ -155,14 +155,14 @@ public sealed partial class UcadSettingsPage : UserControl
             Foreground = Brush("UcadTextSecondaryBrush"),
             Margin = new Thickness(0, 2, 0, 0)
         });
-        SettingsContent.Children.Add(Spacer(35));
+        SettingsContent.Children.Add(Spacer(TokenDouble("UcadSettingsTitleToSectionSpacing")));
     }
 
     private void AddSection(string titleKey, params SettingCard[] cards)
     {
         if (_hasSection)
         {
-            SettingsContent.Children.Add(Spacer(30));
+            SettingsContent.Children.Add(Spacer(TokenDouble("UcadSettingsSectionSpacing")));
         }
 
         SettingsContent.Children.Add(new TextBlock
@@ -172,12 +172,12 @@ public sealed partial class UcadSettingsPage : UserControl
             FontWeight = FontWeights.SemiBold,
             Foreground = Brush("UcadTextPrimaryBrush")
         });
-        SettingsContent.Children.Add(Spacer(12));
+        SettingsContent.Children.Add(Spacer(TokenDouble("UcadSettingsSectionToCardSpacing")));
         for (var index = 0; index < cards.Length; index++)
         {
             if (index > 0)
             {
-                SettingsContent.Children.Add(Spacer(8));
+                SettingsContent.Children.Add(Spacer(TokenDouble("UcadSettingsCardSpacing")));
             }
             SettingsContent.Children.Add(cards[index]);
         }
@@ -193,7 +193,7 @@ public sealed partial class UcadSettingsPage : UserControl
         ActionContent = action
     };
 
-    private ToggleSwitch Toggle(bool current, Action<bool> changed)
+    private ToggleSwitch Toggle(bool current, Action<bool> changed, bool enabled = true)
     {
         var control = new ToggleSwitch
         {
@@ -201,17 +201,28 @@ public sealed partial class UcadSettingsPage : UserControl
             OnContent = string.Empty,
             OffContent = string.Empty,
             MinWidth = 0,
-            Width = 42
+            Width = 42,
+            IsEnabled = enabled
         };
         control.Toggled += (_, _) =>
         {
+            if (!control.IsEnabled)
+            {
+                return;
+            }
             changed(control.IsOn);
             Persist();
         };
         return control;
     }
 
-    private ComboBox Combo(string current, IEnumerable<(string Value, string LabelKey)> options, Action<string> changed, double width = 120)
+    private ComboBox Combo(
+        string current,
+        IEnumerable<(string Value, string LabelKey)> options,
+        Action<string> changed,
+        double width = 120,
+        bool enabled = true,
+        ISet<string>? disabledValues = null)
     {
         var control = new ComboBox
         {
@@ -219,13 +230,19 @@ public sealed partial class UcadSettingsPage : UserControl
             Height = 30,
             FontSize = 10,
             Background = Brush("UcadControlFillSubtleBrush"),
-            BorderBrush = Brush("UcadControlBorderBrush")
+            BorderBrush = Brush("UcadControlBorderBrush"),
+            IsEnabled = enabled
         };
 
         ComboBoxItem? selected = null;
         foreach (var option in options)
         {
-            var item = new ComboBoxItem { Tag = option.Value, Content = GetString(option.LabelKey) };
+            var item = new ComboBoxItem
+            {
+                Tag = option.Value,
+                Content = GetString(option.LabelKey),
+                IsEnabled = disabledValues is null || !disabledValues.Contains(option.Value)
+            };
             control.Items.Add(item);
             if (option.Value == current)
             {
@@ -235,7 +252,11 @@ public sealed partial class UcadSettingsPage : UserControl
         control.SelectedItem = selected ?? control.Items.FirstOrDefault();
         control.SelectionChanged += (_, _) =>
         {
-            if (control.SelectedItem is ComboBoxItem { Tag: string value })
+            if (!control.IsEnabled)
+            {
+                return;
+            }
+            if (control.SelectedItem is ComboBoxItem { Tag: string value, IsEnabled: true })
             {
                 changed(value);
                 Persist();
@@ -244,7 +265,7 @@ public sealed partial class UcadSettingsPage : UserControl
         return control;
     }
 
-    private Button ActionButton(string labelKey, Action action, double width = 76)
+    private Button ActionButton(string labelKey, Action action, double width = 76, bool enabled = true)
     {
         var button = new Button
         {
@@ -253,9 +274,16 @@ public sealed partial class UcadSettingsPage : UserControl
             Height = 30,
             Padding = new Thickness(10, 0, 10, 0),
             FontSize = 10,
-            HorizontalContentAlignment = HorizontalAlignment.Center
+            HorizontalContentAlignment = HorizontalAlignment.Center,
+            IsEnabled = enabled
         };
-        button.Click += (_, _) => action();
+        button.Click += (_, _) =>
+        {
+            if (button.IsEnabled)
+            {
+                action();
+            }
+        };
         return button;
     }
 
@@ -273,14 +301,16 @@ public sealed partial class UcadSettingsPage : UserControl
             Card("Settings_General_StartupBehavior_Title", "Settings_General_StartupBehavior_Description", "\uE7E8",
                 Combo(s.StartupBehavior,
                     [("StartPage", "Settings_Option_StartPage"), ("BlankDrawing", "Settings_Option_BlankDrawing"), ("RestoreSession", "Settings_Option_RestoreSession")],
-                    value => s.StartupBehavior = value, 142)),
+                    value => s.StartupBehavior = value,
+                    142,
+                    disabledValues: new HashSet<string>(StringComparer.Ordinal) { "RestoreSession" })),
             Card("Settings_General_NewTab_Title", "Settings_General_NewTab_Description", "\uE710",
                 Toggle(s.ShowStartOnNewTab, value => s.ShowStartOnNewTab = value)),
             Card("Settings_General_CloseUnsaved_Title", "Settings_General_CloseUnsaved_Description", "\uE8BB",
                 Toggle(s.ConfirmUnsaved, value => s.ConfirmUnsaved = value)));
         AddSection("Settings_General_UpdatesSection",
             Card("Settings_General_AutoUpdate_Title", "Settings_General_AutoUpdate_Description", "\uE895",
-                Toggle(s.AutoCheckUpdates, value => s.AutoCheckUpdates = value)),
+                Toggle(s.AutoCheckUpdates, value => s.AutoCheckUpdates = value, enabled: false)),
             Card("Settings_General_CheckUpdate_Title", "Settings_General_CheckUpdate_Description", "\uE72C",
                 ActionButton("Settings_Action_CheckNow", () => CheckUpdatesRequested?.Invoke(this, EventArgs.Empty), 92)));
         SettingsContent.Children.Add(Spacer(20));
@@ -309,7 +339,7 @@ public sealed partial class UcadSettingsPage : UserControl
             Card("Settings_Appearance_GridOpacity_Title", "Settings_Appearance_GridOpacity_Description", "\uE91F",
                 Combo(s.GridOpacity.ToString(), [("10", "Settings_Option_Opacity10"), ("22", "Settings_Option_Opacity22"), ("50", "Settings_Option_Opacity50"), ("75", "Settings_Option_Opacity75")], value => s.GridOpacity = int.Parse(value), 86)),
             Card("Settings_Appearance_UiScale_Title", "Settings_Appearance_UiScale_Description", "\uE740",
-                Combo(s.UiScale, [("System", "Settings_Option_System"), ("100", "Settings_Option_Scale100"), ("125", "Settings_Option_Scale125"), ("150", "Settings_Option_Scale150")], value => s.UiScale = value, 132)));
+                Combo(s.UiScale, [("System", "Settings_Option_System"), ("100", "Settings_Option_Scale100"), ("125", "Settings_Option_Scale125"), ("150", "Settings_Option_Scale150")], value => s.UiScale = value, 132, enabled: false)));
     }
 
     private void BuildDrafting()
@@ -330,7 +360,7 @@ public sealed partial class UcadSettingsPage : UserControl
                 Combo(s.DefaultSnapTypes, [("EndpointMidpointIntersection", "Settings_Option_SnapCore"), ("EndpointMidpoint", "Settings_Option_SnapBasic")], value => s.DefaultSnapTypes = value, 188)),
             Card("Settings_Drafting_Ortho_Title", "Settings_Drafting_Ortho_Description", "\uE809",
                 Toggle(s.DefaultOrtho, value => s.DefaultOrtho = value)));
-        SettingsContent.Children.Add(Spacer(12));
+        SettingsContent.Children.Add(Spacer(TokenDouble("UcadSettingsSectionToCardSpacing")));
         SettingsContent.Children.Add(InfoNote("Settings_Drafting_PendingNote"));
     }
 
@@ -372,26 +402,39 @@ public sealed partial class UcadSettingsPage : UserControl
             Card("Settings_Files_RecentCount_Title", "Settings_Files_RecentCount_Description", "\uE9D2",
                 Combo(s.RecentFileCount.ToString(), [("10", "Settings_Option_Count10"), ("20", "Settings_Option_Count20"), ("30", "Settings_Option_Count30")], value => s.RecentFileCount = int.Parse(value), 82)),
             Card("Settings_Files_ClearRecent_Title", "Settings_Files_ClearRecent_Description", "\uE74D",
-                ActionButton("Settings_Action_Clear", _service.ResetRecentHistory, 72)));
+                ActionButton("Settings_Action_Clear", _service.ResetRecentHistory, 72, enabled: false)));
     }
 
     private void BuildLanguage()
     {
         var s = _service.Settings;
         AddPageHeader("Settings_Language_Title", "Settings_Language_Subtitle");
+
+        ComboBox? displayLanguage = null;
+        displayLanguage = Combo(
+            s.DisplayLanguage,
+            [("System", "Settings_Option_SystemLanguage"), ("zh-CN", "Settings_Option_Chinese"), ("ja-JP", "Settings_Option_Japanese"), ("en-US", "Settings_Option_English")],
+            value =>
+            {
+                s.DisplayLanguage = value;
+                LanguageChanged?.Invoke(this, EventArgs.Empty);
+            },
+            132,
+            enabled: !s.FollowSystemLanguage);
+
+        var followSystem = Toggle(s.FollowSystemLanguage, value =>
+        {
+            s.FollowSystemLanguage = value;
+            if (displayLanguage is not null)
+            {
+                displayLanguage.IsEnabled = !value;
+            }
+            LanguageChanged?.Invoke(this, EventArgs.Empty);
+        });
+
         AddSection("Settings_Language_LanguageSection",
-            Card("Settings_Language_Display_Title", "Settings_Language_Display_Description", "\uF2B7",
-                Combo(s.DisplayLanguage, [("System", "Settings_Option_SystemLanguage"), ("zh-CN", "Settings_Option_Chinese"), ("ja-JP", "Settings_Option_Japanese"), ("en-US", "Settings_Option_English")], value =>
-                {
-                    s.DisplayLanguage = value;
-                    LanguageChanged?.Invoke(this, EventArgs.Empty);
-                }, 132)),
-            Card("Settings_Language_FollowSystem_Title", "Settings_Language_FollowSystem_Description", "\uE774",
-                Toggle(s.FollowSystemLanguage, value =>
-                {
-                    s.FollowSystemLanguage = value;
-                    LanguageChanged?.Invoke(this, EventArgs.Empty);
-                })));
+            Card("Settings_Language_Display_Title", "Settings_Language_Display_Description", "\uF2B7", displayLanguage),
+            Card("Settings_Language_FollowSystem_Title", "Settings_Language_FollowSystem_Description", "\uE774", followSystem));
         AddSection("Settings_Language_RegionalSection",
             Card("Settings_Language_NumberFormat_Title", "Settings_Language_NumberFormat_Description", "\uE9D2",
                 Combo(s.NumberFormat, [("System", "Settings_Option_SystemRegion"), ("Invariant", "Settings_Option_InvariantRegion")], value => s.NumberFormat = value, 142)),
@@ -399,7 +442,7 @@ public sealed partial class UcadSettingsPage : UserControl
                 Combo(s.UnitDisplay, [("Metric", "Settings_Option_Metric"), ("Imperial", "Settings_Option_Imperial")], value => s.UnitDisplay = value, 104)),
             Card("Settings_Language_AngleDecimal_Title", "Settings_Language_AngleDecimal_Description", "\uE8C1",
                 Combo(s.AngleDecimalFormat, [("Automatic", "Settings_Option_Automatic"), ("Dot", "Settings_Option_DecimalDot"), ("Comma", "Settings_Option_DecimalComma")], value => s.AngleDecimalFormat = value, 104)));
-        SettingsContent.Children.Add(Spacer(8));
+        SettingsContent.Children.Add(Spacer(TokenDouble("UcadSettingsCardSpacing")));
         SettingsContent.Children.Add(InfoNote("Settings_Language_ReloadNote"));
     }
 
@@ -413,7 +456,7 @@ public sealed partial class UcadSettingsPage : UserControl
             FontWeight = FontWeights.SemiBold,
             Foreground = Brush("UcadTextPrimaryBrush")
         });
-        SettingsContent.Children.Add(Spacer(12));
+        SettingsContent.Children.Add(Spacer(TokenDouble("UcadSettingsSectionToCardSpacing")));
         SettingsContent.Children.Add(BuildAppInfoCard());
         _hasSection = true;
 
@@ -424,7 +467,7 @@ public sealed partial class UcadSettingsPage : UserControl
         AddAboutSection("Settings_About_OpenSourceSection",
             AboutRow("\uE943", "Settings_About_OpenSource_Title", "Settings_About_OpenSource_Description", "Settings_Action_View", "https://github.com/KiYouJyo/UCAD"),
             AboutRow("\uE734", "Settings_About_Credits_Title", "Settings_About_Credits_Description", null, null));
-        SettingsContent.Children.Add(Spacer(12));
+        SettingsContent.Children.Add(Spacer(TokenDouble("UcadSettingsSectionToCardSpacing")));
         SettingsContent.Children.Add(new TextBlock
         {
             Text = "© UCAD Project",
@@ -446,7 +489,7 @@ public sealed partial class UcadSettingsPage : UserControl
             Width = 64,
             Height = 64,
             VerticalAlignment = VerticalAlignment.Center,
-            Background = Brush("UcadAccentSelectedBrush"),
+            Background = Brush("UcadAboutMarkBrush"),
             CornerRadius = new CornerRadius(12),
             Child = new TextBlock
             {
@@ -490,19 +533,19 @@ public sealed partial class UcadSettingsPage : UserControl
 
         return new Border
         {
-            Width = 940,
-            Height = 128,
-            Background = Brush("UcadCardBrush"),
-            BorderBrush = Brush("UcadCardBorderBrush"),
+            Width = TokenDouble("UcadSettingsCardWidth"),
+            Height = TokenDouble("UcadSettingsAboutCardHeight"),
+            Background = Brush("UcadAboutCardBrush"),
+            BorderBrush = Brush("UcadAboutCardBorderBrush"),
             BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(6),
+            CornerRadius = (CornerRadius)Application.Current.Resources["UcadRadiusAboutCard"],
             Child = grid
         };
     }
 
     private void AddAboutSection(string titleKey, params Border[] rows)
     {
-        SettingsContent.Children.Add(Spacer(30));
+        SettingsContent.Children.Add(Spacer(TokenDouble("UcadSettingsSectionSpacing")));
         SettingsContent.Children.Add(new TextBlock
         {
             Text = GetString(titleKey),
@@ -510,10 +553,10 @@ public sealed partial class UcadSettingsPage : UserControl
             FontWeight = FontWeights.SemiBold,
             Foreground = Brush("UcadTextPrimaryBrush")
         });
-        SettingsContent.Children.Add(Spacer(12));
+        SettingsContent.Children.Add(Spacer(TokenDouble("UcadSettingsSectionToCardSpacing")));
         for (var i = 0; i < rows.Length; i++)
         {
-            if (i > 0) SettingsContent.Children.Add(Spacer(8));
+            if (i > 0) SettingsContent.Children.Add(Spacer(TokenDouble("UcadSettingsCardSpacing")));
             SettingsContent.Children.Add(rows[i]);
         }
     }
@@ -547,12 +590,12 @@ public sealed partial class UcadSettingsPage : UserControl
         }
         return new Border
         {
-            Width = 940,
-            Height = 72,
-            Background = Brush("UcadCardBrush"),
-            BorderBrush = Brush("UcadCardBorderBrush"),
+            Width = TokenDouble("UcadSettingsCardWidth"),
+            Height = TokenDouble("UcadSettingsCardHeight"),
+            Background = Brush("UcadAboutCardBrush"),
+            BorderBrush = Brush("UcadAboutCardBorderBrush"),
             BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(6),
+            CornerRadius = (CornerRadius)Application.Current.Resources["UcadRadiusAboutCard"],
             Child = grid
         };
     }
@@ -581,7 +624,7 @@ public sealed partial class UcadSettingsPage : UserControl
         grid.Children.Add(text);
         return new Border
         {
-            Width = 940,
+            Width = TokenDouble("UcadSettingsCardWidth"),
             Height = 54,
             Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 23, 31, 36)),
             BorderBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 41, 77, 97)),
@@ -592,6 +635,8 @@ public sealed partial class UcadSettingsPage : UserControl
     }
 
     private static Border Spacer(double height) => new() { Height = height };
+
+    private static double TokenDouble(string key) => (double)Application.Current.Resources[key];
 
     private static Brush Brush(string key) => (Brush)Application.Current.Resources[key];
 }
