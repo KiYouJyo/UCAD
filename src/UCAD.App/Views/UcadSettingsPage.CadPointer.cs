@@ -64,8 +64,8 @@ public sealed partial class UcadSettingsPage
                 "\uE8A7",
                 NumericSlider(
                     settings.PickboxSize,
-                    3,
-                    20,
+                    1,
+                    50,
                     1,
                     " px",
                     value => settings.PickboxSize = value)),
@@ -176,7 +176,7 @@ public sealed partial class UcadSettingsPage
             ("ja-JP", "CrosshairTitle") => "クロスヘアのサイズ",
             ("ja-JP", "CrosshairDescription") => "作図領域に対するクロスヘアの長さを調整します（5–100%）。",
             ("ja-JP", "PickboxTitle") => "ピックボックスのサイズ",
-            ("ja-JP", "PickboxDescription") => "オブジェクト選択に使う中央の四角いターゲットを調整します。",
+            ("ja-JP", "PickboxDescription") => "中央の選択用四角を 1–50 px で調整します（既定値 10 px）。",
             ("ja-JP", "ApertureTitle") => "OSNAP アパーチャのサイズ",
             ("ja-JP", "ApertureDescription") => "オブジェクトスナップが候補を取得する画面上の範囲を調整します。",
 
@@ -184,15 +184,15 @@ public sealed partial class UcadSettingsPage
             ("en-US", "CrosshairTitle") => "Crosshair size",
             ("en-US", "CrosshairDescription") => "Adjust crosshair length as a percentage of the drawing area (5–100%).",
             ("en-US", "PickboxTitle") => "Pickbox size",
-            ("en-US", "PickboxDescription") => "Adjust the central square target used for object selection.",
+            ("en-US", "PickboxDescription") => "Adjust the central selection square from 1–50 px (10 px default).",
             ("en-US", "ApertureTitle") => "OSNAP aperture size",
             ("en-US", "ApertureDescription") => "Adjust the screen-space range used to acquire object-snap candidates.",
 
             (_, "Section") => "CAD 光标",
             (_, "CrosshairTitle") => "十字光标大小",
             (_, "CrosshairDescription") => "按绘图区百分比调整十字线长度（5–100%）。",
-            (_, "PickboxTitle") => "拾取框大小",
-            (_, "PickboxDescription") => "调整用于对象选择的中央方形目标框。",
+            (_, "PickboxTitle") => "中心拾取框大小",
+            (_, "PickboxDescription") => "调整对象选择用的中央方框，范围 1–50 px，默认 10 px。",
             (_, "ApertureTitle") => "对象捕捉孔径",
             (_, "ApertureDescription") => "调整 OSNAP 搜索捕捉候选点的屏幕范围。",
             _ => key
