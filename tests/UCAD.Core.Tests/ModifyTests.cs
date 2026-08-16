@@ -37,7 +37,6 @@ public sealed class ModifyTests
     public void CopyCreatesFreshIdentity()
     {
         var source = new CircleEntity(new CadPoint(2, 3), 4);
-
         var copy = Assert.IsType<CircleEntity>(
             CadEntityTransform.Translate(source, new CadVector(10, -2), preserveIdentity: false));
 
@@ -66,6 +65,23 @@ public sealed class ModifyTests
             new CadPoint(0, 10)));
         AssertClose(new CadPoint(-1, 0), mirrored.Start);
         AssertClose(new CadPoint(-2, 0), mirrored.End);
+    }
+
+    [Fact]
+    public void ScaleCircleAndArcPreservesCenterTopologyAndIdentity()
+    {
+        var circle = new CircleEntity(new CadPoint(5, 5), 2);
+        var scaledCircle = Assert.IsType<CircleEntity>(CadEntityTransform.Scale(circle, new CadPoint(0, 0), 3));
+        Assert.Equal(circle.Id, scaledCircle.Id);
+        AssertClose(new CadPoint(15, 15), scaledCircle.Center);
+        Assert.Equal(6, scaledCircle.Radius, 8);
+
+        Assert.True(ArcEntity.TryCreateFromThreePoints(
+            new CadPoint(1, 0), new CadPoint(0, 1), new CadPoint(-1, 0), out var arc));
+        var scaledArc = Assert.IsType<ArcEntity>(CadEntityTransform.Scale(arc!, new CadPoint(0, 0), 4));
+        Assert.Equal(arc!.Id, scaledArc.Id);
+        Assert.Equal(4, scaledArc.Radius, 8);
+        Assert.Equal(arc.SweepAngleRadians, scaledArc.SweepAngleRadians, 8);
     }
 
     [Fact]
@@ -112,6 +128,25 @@ public sealed class ModifyTests
 
         Assert.True(CadOffset.TryCreate(circle, 2, new CadPoint(1, 0), out var inside));
         Assert.Equal(8, Assert.IsType<CircleEntity>(inside).Radius, 8);
+        Assert.False(CadOffset.TryCreate(circle, 10, new CadPoint(1, 0), out _));
+    }
+
+    [Fact]
+    public void OffsetOpenPolylineUsesMiterJoin()
+    {
+        var polyline = new PolylineEntity([
+            new CadPoint(0, 0),
+            new CadPoint(10, 0),
+            new CadPoint(10, 10)
+        ]);
+
+        Assert.True(CadOffset.TryCreate(polyline, 2, new CadPoint(8, 2), out var result));
+        var offset = Assert.IsType<PolylineEntity>(result);
+        Assert.False(offset.Closed);
+        Assert.Equal(3, offset.Points.Count);
+        AssertClose(new CadPoint(0, 2), offset.Points[0]);
+        AssertClose(new CadPoint(8, 2), offset.Points[1]);
+        AssertClose(new CadPoint(8, 10), offset.Points[2]);
     }
 
     [Fact]
@@ -138,6 +173,20 @@ public sealed class ModifyTests
     }
 
     [Fact]
+    public void QuickTrimCircleCreatesArcPiecesAndPreservesOneIdentity()
+    {
+        var circle = new CircleEntity(new CadPoint(0, 0), 10);
+        var left = new LineEntity(new CadPoint(-5, -20), new CadPoint(-5, 20));
+        var right = new LineEntity(new CadPoint(5, -20), new CadPoint(5, 20));
+
+        Assert.True(CadTrimExtend.TryTrim(circle, [left, right], new CadPoint(0, 10), out var replacements));
+        Assert.NotEmpty(replacements);
+        Assert.All(replacements, replacement => Assert.IsType<ArcEntity>(replacement));
+        Assert.Contains(replacements, replacement => replacement.Id == circle.Id);
+        Assert.DoesNotContain(replacements.OfType<ArcEntity>(), arc => CadEntityGeometry.IsPointOnArc(arc, new CadPoint(0, 10)));
+    }
+
+    [Fact]
     public void QuickExtendLineUsesNearestForwardBoundary()
     {
         var target = new LineEntity(new CadPoint(0, 0), new CadPoint(5, 0));
@@ -154,6 +203,21 @@ public sealed class ModifyTests
         Assert.Equal(target.Id, extended.Id);
         AssertClose(new CadPoint(0, 0), extended.Start);
         AssertClose(new CadPoint(10, 0), extended.End);
+    }
+
+    [Fact]
+    public void QuickExtendOpenPolylineExtendsPickedEndOnly()
+    {
+        var target = new PolylineEntity([
+            new CadPoint(0, 0), new CadPoint(5, 0), new CadPoint(5, 5)
+        ]);
+        var boundary = new LineEntity(new CadPoint(0, 10), new CadPoint(10, 10));
+
+        Assert.True(CadTrimExtend.TryExtend(target, [boundary], new CadPoint(5, 5), out var replacement));
+        var extended = Assert.IsType<PolylineEntity>(replacement);
+        Assert.Equal(target.Id, extended.Id);
+        AssertClose(new CadPoint(5, 10), extended.Points[^1]);
+        AssertClose(new CadPoint(0, 0), extended.Points[0]);
     }
 
     [Fact]
@@ -174,6 +238,24 @@ public sealed class ModifyTests
         Assert.True(document.Undo());
         Assert.Equal(3, document.Entities.Count);
         Assert.Contains(document.Entities, entity => entity.Id == target.Id);
+    }
+
+    [Fact]
+    public void ReplaceRangeRejectsIdentityCollisionsWithoutMutatingDocument()
+    {
+        var document = new CadDocument();
+        var first = new LineEntity(new CadPoint(0, 0), new CadPoint(1, 0));
+        var second = new LineEntity(new CadPoint(0, 1), new CadPoint(1, 1));
+        document.Add(first);
+        document.Add(second);
+        var revision = document.Revision;
+
+        Assert.Throws<ArgumentException>(() => document.ReplaceRange([
+            CadEntityTransform.Translate(first, new CadVector(1, 0)),
+            CadEntityTransform.Translate(first, new CadVector(2, 0))
+        ]));
+        Assert.Equal(revision, document.Revision);
+        Assert.Equal(2, document.Entities.Count);
     }
 
     private static void AssertClose(CadPoint expected, CadPoint actual, double tolerance = 1e-7)
