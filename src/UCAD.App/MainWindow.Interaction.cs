@@ -85,6 +85,13 @@ public sealed partial class MainWindow
                 RefreshInteractionUi(session);
             }
         };
+        session.CommandSession.Changed += (_, _) =>
+        {
+            if (ReferenceEquals(ActiveSession, session))
+            {
+                RefreshInspectorSelection(session);
+            }
+        };
         session.Document.Changed += (_, _) =>
         {
             if (ReferenceEquals(ActiveSession, session))
