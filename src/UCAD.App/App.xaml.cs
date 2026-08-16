@@ -31,8 +31,10 @@ public partial class App : Application
             var mainWindow = new MainWindow();
             mainWindow.RefreshLocalization();
             mainWindow.EnsureInteractionUiInitialized();
+            mainWindow.EnsureAuthoringUiInitialized();
             mainWindow.ScheduleLocalizationSmoke();
             mainWindow.ScheduleInteractionSmoke();
+            mainWindow.ScheduleAuthoringSmoke();
             _window = mainWindow;
             WriteStartupEvent("MainWindow constructed and localized");
             _window.Activate();
@@ -48,18 +50,8 @@ public partial class App : Application
     private void SettingsService_SettingsChanged(object? sender, EventArgs e)
     {
         var localization = LocalizationService.Current;
-        if (localization.IsSettingsLanguageApplied)
-        {
-            return;
-        }
-
-        if (_window is MainWindow mainWindow)
-        {
-            // Settings controls persist during their own SelectionChanged/Toggled event.
-            // Enqueue the visual rebuild so that callback can return before the current
-            // Settings section is reconstructed in the new language.
-            mainWindow.ApplyLiveLocalizationFromSettings();
-        }
+        if (localization.IsSettingsLanguageApplied) return;
+        if (_window is MainWindow mainWindow) mainWindow.ApplyLiveLocalizationFromSettings();
     }
 
     private static void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e) =>
@@ -67,14 +59,8 @@ public partial class App : Application
 
     private static void CurrentDomain_UnhandledException(object sender, System.UnhandledExceptionEventArgs e)
     {
-        if (e.ExceptionObject is Exception ex)
-        {
-            WriteStartupFailure("AppDomain.UnhandledException", ex);
-        }
-        else
-        {
-            WriteStartupEvent($"AppDomain.UnhandledException: {e.ExceptionObject}");
-        }
+        if (e.ExceptionObject is Exception ex) WriteStartupFailure("AppDomain.UnhandledException", ex);
+        else WriteStartupEvent($"AppDomain.UnhandledException: {e.ExceptionObject}");
     }
 
     internal static void WriteStartupFailure(string stage, Exception ex)
