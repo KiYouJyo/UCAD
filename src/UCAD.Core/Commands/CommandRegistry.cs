@@ -47,6 +47,7 @@ public sealed class CommandRegistry
         registry.Register(new CadCommandDefinition("ARC", CadCommandCategory.Draw, DrawingCommandKind.Arc, "A"));
         registry.Register(new CadCommandDefinition("UNDO", CadCommandCategory.Edit, "U"));
         registry.Register(new CadCommandDefinition("REDO", CadCommandCategory.Edit));
+        registry.Register(new CadCommandDefinition("ERASE", CadCommandCategory.Edit, "E", "DELETE"));
         registry.Register(new CadCommandDefinition("CLEAR", CadCommandCategory.Edit));
         registry.Register(new CadCommandDefinition("RESETVIEW", CadCommandCategory.View, "RV"));
         return registry;
