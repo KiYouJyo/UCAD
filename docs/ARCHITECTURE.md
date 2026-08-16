@@ -4,9 +4,9 @@ UCAD is intentionally split into a UI-independent CAD core and a Windows-native 
 
 ## `UCAD.Core`
 
-Owns geometry, document state, entity models, command vocabulary, command-session state, parsers, and reversible document history.
+Owns geometry, document state, entity models, command vocabulary, command-session state, parsers, reversible document history, and the reusable geometry/interaction contracts required by selection and drafting aids.
 
-### Entity model at v0.3.x
+### Entity model at v0.4.0
 
 - `LineEntity` — two-point line segment.
 - `PolylineEntity` — ordered vertices with optional closed topology; RECTANGLE commits as a closed polyline.
@@ -22,14 +22,29 @@ The observable boundary remains UI-agnostic:
 - `CadDocument.Changed` publishes committed mutations, Undo, and Redo.
 - `CadDocument.Revision` monotonically identifies document-state changes.
 - `CadDocumentChangedEventArgs` exposes change kind and entity count without referencing WinUI.
+- `CommandSession.Changed` publishes command lifecycle changes so Inspector/shell state does not need to poll Core internals.
 
-Browser-style tabs, inspector state, dirty indicators, and future selection/layer services can react to the document without routing state through `CadViewport`.
+Browser-style tabs, inspector state, dirty indicators, selection, and future layer services can react to document/workspace state without routing ownership through `CadViewport`.
+
+### v0.4 geometry and selection foundation
+
+v0.4.0 adds UI-independent geometry queries under `UCAD.Core.Interaction`:
+
+- `CadRect` represents normalized world-coordinate selection rectangles.
+- `CadEntityGeometry` supplies entity bounds, point-to-entity distance, rectangle containment/intersection, grip points, and line/polyline/circle/arc intersections.
+- `CadSelectionQuery` resolves nearest point hits plus Window/Crossing queries.
+- `SelectionSet` owns selected entity IDs for one `CadDocument`, supports additive selection, and automatically prunes IDs that disappear from document history.
+- `ObjectSnapResolver` resolves Endpoint / Midpoint / Intersection and optional Center candidates within a world-space aperture supplied by the viewport.
+- `OrthoConstraint` applies a dominant-axis 0°/90° constraint from a drawing base point.
+- `CadInteractionState` groups Selection, OSNAP state/modes, and Ortho state for one workspace.
+
+These types have no WinUI/Win2D dependency and are intended to be reused by v0.5 Modify commands and later spatial-index work.
 
 ### Command foundation
 
 - `CadCommandDefinition` — canonical command name plus aliases, UI-neutral category metadata, and optional `DrawingCommandKind`.
 - `CommandRegistry` — case-insensitive command resolution and duplicate-token protection.
-- `CommandSession` — active/previous command lifecycle, repeat, complete, cancel.
+- `CommandSession` — active/previous command lifecycle, repeat, complete, cancel, and observable lifecycle changes.
 - `CommandInputParser` — numeric, absolute coordinate, and relative coordinate parsing.
 - `DrawingCommandKind` — UI-independent drawing workflow vocabulary.
 - `CadCommandCategory` — stable high-level command grouping used by the shell without encoding toolbar logic in Core.
@@ -40,25 +55,49 @@ Every command-capable UI surface resolves to the same `CommandRegistry → Comma
 
 Owns WinUI 3 windowing, the Win2D viewport, keyboard routing, localized prompts, pointer interaction, live previews, workspace presentation, settings persistence, and MSIX integration.
 
-### Shell and page model at v0.3.9
+### Shell and page model
 
-Figma is the visual SSOT and WinUI native controls are the interaction SSOT. `WorkspacePageKind` defines three explicit tab-content types:
+Figma remains the visual SSOT and WinUI native controls remain the interaction SSOT. `WorkspacePageKind` defines three explicit tab-content types:
 
 - **Drawing** — the CAD workspace: Category Bar, Tool Shelf, Tool Rail, `CadViewport`, Inspector, Command Line, and Status Bar.
-- **Start** — the long-lived new-tab / Start Center. The title-bar `+` selects or creates Start rather than immediately creating an empty CAD document.
+- **Start** — the long-lived new-tab / Start Center. The title-bar `+` selects or creates Start rather than immediately creating an empty CAD document by default.
 - **Settings** — one reusable settings tab with its own navigation and content. CAD-only rails and bottom bars are covered rather than duplicated beside Settings navigation.
 
-The title strip is an explicit `[Brand][Document Tab Strip][Drag Region][native caption buttons]` layout instead of relying on `TitleBar.Content` auto-arrangement. This keeps approximately 190×34 document tabs left-contiguous like a browser.
+The title strip is an explicit `[Brand][Document Tab Strip][Drag Region][native caption buttons]` layout instead of relying on `TitleBar.Content` auto-arrangement. Approximately 190×34 document tabs remain left-contiguous like a browser.
 
-`CadWorkspaceSession` remains the application-level owner for one Drawing tab. Each session has its own:
+`CadWorkspaceSession` is the application-level owner for one Drawing tab. Each session has its own:
 
 - `CadDocument`
+- `CadInteractionState`
 - `CadViewport`
 - `CommandSession`
 - typed-command base point
 - pointer/status context
 
-Tabs are therefore real independent in-memory CAD tasks, not presentation-only tabs. Start and Settings are shell pages, not fake `CadWorkspaceSession` objects.
+Tabs are therefore real independent in-memory CAD tasks, including independent Selection / OSNAP / Ortho state.
+
+### v0.4 selection and drafting interaction
+
+`CadViewport` coordinates screen-space pointer input with Core interaction services rather than owning selection business rules.
+
+- Idle click uses `CadSelectionQuery.HitTestNearest`.
+- Consecutive click/window results are additive by default; blank click or Esc clears selection.
+- Left-to-right drag performs Window selection (fully contained entities).
+- Right-to-left drag performs Crossing selection (contained or intersecting entities).
+- Selection preview, selected-entity emphasis, grip feedback, selection window, and snap markers are viewport-only presentation of Core-owned results.
+- OSNAP converts a fixed screen-pixel aperture to world units, then resolves candidates through `ObjectSnapResolver`.
+- OSNAP has priority when a real snap candidate is present; otherwise Ortho constrains LINE/PLINE mouse input from the latest accepted base point.
+- Typed coordinates remain explicit typed coordinates and converge on the same `SubmitDrawingPoint` entity-commit path without being silently rewritten by mouse-only aids.
+- F3 and the OSNAP status button toggle per-workspace object snap.
+- F8 and the ORTHO status button toggle per-workspace orthogonal drawing.
+
+Grid snap, Polar and OTRACK remain reserved and non-interactive until their Core contracts exist.
+
+### Inspector and capability boundary
+
+Inspector reads the active workspace's `SelectionSet`. With one selected Line / Polyline / Circle / Arc it reports type, basic geometry and entity ID; multiple selections report a mixed selection/count summary. No duplicate selection model lives in XAML.
+
+Category availability derives from `CommandRegistry` categories. Draw/View remain available because registered commands exist; Modify/Annotate/Layer/Block/Measure stay unavailable until corresponding commands are registered. This prevents a presentation-only category from implying a Core capability.
 
 ### Start Center
 
@@ -68,44 +107,47 @@ Tabs are therefore real independent in-memory CAD tasks, not presentation-only t
 
 `AppSettings` is the lightweight settings model and `SettingsService` is the single persistence boundary. Values are stored at `%LOCALAPPDATA%\UCAD\settings.json`; individual views do not scatter `ApplicationData.Current.LocalSettings.Values[...]` calls.
 
-Settings covers General, Appearance, Drafting, Input & Interaction, Files & Save, Language & Region, and About. Drafting aids that do not yet have Core support are persisted as future defaults but do not alter CAD behavior prematurely.
+Settings covers General, Appearance, Drafting, Input & Interaction, Files & Save, Language & Region, and About. In v0.4.0, `DefaultObjectSnap`, `DefaultSnapTypes`, and `DefaultOrtho` are no longer future-only values: they initialize the `CadInteractionState` of newly created Drawing sessions. Existing sessions keep their current F3/F8 state rather than being overwritten by a default-setting edit.
 
-App Theme and Canvas Theme are deliberately separate state domains. Existing viewport-backed options such as canvas background, grid visibility/opacity, cursor-centered zoom, middle-button pan, and reverse wheel zoom flow through `SettingsService` into `CadViewport`. A Windows light theme therefore does not force the CAD canvas to become light.
-
-The settings layout contract is centralized in `UcadDesignTokens.xaml`: 228-DIP navigation, 54-DIP content offset, 940×72 setting cards, and 35 / 12 / 8 / 30 DIP vertical rhythm. `SettingCard` is the reusable native-control composition for these rows.
+App Theme and Canvas Theme are deliberately separate state domains. Existing viewport-backed options such as canvas background, grid visibility/opacity, cursor-centered zoom, middle-button pan, reverse wheel zoom, and selection preview flow through `SettingsService` into `CadViewport`.
 
 ### Localization
 
-Legacy shell resources remain in each locale's `Resources.resw`; the v0.3.9 Start/Settings surface uses the parallel `UcadV039.resw` map. zh-CN, ja-JP, and en-US maintain identical key sets, validated in CI. A small resource-loader bridge lets the shell resolve legacy keys first and v0.3.9 keys second without copying strings into view code.
+Legacy XAML resources remain in each locale's `Resources.resw`; Start/Settings use `UcadV039.resw`; imperative hot-refresh Shell strings use `ShellLive.resw`. zh-CN, ja-JP, and en-US maintain identical key sets, validated in CI.
+
+`LocalizationService` uses an explicit MRT Core `ResourceContext` language qualifier, so switching language refreshes the existing Window/Start/Settings/Drawing surfaces without restarting the process or discarding `CadWorkspaceSession` state. v0.4 interaction/Inspector strings are part of the same hot-switchable `ShellLive` contract.
 
 ### Version SSOT
 
 The repository root `VERSION` file is the product version SSOT. `Directory.Build.props` derives assembly/file/informational versions from it; `release/release.json` and MSIX identity are validated against the same value. Runtime UI reads assembly metadata through `AppVersionInfo` rather than hardcoding a third version string.
 
-### Viewport
-
-`CadViewport` is the drawing interaction coordinator and renderer. Mouse picks and typed coordinates converge on `SubmitDrawingPoint`, so the final entity model is independent of input method. LINE commits segments incrementally; PLINE commits one polyline when confirmed; RECTANGLE/CIRCLE/ARC auto-complete after the required points are valid.
-
-The viewport receives a `CadDocument` rather than owning the only document in the application. It reports pointer and zoom changes, while committed document state is observed directly from Core.
-
 ## Rendering and DPI
 
-The viewport performs world/screen transforms, adaptive grid rendering, crosshair drawing, zoom/pan, persistent entity rendering, and transient previews. Geometry code in `UCAD.Core` has no Win2D dependency.
+The viewport performs world/screen transforms, adaptive grid rendering, crosshair drawing, zoom/pan, persistent entity rendering, selection/snap feedback, and transient previews. Geometry and interaction calculations in `UCAD.Core` have no Win2D dependency.
 
-UCAD declares `PerMonitorV2` and uses XAML DIP layout. The UI must not add manual bitmap scaling for 100/125/150/175/200% display scales. Figma fidelity is checked at a deterministic 1440×900 window while PMv2 remains a separate runtime/manifest contract.
+UCAD declares `PerMonitorV2` and uses XAML DIP layout. The UI must not add manual bitmap scaling for 100/125/150/175/200% display scales. Figma fidelity remains a separate visual contract and is intentionally not a v0.4.0 release gate while Core interaction work is active.
 
 ## Validation boundary
 
-CI validates Core tests, WinUI build, real startup, MSIX/one-click packaging, language-key parity, version SSOT, PerMonitorV2, removal of Unicode placeholder icons, and Figma-critical design tokens. A dedicated UI-fidelity workflow starts the real executable at 1440×900 and captures Drawing, Start, Settings General, Appearance, Input & Interaction, and About for visual comparison with the Figma frames.
+CI requires:
 
-## v0.4 coupling rule
+- Core tests for command/document/entity plus v0.4 selection, Window/Crossing, curve hit tests, OSNAP/intersections, Ortho, and command lifecycle observation;
+- WinUI app build;
+- real startup smoke, which now creates a Drawing session and verifies Selection + OSNAP + Ortho + Inspector + capability-derived category state in the running application;
+- MSIX / one-click packaging;
+- language-key parity and representative translated values;
+- version SSOT, PerMonitorV2, icon contracts, and frozen Figma-critical design tokens.
 
-v0.4 is the first milestone where the completed shell and CAD Core become deliberately more coupled through explicit, reusable contracts:
+Pixel-level UI comparison remains manual/non-gating for this milestone.
 
-1. selection state belongs to a document/workspace service, not ad-hoc XAML controls;
-2. OSNAP and Ortho are Core/interaction state surfaced by the existing status bar;
-3. inspector content reads selected Core entities through a stable selection model;
-4. tool/category enabled state is derived from registered capabilities;
+## Milestone boundary
+
+v0.4.0 freezes the first explicit shell/Core interaction contracts:
+
+1. selection state belongs to `SelectionSet` / `CadInteractionState`, not ad-hoc XAML;
+2. OSNAP and Ortho are reusable Core/interaction services surfaced by per-workspace status controls;
+3. Inspector reads selected Core entities through the stable selection model;
+4. tool/category enabled state derives from registered `CommandRegistry` capabilities;
 5. all command invocations continue through `CommandRegistry` / `CommandSession`.
 
-Selection/OSNAP/Ortho belongs to v0.4 and modify commands belong to v0.5. Architecture/GIS helpers remain out of scope until the v0.5 drawing-editing loop is coherent.
+MOVE/COPY/ROTATE/TRIM/EXTEND/OFFSET and other Modify commands belong to v0.5.x. Architecture/GIS helpers remain out of scope until the drawing-editing loop is coherent.
