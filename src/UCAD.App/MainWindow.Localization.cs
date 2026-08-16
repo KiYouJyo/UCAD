@@ -193,6 +193,7 @@ public sealed partial class MainWindow
         var title = GetString("Settings_Nav_Title");
         var start = GetString("Start_TabTitle");
         var file = GetString("FileMenuButton.Content");
+        App.WriteStartupEvent($"Localization probe [{expectedLanguage}]: Settings_Nav_Title='{title}' | Start_TabTitle='{start}' | FileMenuButton.Content='{file}'");
 
         if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(start) || string.IsNullOrWhiteSpace(file))
         {
