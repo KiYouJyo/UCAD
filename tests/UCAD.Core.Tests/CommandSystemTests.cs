@@ -52,6 +52,21 @@ public sealed class CommandSystemTests
     }
 
     [Fact]
+    public void SessionPublishesObservableLifecycleChanges()
+    {
+        var session = new CommandSession(CommandRegistry.CreateDefault());
+        var changes = 0;
+        session.Changed += (_, _) => changes++;
+
+        session.Start("LINE");
+        session.Complete();
+        session.Start("CIRCLE");
+        session.Cancel();
+
+        Assert.Equal(4, changes);
+    }
+
+    [Fact]
     public void EmptySessionHasNoPreviousCommand()
     {
         var session = new CommandSession(CommandRegistry.CreateDefault());
