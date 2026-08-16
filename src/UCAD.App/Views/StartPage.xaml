@@ -5,7 +5,7 @@
 
     <Grid Background="{StaticResource UcadAppBackgroundBrush}">
         <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <StackPanel MaxWidth="1120" Margin="40,58,40,40" HorizontalAlignment="Center">
+            <StackPanel Width="1120" Margin="40,58,40,40" HorizontalAlignment="Center">
                 <TextBlock x:Name="StartTitleText" FontSize="28" FontWeight="Bold" Foreground="{StaticResource UcadTextPrimaryBrush}" />
                 <TextBlock x:Name="StartSubtitleText" Margin="0,8,0,0" FontSize="12" Foreground="{StaticResource UcadTextSecondaryBrush}" />
 
