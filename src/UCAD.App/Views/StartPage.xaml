@@ -10,7 +10,7 @@
                 <TextBlock x:Name="StartSubtitleText" Margin="0,8,0,0" FontSize="12" Foreground="{StaticResource UcadTextSecondaryBrush}" />
 
                 <StackPanel Margin="0,34,0,0" Orientation="Horizontal" Spacing="18">
-                    <Button x:Name="NewDrawingButton" Width="500" Height="112" Padding="20,0" HorizontalContentAlignment="Stretch" Background="{StaticResource UcadCardBrush}" BorderBrush="{StaticResource UcadCardBorderBrush}" BorderThickness="1" CornerRadius="8" Click="NewDrawingButton_Click">
+                    <Button x:Name="NewDrawingButton" Width="500" Height="112" Padding="20,0" HorizontalContentAlignment="Stretch" Background="{StaticResource UcadCardBrush}" BorderBrush="{StaticResource UcadStartActionBorderBrush}" BorderThickness="1" CornerRadius="8" Click="NewDrawingButton_Click">
                         <Grid>
                             <Grid.ColumnDefinitions><ColumnDefinition Width="48" /><ColumnDefinition Width="18" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                             <Border Width="48" Height="48" Background="{StaticResource UcadAccentBrush}" CornerRadius="8"><FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE710;" FontSize="22" /></Border>
@@ -20,7 +20,7 @@
                             </StackPanel>
                         </Grid>
                     </Button>
-                    <Button x:Name="OpenDrawingButton" Width="500" Height="112" Padding="20,0" HorizontalContentAlignment="Stretch" Background="{StaticResource UcadCardBrush}" BorderBrush="{StaticResource UcadCardBorderBrush}" BorderThickness="1" CornerRadius="8" Click="OpenDrawingButton_Click">
+                    <Button x:Name="OpenDrawingButton" Width="500" Height="112" Padding="20,0" HorizontalContentAlignment="Stretch" Background="{StaticResource UcadCardBrush}" BorderBrush="{StaticResource UcadStartActionBorderBrush}" BorderThickness="1" CornerRadius="8" Click="OpenDrawingButton_Click">
                         <Grid>
                             <Grid.ColumnDefinitions><ColumnDefinition Width="48" /><ColumnDefinition Width="18" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                             <Border Width="48" Height="48" Background="{StaticResource UcadControlFillSubtleBrush}" CornerRadius="8"><FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE8E5;" FontSize="22" /></Border>
@@ -37,9 +37,9 @@
                     <StackPanel Grid.Column="0">
                         <Grid Height="24">
                             <TextBlock x:Name="RecentTitleText" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource UcadTextPrimaryBrush}" />
-                            <Button x:Name="RecentShowAllButton" HorizontalAlignment="Right" VerticalAlignment="Center" Padding="8,4" Background="Transparent" BorderThickness="0" FontSize="10" Foreground="{StaticResource UcadTextSecondaryBrush}" />
+                            <Button x:Name="RecentShowAllButton" IsEnabled="False" HorizontalAlignment="Right" VerticalAlignment="Center" Padding="8,4" Background="Transparent" BorderThickness="0" FontSize="10" Foreground="{StaticResource UcadTextSecondaryBrush}" />
                         </Grid>
-                        <Border Margin="0,12,0,0" Width="680" Height="58" Background="{StaticResource UcadCardBrush}" BorderBrush="{StaticResource UcadCardBorderBrush}" BorderThickness="1" CornerRadius="6">
+                        <Border Margin="0,12,0,0" Width="680" Height="58" Background="{StaticResource UcadCardBrush}" BorderBrush="{StaticResource UcadStartTemplateBorderBrush}" BorderThickness="1" CornerRadius="6">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0" Spacing="12">
                                 <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE823;" FontSize="17" Foreground="{StaticResource UcadTextSecondaryBrush}" />
                                 <StackPanel Spacing="2">
@@ -52,14 +52,14 @@
 
                     <StackPanel Grid.Column="2">
                         <TextBlock x:Name="TemplatesTitleText" Height="24" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource UcadTextPrimaryBrush}" />
-                        <Button Margin="0,12,0,0" Width="360" Height="62" Padding="14,0" HorizontalContentAlignment="Stretch" Background="{StaticResource UcadCardBrush}" BorderBrush="{StaticResource UcadCardBorderBrush}" BorderThickness="1" CornerRadius="6" Click="NewDrawingButton_Click">
+                        <Button Margin="0,12,0,0" Width="360" Height="62" Padding="14,0" HorizontalContentAlignment="Stretch" Background="{StaticResource UcadCardBrush}" BorderBrush="{StaticResource UcadStartTemplateBorderBrush}" BorderThickness="1" CornerRadius="6" Click="NewDrawingButton_Click">
                             <Grid>
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="36" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                                 <Border Width="36" Height="36" Background="{StaticResource UcadControlFillSubtleBrush}" CornerRadius="5"><FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE8A5;" FontSize="16" /></Border>
                                 <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="2"><TextBlock x:Name="BlankTitleText" FontSize="11" FontWeight="SemiBold" /><TextBlock x:Name="BlankDescriptionText" FontSize="9" Foreground="{StaticResource UcadTextSecondaryBrush}" /></StackPanel>
                             </Grid>
                         </Button>
-                        <Button Margin="0,10,0,0" Width="360" Height="62" Padding="14,0" HorizontalContentAlignment="Stretch" IsEnabled="False" Background="{StaticResource UcadCardBrush}" BorderBrush="{StaticResource UcadCardBorderBrush}" BorderThickness="1" CornerRadius="6">
+                        <Button Margin="0,10,0,0" Width="360" Height="62" Padding="14,0" HorizontalContentAlignment="Stretch" IsEnabled="False" Background="{StaticResource UcadCardBrush}" BorderBrush="{StaticResource UcadStartTemplateBorderBrush}" BorderThickness="1" CornerRadius="6">
                             <Grid>
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="36" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                 <Border Width="36" Height="36" Background="{StaticResource UcadControlFillSubtleBrush}" CornerRadius="5"><PathIcon Width="17" Height="17" Data="M2,14 L2,7 L8,2 L14,7 L14,14 M6,14 L6,9 L10,9 L10,14" /></Border>
@@ -67,7 +67,7 @@
                                 <TextBlock x:Name="ArchitectureComingSoonText" Grid.Column="3" VerticalAlignment="Center" FontSize="9" Foreground="{StaticResource UcadTextTertiaryBrush}" />
                             </Grid>
                         </Button>
-                        <Button Margin="0,10,0,0" Width="360" Height="62" Padding="14,0" HorizontalContentAlignment="Stretch" IsEnabled="False" Background="{StaticResource UcadCardBrush}" BorderBrush="{StaticResource UcadCardBorderBrush}" BorderThickness="1" CornerRadius="6">
+                        <Button Margin="0,10,0,0" Width="360" Height="62" Padding="14,0" HorizontalContentAlignment="Stretch" IsEnabled="False" Background="{StaticResource UcadCardBrush}" BorderBrush="{StaticResource UcadStartTemplateBorderBrush}" BorderThickness="1" CornerRadius="6">
                             <Grid>
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="36" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                 <Border Width="36" Height="36" Background="{StaticResource UcadControlFillSubtleBrush}" CornerRadius="5"><PathIcon Width="17" Height="17" Data="M2,14 L2,5 L5,5 L5,14 M7,14 L7,2 L10,2 L10,14 M12,14 L12,7 L15,7 L15,14 M1,14 L16,14" /></Border>
