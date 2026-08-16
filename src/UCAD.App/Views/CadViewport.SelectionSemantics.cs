@@ -14,8 +14,8 @@ public sealed partial class CadViewport
     {
         // ProtectedCursor is the Windows App SDK cursor path for XAML elements.
         // Give WinUI a real but fully transparent InputCursor, then let Win2D draw
-        // the visible CAD crosshair/pickbox. This avoids the race where SetCursor(NULL)
-        // is immediately overwritten again by WinUI/DefWindowProc on mouse movement.
+        // the visible CAD crosshair/pickbox. This avoids racing WinUI's own cursor
+        // ownership with imperative Win32 cursor changes on every mouse movement.
         try
         {
             ProtectedCursor = TransparentInputCursor.GetOrCreate();
