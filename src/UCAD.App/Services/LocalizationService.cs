@@ -30,6 +30,18 @@ public sealed class LocalizationService
 
     public int Generation { get; private set; }
 
+    public bool IsSettingsLanguageApplied
+    {
+        get
+        {
+            var settings = SettingsService.Current.Settings;
+            return string.Equals(
+                AppliedLanguageOverride,
+                ResolveOverride(settings.DisplayLanguage, settings.FollowSystemLanguage),
+                StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
     public string CurrentLanguageTag
     {
         get
@@ -130,9 +142,8 @@ public sealed class LocalizationService
             return new ResourceLoader();
         }
 
-        // Important: the one-argument ResourceLoader(string) overload is a PRI file
-        // path constructor in current Windows App SDK guidance. A named .resw subtree
-        // must use the two-argument constructor with the default PRI file path.
+        // ResourceLoader(string) is a PRI file-path constructor. Named .resw maps
+        // require the two-argument overload with the default PRI resource file.
         return new ResourceLoader(ResourceLoader.GetDefaultResourceFilePath(), mapName);
     }
 
