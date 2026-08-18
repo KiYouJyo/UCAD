@@ -10,8 +10,9 @@ namespace UCAD.Core.Plot;
 
 /// <summary>
 /// Dependency-free one-page vector PDF writer used by the v0.12 plot foundation.
-/// Geometry remains vector paths. The built-in PDF Type1 font is ASCII-only; Unicode
-/// annotation text is explicitly replaced and reported instead of corrupting the PDF.
+/// Geometry remains vector paths. A platform text-outline provider can convert installed
+/// fonts, including CJK glyphs, into vector fills without embedding or distributing font
+/// files. Built-in Helvetica/ASCII remains an explicit fallback if outline generation fails.
 /// Multiple paper-space viewports are emitted into the same physical page with an
 /// independent clip rectangle and model transform for each viewport.
 /// </summary>
@@ -23,13 +24,30 @@ public static class CadPdfExporter
     public static CadPdfExportResult Export(CadDocument document, CadPlotPlan plan, string title = "UCAD Drawing")
     {
         ArgumentNullException.ThrowIfNull(plan);
-        return Export(document, [plan], title);
+        return Export(document, [plan], title, textOutlineProvider: null);
+    }
+
+    public static CadPdfExportResult Export(
+        CadDocument document,
+        CadPlotPlan plan,
+        string title,
+        ICadPdfTextOutlineProvider? textOutlineProvider)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+        return Export(document, [plan], title, textOutlineProvider);
     }
 
     public static CadPdfExportResult Export(
         CadDocument document,
         IReadOnlyList<CadPlotPlan> plans,
-        string title = "UCAD Drawing")
+        string title = "UCAD Drawing") =>
+        Export(document, plans, title, textOutlineProvider: null);
+
+    public static CadPdfExportResult Export(
+        CadDocument document,
+        IReadOnlyList<CadPlotPlan> plans,
+        string title,
+        ICadPdfTextOutlineProvider? textOutlineProvider)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(plans);
@@ -47,12 +65,16 @@ public static class CadPdfExporter
         }
 
         var warnings = new List<string>();
-        var content = BuildContent(document, plans, warnings);
+        var content = BuildContent(document, plans, warnings, textOutlineProvider);
         var pdf = BuildPdf(pageSetup, title, content);
         return new CadPdfExportResult(pdf, warnings.Distinct(StringComparer.Ordinal).ToArray());
     }
 
-    private static string BuildContent(CadDocument document, IReadOnlyList<CadPlotPlan> plans, List<string> warnings)
+    private static string BuildContent(
+        CadDocument document,
+        IReadOnlyList<CadPlotPlan> plans,
+        List<string> warnings,
+        ICadPdfTextOutlineProvider? textOutlineProvider)
     {
         var sb = new StringBuilder(Math.Max(8192, plans.Count * 8192));
         foreach (var plan in plans)
@@ -72,7 +94,7 @@ public static class CadPdfExporter
                 var lineWeightMm = properties.LineWeight ?? layer.LineWeight;
                 sb.AppendFormat(Invariant, "{0} w\n", F(Math.Max(0.1, MmToPt(lineWeightMm))));
                 WritePlotColor(sb, properties.ColorHex ?? layer.ColorHex, plan.PageSetup.PlotStyle);
-                WriteEntity(sb, document, entity, plan, warnings);
+                WriteEntity(sb, document, entity, plan, warnings, textOutlineProvider);
             }
             sb.AppendLine("Q");
         }
@@ -84,7 +106,8 @@ public static class CadPdfExporter
         CadDocument document,
         ICadEntity entity,
         CadPlotPlan plan,
-        List<string> warnings)
+        List<string> warnings,
+        ICadPdfTextOutlineProvider? textOutlineProvider)
     {
         switch (entity)
         {
@@ -116,28 +139,39 @@ public static class CadPdfExporter
                 WriteInfiniteLine(sb, xline.Point, xline.Direction, rayOnly: false, plan);
                 break;
             case TextEntity text:
-                WriteText(sb, text.Text, text.Position, text.Height, text.RotationRadians, plan, warnings, text.Id);
+                WriteText(
+                    sb,
+                    text.Text,
+                    text.Position,
+                    text.Height,
+                    text.RotationRadians,
+                    ResolveTextStyle(document, text.StyleName),
+                    plan,
+                    warnings,
+                    text.Id,
+                    textOutlineProvider);
                 break;
             case MTextEntity text:
-                WriteMText(sb, text, plan, warnings);
+                WriteMText(sb, document, text, plan, warnings, textOutlineProvider);
                 break;
             case LinearDimensionEntity dimension:
-                WriteLinearDimension(sb, document, dimension, plan, warnings);
+                WriteLinearDimension(sb, document, dimension, plan, warnings, textOutlineProvider);
                 break;
             case AngularDimensionEntity dimension:
-                WriteAngularDimension(sb, document, dimension, plan, warnings);
+                WriteAngularDimension(sb, document, dimension, plan, warnings, textOutlineProvider);
                 break;
             case RadialDimensionEntity dimension:
-                WriteRadialDimension(sb, document, dimension, plan, warnings);
+                WriteRadialDimension(sb, document, dimension, plan, warnings, textOutlineProvider);
                 break;
             case LeaderEntity leader:
-                WriteLeader(sb, leader, plan, warnings);
+                WriteLeader(sb, document, leader, plan, warnings, textOutlineProvider);
                 break;
             case HatchEntity hatch:
                 WriteHatch(sb, hatch, plan, warnings);
                 break;
             case BlockReferenceEntity reference:
-                foreach (var child in reference.Contents) WriteEntity(sb, document, child, plan, warnings);
+                foreach (var child in reference.Contents)
+                    WriteEntity(sb, document, child, plan, warnings, textOutlineProvider);
                 break;
             default:
                 warnings.Add($"PDF export skipped unsupported entity {entity.GetType().Name} ({entity.Id}).");
@@ -150,7 +184,8 @@ public static class CadPdfExporter
         CadDocument document,
         LinearDimensionEntity dimension,
         CadPlotPlan plan,
-        List<string> warnings)
+        List<string> warnings,
+        ICadPdfTextOutlineProvider? textOutlineProvider)
     {
         var endpoints = dimension.GetDimensionLineEndpoints();
         StrokeChain(sb, [dimension.FirstExtensionPoint, endpoints.First], false, plan);
@@ -159,7 +194,17 @@ public static class CadPdfExporter
         var style = ResolveDimensionStyle(document, dimension.StyleName);
         var midpoint = Midpoint(endpoints.First, endpoints.Second);
         var label = dimension.TextOverride ?? style.Format(dimension.Measurement);
-        WriteText(sb, label, midpoint, style.TextHeight, 0, plan, warnings, dimension.Id);
+        WriteText(
+            sb,
+            label,
+            midpoint,
+            style.TextHeight,
+            0,
+            CadTextStyle.CreateDefault(),
+            plan,
+            warnings,
+            dimension.Id,
+            textOutlineProvider);
     }
 
     private static void WriteAngularDimension(
@@ -167,7 +212,8 @@ public static class CadPdfExporter
         CadDocument document,
         AngularDimensionEntity dimension,
         CadPlotPlan plan,
-        List<string> warnings)
+        List<string> warnings,
+        ICadPdfTextOutlineProvider? textOutlineProvider)
     {
         var radius = dimension.Radius;
         var firstRay = Unit(dimension.FirstRayPoint - dimension.Vertex);
@@ -178,7 +224,17 @@ public static class CadPdfExporter
         var style = ResolveDimensionStyle(document, dimension.StyleName);
         var degrees = dimension.MeasurementRadians * 180.0 / Math.PI;
         var label = dimension.TextOverride ?? style.Format(degrees) + " deg";
-        WriteText(sb, label, dimension.GetArcMidpoint(), style.TextHeight, 0, plan, warnings, dimension.Id);
+        WriteText(
+            sb,
+            label,
+            dimension.GetArcMidpoint(),
+            style.TextHeight,
+            0,
+            CadTextStyle.CreateDefault(),
+            plan,
+            warnings,
+            dimension.Id,
+            textOutlineProvider);
     }
 
     private static void WriteRadialDimension(
@@ -186,30 +242,74 @@ public static class CadPdfExporter
         CadDocument document,
         RadialDimensionEntity dimension,
         CadPlotPlan plan,
-        List<string> warnings)
+        List<string> warnings,
+        ICadPdfTextOutlineProvider? textOutlineProvider)
     {
         StrokeChain(sb, [dimension.Center, dimension.PointOnCircle, dimension.TextPoint], false, plan);
         var style = ResolveDimensionStyle(document, dimension.StyleName);
         var prefix = dimension.Diameter ? "D" : "R";
         var label = dimension.TextOverride ?? prefix + style.Format(dimension.Measurement);
-        WriteText(sb, label, dimension.TextPoint, style.TextHeight, 0, plan, warnings, dimension.Id);
+        WriteText(
+            sb,
+            label,
+            dimension.TextPoint,
+            style.TextHeight,
+            0,
+            CadTextStyle.CreateDefault(),
+            plan,
+            warnings,
+            dimension.Id,
+            textOutlineProvider);
     }
 
-    private static void WriteLeader(StringBuilder sb, LeaderEntity leader, CadPlotPlan plan, List<string> warnings)
+    private static void WriteLeader(
+        StringBuilder sb,
+        CadDocument document,
+        LeaderEntity leader,
+        CadPlotPlan plan,
+        List<string> warnings,
+        ICadPdfTextOutlineProvider? textOutlineProvider)
     {
         StrokeChain(sb, leader.Points, false, plan);
-        WriteText(sb, leader.Text, leader.Points[^1], leader.TextHeight, 0, plan, warnings, leader.Id);
+        WriteText(
+            sb,
+            leader.Text,
+            leader.Points[^1],
+            leader.TextHeight,
+            0,
+            ResolveTextStyle(document, leader.StyleName),
+            plan,
+            warnings,
+            leader.Id,
+            textOutlineProvider);
     }
 
-    private static void WriteMText(StringBuilder sb, MTextEntity text, CadPlotPlan plan, List<string> warnings)
+    private static void WriteMText(
+        StringBuilder sb,
+        CadDocument document,
+        MTextEntity text,
+        CadPlotPlan plan,
+        List<string> warnings,
+        ICadPdfTextOutlineProvider? textOutlineProvider)
     {
         var lines = text.ApproximateLines();
         var lineHeight = text.TextHeight * 1.2;
         var normal = new CadVector(-Math.Sin(text.RotationRadians), Math.Cos(text.RotationRadians));
+        var style = ResolveTextStyle(document, text.StyleName);
         for (var index = 0; index < lines.Count; index++)
         {
             var position = Add(text.Position, normal, -lineHeight * index);
-            WriteText(sb, lines[index], position, text.TextHeight, text.RotationRadians, plan, warnings, text.Id);
+            WriteText(
+                sb,
+                lines[index],
+                position,
+                text.TextHeight,
+                text.RotationRadians,
+                style,
+                plan,
+                warnings,
+                text.Id,
+                textOutlineProvider);
         }
     }
 
@@ -288,12 +388,26 @@ public static class CadPdfExporter
         CadPoint modelPosition,
         double modelHeight,
         double rotationRadians,
+        CadTextStyle textStyle,
         CadPlotPlan plan,
         List<string> warnings,
-        Guid sourceId)
+        Guid sourceId,
+        ICadPdfTextOutlineProvider? textOutlineProvider)
     {
+        if (textOutlineProvider is not null &&
+            textOutlineProvider.TryCreateOutline(value, textStyle, out var outline, out var outlineWarning) &&
+            outline is not null)
+        {
+            WriteTextOutline(sb, outline, modelPosition, modelHeight, rotationRadians, plan);
+            return;
+        }
+
+        if (textOutlineProvider is not null && !string.IsNullOrWhiteSpace(outlineWarning))
+            warnings.Add($"Annotation {sourceId}: {outlineWarning}");
+
         var ascii = ToPdfAscii(value, out var replaced);
-        if (replaced) warnings.Add($"PDF built-in font replaced non-ASCII characters in annotation {sourceId}; Unicode font embedding is pending.");
+        if (replaced)
+            warnings.Add($"PDF text outline was unavailable and built-in Helvetica replaced non-ASCII characters in annotation {sourceId}.");
         var paper = plan.ModelToPaper(modelPosition);
         var x = MmToPt(paper.X);
         var y = MmToPt(paper.Y);
@@ -306,6 +420,40 @@ public static class CadPdfExporter
         sb.AppendFormat(Invariant, "{0} {1} {2} {3} {4} {5} Tm\n", F(cosine), F(sine), F(-sine), F(cosine), F(x), F(y));
         sb.Append('(').Append(EscapePdfString(ascii)).AppendLine(") Tj");
         sb.AppendLine("ET");
+    }
+
+    private static void WriteTextOutline(
+        StringBuilder sb,
+        CadPdfTextOutline outline,
+        CadPoint modelPosition,
+        double modelHeight,
+        double rotationRadians,
+        CadPlotPlan plan)
+    {
+        var origin = plan.ModelToPaper(modelPosition);
+        var scaleMm = modelHeight / plan.ScaleDenominator;
+        var paperRotation = plan.ModelAngleToPaper(rotationRadians);
+        var cosine = Math.Cos(paperRotation);
+        var sine = Math.Sin(paperRotation);
+
+        foreach (var figure in outline.Figures)
+        {
+            if (figure.Points.Count < 2) continue;
+            for (var index = 0; index < figure.Points.Count; index++)
+            {
+                var local = figure.Points[index];
+                var localX = local.X * scaleMm;
+                var localY = -local.Y * scaleMm;
+                var paperX = origin.X + (localX * cosine) - (localY * sine);
+                var paperY = origin.Y + (localX * sine) + (localY * cosine);
+                if (index == 0)
+                    sb.AppendFormat(Invariant, "{0} {1} m\n", F(MmToPt(paperX)), F(MmToPt(paperY)));
+                else
+                    sb.AppendFormat(Invariant, "{0} {1} l\n", F(MmToPt(paperX)), F(MmToPt(paperY)));
+            }
+            if (figure.Closed) sb.AppendLine("h");
+        }
+        sb.AppendLine("f");
     }
 
     private static void StrokeChain(StringBuilder sb, IReadOnlyList<CadPoint> points, bool closed, CadPlotPlan plan)
@@ -403,6 +551,9 @@ public static class CadPdfExporter
 
     private static CadDimensionStyle ResolveDimensionStyle(CadDocument document, string name) =>
         document.TryGetDimensionStyle(name, out var style) && style is not null ? style : CadDimensionStyle.CreateDefault();
+
+    private static CadTextStyle ResolveTextStyle(CadDocument document, string name) =>
+        document.TryGetTextStyle(name, out var style) && style is not null ? style : CadTextStyle.CreateDefault();
 
     private static CadPoint Midpoint(CadPoint first, CadPoint second) => new((first.X + second.X) / 2, (first.Y + second.Y) / 2);
 
