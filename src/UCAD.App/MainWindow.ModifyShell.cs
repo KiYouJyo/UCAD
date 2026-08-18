@@ -21,14 +21,17 @@ public sealed partial class MainWindow
         _modifyToolSurfacesActivated = true;
 
         // The v0.3 shell intentionally shipped the first four Modify buttons as inert
-        // placeholders. v0.5 promotes those exact surfaces to real commands and appends
-        // the remaining foundational transforms without reworking the frozen shell layout.
+        // placeholders. v0.5 promotes those exact surfaces to real commands. ERASE is inserted
+        // as a discoverable high-frequency command; the remaining transforms are appended.
         var commands = new[] { "MOVE", "COPY", "OFFSET", "TRIM" };
         var existing = ModifyToolShelf.Children.OfType<Button>().ToArray();
         for (var i = 0; i < Math.Min(commands.Length, existing.Length); i++)
         {
             ConfigureModifyButton(existing[i], commands[i]);
         }
+
+        var eraseButton = CreateModifyShelfButton("ERASE", existing.FirstOrDefault()?.Style);
+        ModifyToolShelf.Children.Insert(Math.Min(2, ModifyToolShelf.Children.Count), eraseButton);
 
         foreach (var command in new[] { "ROTATE", "SCALE", "MIRROR", "EXTEND" })
         {
@@ -76,7 +79,7 @@ public sealed partial class MainWindow
                 Spacing = 1,
                 Children =
                 {
-                    CadToolIconService.Create(command),
+                    CreateModifyCommandIcon(command),
                     new TextBlock
                     {
                         Text = command,
@@ -87,6 +90,7 @@ public sealed partial class MainWindow
                     {
                         Text = command switch
                         {
+                            "ERASE" => "E",
                             "ROTATE" => "RO",
                             "SCALE" => "SC",
                             "MIRROR" => "MI",
@@ -102,6 +106,21 @@ public sealed partial class MainWindow
         };
         button.Click += RunCommand_Click;
         return button;
+    }
+
+    private static IconElement CreateModifyCommandIcon(string command)
+    {
+        if (string.Equals(command, "ERASE", StringComparison.Ordinal))
+        {
+            return new FontIcon
+            {
+                FontFamily = new FontFamily("Segoe Fluent Icons"),
+                Glyph = "\uE74D",
+                FontSize = 16
+            };
+        }
+
+        return CadToolIconService.Create(command);
     }
 
     private static bool TryGetModifyCommandLabel(Button button, out string command)
