@@ -635,7 +635,7 @@ public static class CadDxfAdvancedInteropCodec
         var textPoint = new CadPoint((endpoints.First.X + endpoints.Second.X) / 2.0, (endpoints.First.Y + endpoints.Second.Y) / 2.0);
         WritePoint(output, 11, 21, textPoint);
         WritePair(output, 31, 0);
-        WritePair(output, 70, 1); // aligned dimension
+        WritePair(output, 70, 1);
         if (dimension.TextOverride is not null) WritePair(output, 1, dimension.TextOverride);
         WritePair(output, 3, dimension.StyleName);
         WritePoint(output, 13, 23, dimension.FirstExtensionPoint);
@@ -652,7 +652,7 @@ public static class CadDxfAdvancedInteropCodec
         WritePair(output, 30, 0);
         WritePoint(output, 11, 21, dimension.GetArcMidpoint());
         WritePair(output, 31, 0);
-        WritePair(output, 70, 5); // three-point angular dimension
+        WritePair(output, 70, 5);
         if (dimension.TextOverride is not null) WritePair(output, 1, dimension.TextOverride);
         WritePair(output, 3, dimension.StyleName);
         WritePoint(output, 13, 23, dimension.FirstRayPoint);
@@ -671,9 +671,9 @@ public static class CadDxfAdvancedInteropCodec
         WritePair(output, 5, leaderHandle);
         WriteEntityProperties(output, properties);
         WritePair(output, 3, leader.StyleName);
-        WritePair(output, 71, 1); // arrowhead enabled
-        WritePair(output, 72, 0); // straight segments
-        WritePair(output, 73, 0); // text annotation
+        WritePair(output, 71, 1);
+        WritePair(output, 72, 0);
+        WritePair(output, 73, 0);
         WritePair(output, 74, 0);
         WritePair(output, 75, 0);
         WritePair(output, 76, leader.Points.Count);
@@ -758,7 +758,7 @@ public static class CadDxfAdvancedInteropCodec
         var trueColor = GetInt(record, 420, -1);
         var color = trueColor >= 0 ? $"#{(trueColor & 0xFFFFFF):X6}" : null;
         var rawLineWeight = GetInt(record, 370, -1);
-        var lineWeight = rawLineWeight > 0 ? rawLineWeight / 100.0 : null;
+        double? lineWeight = rawLineWeight > 0 ? rawLineWeight / 100.0 : null;
         var lineType = GetString(record, 6, "ByLayer");
         return new CadEntityProperties(layerName, color, lineWeight, lineType);
     }
