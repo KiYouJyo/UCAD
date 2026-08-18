@@ -4,6 +4,7 @@ using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using System.Numerics;
 using UCAD.Core.Entities;
+using UCAD.Core.Geometry;
 using UCAD.Core.Hatching;
 using UCAD.Core.Interaction;
 using Windows.UI;
@@ -157,7 +158,7 @@ public sealed partial class CadViewport
         ds.DrawGeometry(geometry, color, strokeWidth);
     }
 
-    private void AddHatchLoop(CanvasPathBuilder builder, IReadOnlyList<Core.Geometry.CadPoint> loop)
+    private void AddHatchLoop(CanvasPathBuilder builder, IReadOnlyList<CadPoint> loop)
     {
         if (loop.Count < 3) return;
         builder.BeginFigure(WorldToScreen(loop[0]));
@@ -167,7 +168,7 @@ public sealed partial class CadViewport
 
     private void DrawHatchLoop(
         CanvasDrawingSession ds,
-        IReadOnlyList<Core.Geometry.CadPoint> loop,
+        IReadOnlyList<CadPoint> loop,
         Color color,
         float strokeWidth)
     {
