@@ -6,6 +6,8 @@ using AcadDocument = ACadSharp.CadDocument;
 using AcadDimension = ACadSharp.Entities.Dimension;
 using AcadDimensionAligned = ACadSharp.Entities.DimensionAligned;
 using AcadDimensionAngular3Pt = ACadSharp.Entities.DimensionAngular3Pt;
+using AcadDimensionRadius = ACadSharp.Entities.DimensionRadius;
+using AcadDimensionDiameter = ACadSharp.Entities.DimensionDiameter;
 using AcadDimensionStyle = ACadSharp.Tables.DimensionStyle;
 using IxDxfFile = IxMilia.Dxf.DxfFile;
 using UcadDocument = UCAD.Core.CadDocument;
@@ -13,72 +15,54 @@ using UcadDocument = UCAD.Core.CadDocument;
 namespace UCAD.Core.IO;
 
 /// <summary>
-/// AutoCAD transport bridge for formats whose binary containers are not implemented natively by UCAD.
-/// ACadSharp owns DWG transport, while IxMilia.Dxf owns text/binary DXF container normalization.
-/// UCAD's advanced DXF semantic bridge remains the single boundary into the UCAD document model so
-/// drawing, annotation, block and style mappings do not diverge between container implementations.
+/// AutoCAD transport bridge. ACadSharp owns DWG transport, IxMilia.Dxf owns
+/// text/binary DXF normalization, and UCAD's full semantic bridge owns the
+/// authoritative conversion into the editable document model.
 /// </summary>
 public static class CadAcadInteropCodec
 {
     private static readonly UTF8Encoding Utf8NoBom = new(encoderShouldEmitUTF8Identifier: false);
 
-    static CadAcadInteropCodec()
-    {
-        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-    }
+    static CadAcadInteropCodec() => Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
     public static CadAcadImportResult ImportDwg(ReadOnlyMemory<byte> content, string sourceExtension = ".dwg")
     {
         if (content.IsEmpty) throw new ArgumentException("DWG content cannot be empty.", nameof(content));
         var warnings = new List<string>();
-
         using var input = new MemoryStream(content.ToArray(), writable: false);
         using var reader = new DwgReader(input);
         reader.OnNotification += (_, args) => AddNotification(warnings, "DWG read", args);
         var acadDocument = reader.Read();
 
         var bridgeText = WriteAsciiDxfBridge(acadDocument, warnings);
-        var imported = CadDxfAdvancedInteropCodec.Import(bridgeText);
+        var imported = CadDxfFullInteropCodec.Import(bridgeText);
         AppendWarnings(warnings, "UCAD DXF bridge", imported.Warnings);
         CadAcadDwgSemanticRepair.Apply(acadDocument, imported.Document, warnings);
         CadAcadLayoutInterop.Import(acadDocument, imported.Document, warnings);
         imported.Document.ResetHistory();
-
-        return new CadAcadImportResult(
-            imported.Document,
-            warnings,
-            NormalizeExtension(sourceExtension),
-            acadDocument.Header.Version.ToString());
+        return new CadAcadImportResult(imported.Document, warnings, NormalizeExtension(sourceExtension), acadDocument.Header.Version.ToString());
     }
 
     public static CadAcadImportResult ImportDxf(ReadOnlyMemory<byte> content, string sourceExtension = ".dxf")
     {
         if (content.IsEmpty) throw new ArgumentException("DXF content cannot be empty.", nameof(content));
         var warnings = new List<string>();
-
         using var input = new MemoryStream(content.ToArray(), writable: false);
         var dxfFile = IxDxfFile.Load(input);
         using var normalized = new MemoryStream();
         dxfFile.Save(normalized, asText: true);
         var bridgeText = Utf8NoBom.GetString(normalized.ToArray());
-
-        var imported = CadDxfAdvancedInteropCodec.Import(bridgeText);
+        var imported = CadDxfFullInteropCodec.Import(bridgeText);
         AppendWarnings(warnings, "UCAD DXF bridge", imported.Warnings);
         imported.Document.ResetHistory();
-
-        return new CadAcadImportResult(
-            imported.Document,
-            warnings,
-            NormalizeExtension(sourceExtension),
-            dxfFile.Header.Version.ToString());
+        return new CadAcadImportResult(imported.Document, warnings, NormalizeExtension(sourceExtension), dxfFile.Header.Version.ToString());
     }
 
     public static CadAcadBinaryExportResult ExportDwg(UcadDocument document, string targetExtension = ".dwg")
     {
         ArgumentNullException.ThrowIfNull(document);
         var extension = NormalizeExtension(targetExtension);
-        if (extension is not ".dwg" and not ".dwt")
-            throw new NotSupportedException($"UCAD does not export DWG transport bytes as '{extension}'.");
+        if (extension is not ".dwg" and not ".dwt") throw new NotSupportedException($"UCAD does not export DWG transport bytes as '{extension}'.");
 
         var warnings = new List<string>();
         var acadDocument = BuildAcadDocument(document, warnings);
@@ -93,54 +77,34 @@ public static class CadAcadInteropCodec
             writer.OnNotification += (_, args) => AddNotification(warnings, "DWG write", args);
             writer.Write();
         }
-
-        return new CadAcadBinaryExportResult(
-            output.ToArray(),
-            warnings,
-            extension,
-            acadDocument.Header.Version.ToString());
+        return new CadAcadBinaryExportResult(output.ToArray(), warnings, extension, acadDocument.Header.Version.ToString());
     }
 
     public static CadAcadBinaryExportResult ExportBinaryDxf(UcadDocument document)
     {
         ArgumentNullException.ThrowIfNull(document);
         var warnings = new List<string>();
-        var dxf = CadDxfAdvancedInteropCodec.Export(document);
+        var dxf = CadDxfFullInteropCodec.Export(document);
         AppendWarnings(warnings, "UCAD DXF export", dxf.Warnings);
-
         using var textInput = new MemoryStream(Utf8NoBom.GetBytes(dxf.Content), writable: false);
         var dxfFile = IxDxfFile.Load(textInput, Utf8NoBom);
         using var output = new MemoryStream();
         dxfFile.Save(output, asText: false);
-
-        return new CadAcadBinaryExportResult(
-            output.ToArray(),
-            warnings,
-            ".dxf",
-            dxfFile.Header.Version.ToString());
+        return new CadAcadBinaryExportResult(output.ToArray(), warnings, ".dxf", dxfFile.Header.Version.ToString());
     }
 
     private static AcadDocument BuildAcadDocument(UcadDocument document, List<string> warnings)
     {
-        var dxf = CadDxfAdvancedInteropCodec.Export(document);
+        var dxf = CadDxfFullInteropCodec.Export(document);
         AppendWarnings(warnings, "UCAD DXF export", dxf.Warnings);
-
         using var input = new MemoryStream(Utf8NoBom.GetBytes(dxf.Content), writable: false);
         using var reader = CreateDxfReaderWithDefaults(input, warnings, "DXF bridge read");
         return reader.Read();
     }
 
-    /// <summary>
-    /// ACadSharp's DXF document builder currently drops UCAD-authored DIMENSION records that do not
-    /// already reference a generated anonymous dimension block. DWG export therefore injects native
-    /// dimension objects from the authoritative UCAD model before writing. Other entities continue to
-    /// flow through the shared DXF bridge.
-    /// </summary>
     private static void InjectNativeDimensions(UcadDocument source, AcadDocument target)
     {
-        foreach (var existing in target.Entities.OfType<AcadDimension>().ToArray())
-            target.Entities.Remove(existing);
-
+        foreach (var existing in target.Entities.OfType<AcadDimension>().ToArray()) target.Entities.Remove(existing);
         foreach (var entity in source.Entities)
         {
             AcadDimension? dimension = entity switch
@@ -162,63 +126,68 @@ public static class CadAcadInteropCodec
                     Text = angular.TextOverride,
                     Style = ResolveAcadDimensionStyle(target, angular.StyleName)
                 },
+                UCAD.Core.Entities.RadialDimensionEntity radial when !radial.Diameter => new AcadDimensionRadius
+                {
+                    DefinitionPoint = ToAcadPoint(radial.Center),
+                    AngleVertex = ToAcadPoint(radial.PointOnCircle),
+                    TextMiddlePoint = ToAcadPoint(radial.TextPoint),
+                    LeaderLength = (radial.PointOnCircle - radial.Center).Length,
+                    Text = radial.TextOverride,
+                    Style = ResolveAcadDimensionStyle(target, radial.StyleName)
+                },
+                UCAD.Core.Entities.RadialDimensionEntity radial => CreateDiameterDimension(radial, target),
                 _ => null
             };
-
             if (dimension is null) continue;
             var properties = source.GetEntityProperties(entity.Id);
-            if (target.Layers.FirstOrDefault(layer => string.Equals(layer.Name, properties.LayerName, StringComparison.OrdinalIgnoreCase)) is { } layer)
-                dimension.Layer = layer;
+            if (target.Layers.FirstOrDefault(layer => string.Equals(layer.Name, properties.LayerName, StringComparison.OrdinalIgnoreCase)) is { } layer) dimension.Layer = layer;
             target.Entities.Add(dimension);
         }
+    }
+
+    private static AcadDimensionDiameter CreateDiameterDimension(UCAD.Core.Entities.RadialDimensionEntity radial, AcadDocument target)
+    {
+        var dx = radial.PointOnCircle.X - radial.Center.X;
+        var dy = radial.PointOnCircle.Y - radial.Center.Y;
+        return new AcadDimensionDiameter
+        {
+            DefinitionPoint = new CSMath.XYZ(radial.Center.X - dx, radial.Center.Y - dy, 0),
+            AngleVertex = ToAcadPoint(radial.PointOnCircle),
+            TextMiddlePoint = ToAcadPoint(radial.TextPoint),
+            LeaderLength = Math.Sqrt(dx * dx + dy * dy) * 2,
+            Text = radial.TextOverride,
+            Style = ResolveAcadDimensionStyle(target, radial.StyleName)
+        };
     }
 
     private static AcadDimensionStyle ResolveAcadDimensionStyle(AcadDocument document, string styleName)
     {
         var normalized = string.IsNullOrWhiteSpace(styleName) ? AcadDimensionStyle.DefaultName : styleName.Trim();
-        return document.DimensionStyles.FirstOrDefault(style => string.Equals(style.Name, normalized, StringComparison.OrdinalIgnoreCase))
-            ?? new AcadDimensionStyle(normalized);
+        var existing = document.DimensionStyles.FirstOrDefault(style => string.Equals(style.Name, normalized, StringComparison.OrdinalIgnoreCase));
+        if (existing is not null) return existing;
+        var created = new AcadDimensionStyle(normalized);
+        document.DimensionStyles.Add(created);
+        return created;
     }
 
     private static CSMath.XYZ ToAcadPoint(UCAD.Core.Geometry.CadPoint point) => new(point.X, point.Y, 0.0);
 
-    /// <summary>
-    /// A DWG DIMENSION references an anonymous *D block containing its rendered picture. The DXF
-    /// bridge carries the semantic dimension fields even when group 2 is absent, but ACadSharp's DWG
-    /// writer expects the anonymous block reference to exist. UpdateBlock creates/registers that block;
-    /// without this normalization a valid semantic DIMENSION can disappear after DWG write/read.
-    /// </summary>
     private static void PrepareAcadSharpDimensionsForDwgWriter(AcadDocument document, List<string> warnings)
     {
         foreach (var dimension in document.Entities.OfType<AcadDimension>())
         {
-            try
-            {
-                dimension.UpdateBlock();
-            }
+            try { dimension.UpdateBlock(); }
             catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or NotSupportedException)
-            {
-                warnings.Add($"DWG dimension block generation for {dimension.GetType().Name} failed: {ex.Message}");
-            }
+            { warnings.Add($"DWG dimension block generation for {dimension.GetType().Name} failed: {ex.Message}"); }
         }
     }
 
-    /// <summary>
-    /// ACadSharp's DXF builder can expose sequence terminators as standalone block entities while also
-    /// linking the same logical terminator through INSERT/Polyline child collections. The DWG writer
-    /// writes child SEQEND records through those owning collections and does not implement standalone
-    /// SEQEND dispatch. Removing only the standalone block-list entries is therefore a transport-shape
-    /// normalization, not a semantic downgrade.
-    /// </summary>
     private static void NormalizeAcadSharpSequencesForDwgWriter(AcadDocument document)
     {
         foreach (var block in document.BlockRecords)
         {
-            var standaloneSequenceEnds = block.Entities
-                .OfType<ACadSharp.Entities.Seqend>()
-                .ToArray();
-            foreach (var sequenceEnd in standaloneSequenceEnds)
-                block.Entities.Remove(sequenceEnd);
+            var standaloneSequenceEnds = block.Entities.OfType<ACadSharp.Entities.Seqend>().ToArray();
+            foreach (var sequenceEnd in standaloneSequenceEnds) block.Entities.Remove(sequenceEnd);
         }
     }
 
@@ -238,19 +207,13 @@ public static class CadAcadInteropCodec
             writer.OnNotification += (_, args) => AddNotification(warnings, "DXF bridge write", args);
             writer.Write();
         }
-
-        var encoding = GetDxfTextEncoding(acadDocument, warnings);
-        return encoding.GetString(output.ToArray());
+        return GetDxfTextEncoding(acadDocument, warnings).GetString(output.ToArray());
     }
 
     private static Encoding GetDxfTextEncoding(AcadDocument document, List<string> warnings)
     {
         if (document.Header.Version >= ACadVersion.AC1021) return Utf8NoBom;
-
-        try
-        {
-            return Encoding.GetEncoding(ResolveCodePage(document.Header.CodePage));
-        }
+        try { return Encoding.GetEncoding(ResolveCodePage(document.Header.CodePage)); }
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException)
         {
             warnings.Add($"DXF bridge: code page '{document.Header.CodePage}' is unavailable; Windows-1252 fallback was used. {ex.Message}");
@@ -264,40 +227,16 @@ public static class CadAcadInteropCodec
         var normalized = codePage.Trim().ToLowerInvariant().Replace('-', '_');
         return normalized switch
         {
-            "utf_8" or "utf8" => 65001,
-            "ascii" or "us_ascii" => 20127,
-            "gb2312" or "ansi_936" or "ansi936" => 936,
-            "big5" or "ansi_950" or "ansi950" => 950,
-            "kcs5601" or "ks_c_5601_1987" or "ansi_949" or "ansi949" => 949,
-            "johab" or "ansi_1361" or "ansi1361" => 1361,
+            "utf_8" or "utf8" => 65001, "ascii" or "us_ascii" => 20127,
+            "gb2312" or "ansi_936" or "ansi936" => 936, "big5" or "ansi_950" or "ansi950" => 950,
+            "kcs5601" or "ks_c_5601_1987" or "ansi_949" or "ansi949" => 949, "johab" or "ansi_1361" or "ansi1361" => 1361,
             "shift_jis" or "sjis" or "ansi_932" or "ansi932" or "dos932" => 932,
-            "ansi_874" or "ansi874" => 874,
-            "ansi_1250" or "ansi1250" => 1250,
-            "ansi_1251" or "ansi1251" => 1251,
-            "ansi_1252" or "ansi1252" => 1252,
-            "ansi_1253" or "ansi1253" => 1253,
-            "ansi_1254" or "ansi1254" => 1254,
-            "ansi_1255" or "ansi1255" => 1255,
-            "ansi_1256" or "ansi1256" => 1256,
-            "ansi_1257" or "ansi1257" => 1257,
-            "ansi_1258" or "ansi1258" => 1258,
-            "dos437" => 437,
-            "dos720" => 720,
-            "dos737" => 737,
-            "dos775" => 775,
-            "dos850" => 850,
-            "dos852" => 852,
-            "dos855" => 855,
-            "dos857" => 857,
-            "dos858" => 858,
-            "dos860" => 860,
-            "dos861" => 861,
-            "dos862" => 862,
-            "dos863" => 863,
-            "dos864" => 864,
-            "dos865" => 865,
-            "dos866" => 866,
-            "dos869" => 869,
+            "ansi_874" or "ansi874" => 874, "ansi_1250" or "ansi1250" => 1250, "ansi_1251" or "ansi1251" => 1251,
+            "ansi_1252" or "ansi1252" => 1252, "ansi_1253" or "ansi1253" => 1253, "ansi_1254" or "ansi1254" => 1254,
+            "ansi_1255" or "ansi1255" => 1255, "ansi_1256" or "ansi1256" => 1256, "ansi_1257" or "ansi1257" => 1257,
+            "ansi_1258" or "ansi1258" => 1258, "dos437" => 437, "dos720" => 720, "dos737" => 737, "dos775" => 775,
+            "dos850" => 850, "dos852" => 852, "dos855" => 855, "dos857" => 857, "dos858" => 858, "dos860" => 860,
+            "dos861" => 861, "dos862" => 862, "dos863" => 863, "dos864" => 864, "dos865" => 865, "dos866" => 866, "dos869" => 869,
             _ => TryResolveNumericCodePage(normalized)
         };
     }
@@ -305,8 +244,7 @@ public static class CadAcadInteropCodec
     private static int TryResolveNumericCodePage(string normalized)
     {
         var digits = new string(normalized.Where(char.IsDigit).ToArray());
-        if (digits.Length > 0 && int.TryParse(digits, NumberStyles.None, CultureInfo.InvariantCulture, out var value) && value > 0)
-            return value;
+        if (digits.Length > 0 && int.TryParse(digits, NumberStyles.None, CultureInfo.InvariantCulture, out var value) && value > 0) return value;
         throw new NotSupportedException($"Unknown AutoCAD code page '{normalized}'.");
     }
 
@@ -333,20 +271,11 @@ public static class CadAcadInteropCodec
     }
 }
 
-public sealed record CadAcadImportResult(
-    UcadDocument Document,
-    IReadOnlyList<string> Warnings,
-    string SourceExtension,
-    string SourceCadVersion)
+public sealed record CadAcadImportResult(UcadDocument Document, IReadOnlyList<string> Warnings, string SourceExtension, string SourceCadVersion)
 {
     public bool HasWarnings => Warnings.Count > 0;
 }
-
-public sealed record CadAcadBinaryExportResult(
-    byte[] Content,
-    IReadOnlyList<string> Warnings,
-    string TargetExtension,
-    string TargetCadVersion)
+public sealed record CadAcadBinaryExportResult(byte[] Content, IReadOnlyList<string> Warnings, string TargetExtension, string TargetCadVersion)
 {
     public bool HasWarnings => Warnings.Count > 0;
 }
