@@ -36,6 +36,7 @@ public partial class App : Application
             mainWindow.EnsureRecentFilesInitialized();
             mainWindow.EnsureFileCloseIntegration();
             mainWindow.EnsureAutoSaveInitialized();
+            mainWindow.HandleInitialFileActivation();
             mainWindow.ScheduleLocalizationSmoke();
             mainWindow.ScheduleInteractionSmoke();
             mainWindow.ScheduleAuthoringSmoke();
