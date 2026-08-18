@@ -6,7 +6,7 @@ on:
       - 'codex/**'
 
 permissions:
-  contents: read
+  contents: write
   statuses: write
 
 jobs:
@@ -14,6 +14,26 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+      - name: Converge v0.8.1 icon registry
+        shell: pwsh
+        run: |
+          if (Test-Path .github/scripts/converge_icon_registry_v081.py) {
+            python .github/scripts/converge_icon_registry_v081.py
+            if (git status --porcelain) {
+              git config user.name 'github-actions[bot]'
+              git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+              git add src/UCAD.App/App.xaml src/UCAD.App/MainWindow.xaml src/UCAD.App/Services/CadToolIconService.cs .github/scripts/Validate-UcadUi.ps1
+              git commit -m 'Fix v0.8.1 CAD icon instance materialization'
+              git push origin HEAD:codex/v0.8-document-dxf-foundation
+              Write-Output 'Icon registry converged; next branch run validates committed state.'
+              exit 0
+            }
+          }
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.302'
