@@ -33,8 +33,10 @@ internal static class CadAcadDxfLayoutSidecar
             var document = reader.Read();
             CadAcadLayoutInterop.Import(document, target, warnings);
         }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or FormatException or NotSupportedException)
+        catch (Exception ex)
         {
+            // Layout metadata is supplemental. Never allow a secondary OBJECTS/layout parser failure
+            // to turn an otherwise valid DXF entity import into a hard open failure.
             warnings.Add($"DXF layout sidecar could not read paper-layout metadata; drawing entities were still imported. {ex.Message}");
         }
     }
