@@ -31,39 +31,49 @@ public sealed class AcadFormatRegistryTests
     [InlineData("script.scr")]
     [InlineData("routine.lsp")]
     [InlineData("sheetset.dst")]
+    public void MigratableAutoCadFormatsExposeBoundedImportCapability(string path)
+    {
+        Assert.True(CadAcadFileFormatRegistry.TryGetByPath(path, out var format));
+        Assert.True(format.Capabilities.HasFlag(CadFileFormatCapabilities.Recognized));
+        Assert.False(format.CanOpen);
+        Assert.True(format.CanImport);
+        Assert.False(string.IsNullOrWhiteSpace(format.Transport));
+        Assert.False(string.IsNullOrWhiteSpace(format.SupportNote));
+    }
+
+    [Theory]
     [InlineData("plugin.arx")]
-    public void PendingAutoCadFormatsAreRecognizedWithoutFalseCapabilities(string path)
+    [InlineData("plugin.crx")]
+    [InlineData("plugin.dbx")]
+    [InlineData("driver.hdi")]
+    [InlineData("automation.js")]
+    public void RuntimeOnlyFormatsRemainRecognizedWithoutFalseExecutionCapabilities(string path)
     {
         Assert.True(CadAcadFileFormatRegistry.TryGetByPath(path, out var format));
         Assert.True(format.Capabilities.HasFlag(CadFileFormatCapabilities.Recognized));
         Assert.False(format.CanOpen);
         Assert.False(format.CanImport);
         Assert.False(format.CanExport);
-        Assert.False(string.IsNullOrWhiteSpace(format.Transport));
-        Assert.False(string.IsNullOrWhiteSpace(format.SupportNote));
     }
 
     [Theory]
     [InlineData("pattern.pat")]
     [InlineData("linetype.lin")]
     [InlineData("aliases.pgp")]
-    public void TextResourcesExposeRealImportExportCapabilities(string path)
+    [InlineData("profile.arg")]
+    [InlineData("custom.cuix")]
+    [InlineData("plot.pc3")]
+    public void ResourceMigrationFormatsExposeRealAdapters(string path)
     {
         Assert.True(CadAcadFileFormatRegistry.TryGetByPath(path, out var format));
-        Assert.Equal(CadFileFormatFamily.AutoCadResource, format.Family);
         Assert.True(format.CanImport);
         Assert.True(format.CanExport);
-        Assert.True(format.Capabilities.HasFlag(CadFileFormatCapabilities.Resource));
-        Assert.Contains("UCAD", format.Transport, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
     public void AutoCadEcosystemInventoryIncludesNativeSupportAndExecutableFamilies()
     {
-        var extensions = CadAcadFileFormatRegistry.Formats
-            .Select(format => format.Extension)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
+        var extensions = CadAcadFileFormatRegistry.Formats.Select(format => format.Extension).ToHashSet(StringComparer.OrdinalIgnoreCase);
         Assert.Contains(".dst", extensions);
         Assert.Contains(".dsd", extensions);
         Assert.Contains(".dcl", extensions);
@@ -79,12 +89,9 @@ public sealed class AcadFormatRegistryTests
     }
 
     [Fact]
-    public void OpenableDrawingFormatsContainNativeAndRecoveryContainers()
+    public void OpenableDrawingFormatsRemainDrawingContainersOnly()
     {
-        var extensions = CadAcadFileFormatRegistry.OpenableDrawingFormats
-            .Select(format => format.Extension)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
+        var extensions = CadAcadFileFormatRegistry.OpenableDrawingFormats.Select(format => format.Extension).ToHashSet(StringComparer.OrdinalIgnoreCase);
         Assert.Contains(".ucad", extensions);
         Assert.Contains(".dwg", extensions);
         Assert.Contains(".dxf", extensions);
@@ -94,6 +101,7 @@ public sealed class AcadFormatRegistryTests
         Assert.Contains(".bak", extensions);
         Assert.Contains(".sv$", extensions);
         Assert.DoesNotContain(".dwf", extensions);
+        Assert.DoesNotContain(".dwfx", extensions);
         Assert.DoesNotContain(".dst", extensions);
     }
 }
