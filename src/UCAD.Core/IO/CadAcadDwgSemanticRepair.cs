@@ -1,10 +1,10 @@
-using ACadSharp;
 using ACadSharp.Entities;
 using UCAD.Core.Entities;
 using UCAD.Core.Geometry;
 using UCAD.Core.Layers;
 using UCAD.Core.Styles;
 using AcadDimension = ACadSharp.Entities.Dimension;
+using AcadDocument = ACadSharp.CadDocument;
 using AcadLeader = ACadSharp.Entities.Leader;
 using AcadMText = ACadSharp.Entities.MText;
 using UcadDocument = UCAD.Core.CadDocument;
@@ -22,7 +22,7 @@ internal static class CadAcadDwgSemanticRepair
 {
     private const double GeometryTolerance = 1e-7;
 
-    public static void Apply(CadDocument source, UcadDocument target, List<string> warnings)
+    public static void Apply(AcadDocument source, UcadDocument target, List<string> warnings)
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(target);
@@ -32,7 +32,7 @@ internal static class CadAcadDwgSemanticRepair
         RestoreLeaders(source, target, warnings);
     }
 
-    private static void RestoreDimensions(CadDocument source, UcadDocument target, List<string> warnings)
+    private static void RestoreDimensions(AcadDocument source, UcadDocument target, List<string> warnings)
     {
         var sourceDimensions = source.Entities.OfType<AcadDimension>().ToArray();
         if (sourceDimensions.Length == 0) return;
@@ -100,7 +100,7 @@ internal static class CadAcadDwgSemanticRepair
         return new AngularDimensionEntity(vertex, firstRay, secondRay, arcPoint, textOverride, styleName);
     }
 
-    private static void RestoreLeaders(CadDocument source, UcadDocument target, List<string> warnings)
+    private static void RestoreLeaders(AcadDocument source, UcadDocument target, List<string> warnings)
     {
         var sourceLeaders = source.Entities.OfType<AcadLeader>().ToArray();
         if (sourceLeaders.Length == 0) return;
@@ -114,7 +114,7 @@ internal static class CadAcadDwgSemanticRepair
             if (sourceLeader.CreationType != LeaderCreationType.CreatedWithTextAnnotation && sourceLeader.AssociatedAnnotation is not AcadMText)
                 continue;
 
-        var annotation = sourceLeader.AssociatedAnnotation as AcadMText;
+            var annotation = sourceLeader.AssociatedAnnotation as AcadMText;
             if (annotation is null)
             {
                 var endpoint = sourceLeader.Vertices[^1];
