@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using UCAD.Services;
 using UCAD.Workspace;
 
 namespace UCAD;
@@ -31,8 +32,13 @@ public sealed partial class MainWindow
 
     private async Task<bool> TryCloseWithSaveAsync(TabViewItem tab)
     {
-        if (!_sessions.TryGetValue(tab, out var session) || !session.IsDirty || !_settingsService.Settings.ConfirmUnsaved)
-            return await TryCloseTabAsync(tab);
+        _sessions.TryGetValue(tab, out var session);
+        if (session is null || !session.IsDirty || !_settingsService.Settings.ConfirmUnsaved)
+        {
+            var closed = await TryCloseTabAsync(tab);
+            if (closed && session is not null) await DeleteRecoveryAfterIntentionalCloseAsync(session);
+            return closed;
+        }
 
         var result = await new ContentDialog
         {
@@ -54,7 +60,9 @@ public sealed partial class MainWindow
             _settingsService.Settings.ConfirmUnsaved = false;
             try
             {
-                return await TryCloseTabAsync(tab);
+                var closed = await TryCloseTabAsync(tab);
+                if (closed) await DeleteRecoveryAfterIntentionalCloseAsync(session);
+                return closed;
             }
             finally
             {
@@ -62,12 +70,26 @@ public sealed partial class MainWindow
             }
         }
 
-        return await TryCloseTabAsync(tab);
+        var savedClose = await TryCloseTabAsync(tab);
+        if (savedClose) await DeleteRecoveryAfterIntentionalCloseAsync(session);
+        return savedClose;
+    }
+
+    private static async Task DeleteRecoveryAfterIntentionalCloseAsync(CadWorkspaceSession session)
+    {
+        try
+        {
+            await RecoveryService.Current.DeleteAsync(session.RecoveryId);
+        }
+        catch (Exception ex)
+        {
+            App.WriteStartupFailure("RecoveryCleanupAfterClose", ex);
+        }
     }
 
     private static string FileCloseText(string key)
     {
-        var language = Services.LocalizationService.Current.CurrentLanguageTag;
+        var language = LocalizationService.Current.CurrentLanguageTag;
         var ja = language.StartsWith("ja", StringComparison.OrdinalIgnoreCase);
         var en = language.StartsWith("en", StringComparison.OrdinalIgnoreCase);
         return key switch
