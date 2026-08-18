@@ -75,6 +75,79 @@ public sealed class DxfCodecTests
     }
 
     [Fact]
+    public void MTextRoundTripPreservesContentGeometryAndStyle()
+    {
+        var document = new CadDocument();
+        var mtext = new MTextEntity(
+            new CadPoint(12, 34),
+            "First line\nSecond line",
+            textHeight: 4.2,
+            width: 88,
+            rotationRadians: Math.PI / 5,
+            styleName: "Standard");
+        document.Add(mtext);
+
+        var exported = CadDxfCodec.Export(document);
+        var imported = CadDxfCodec.Import(exported.Content);
+
+        Assert.False(exported.HasWarnings);
+        Assert.False(imported.HasWarnings);
+        Assert.Contains("MTEXT", exported.Content, StringComparison.Ordinal);
+        Assert.Contains("\\P", exported.Content, StringComparison.Ordinal);
+        var actual = Assert.IsType<MTextEntity>(Assert.Single(imported.Document.Entities));
+        Assert.Equal(mtext.Position, actual.Position);
+        Assert.Equal(mtext.Text, actual.Text);
+        Assert.Equal(mtext.TextHeight, actual.TextHeight, 8);
+        Assert.Equal(mtext.Width, actual.Width, 8);
+        Assert.Equal(mtext.RotationRadians, actual.RotationRadians, 8);
+        Assert.Equal(mtext.StyleName, actual.StyleName);
+    }
+
+    [Fact]
+    public void HatchRoundTripPreservesPolylineBoundaryIslandsAndPatternMetadata()
+    {
+        var document = new CadDocument();
+        var boundary = new[]
+        {
+            new CadPoint(0, 0),
+            new CadPoint(100, 0),
+            new CadPoint(100, 80),
+            new CadPoint(0, 80)
+        };
+        var island = new[]
+        {
+            new CadPoint(20, 20),
+            new CadPoint(40, 20),
+            new CadPoint(40, 40),
+            new CadPoint(20, 40)
+        };
+        var hatch = new HatchEntity(
+            boundary,
+            "ANSI31",
+            patternScale: 2.5,
+            patternAngleRadians: Math.PI / 4,
+            islands: [island],
+            associative: false,
+            sourceEntityIds: null,
+            islandDetection: HatchIslandDetection.Normal);
+        document.Add(hatch);
+
+        var exported = CadDxfCodec.Export(document);
+        var imported = CadDxfCodec.Import(exported.Content);
+
+        Assert.False(exported.HasWarnings);
+        Assert.False(imported.HasWarnings);
+        Assert.Contains("HATCH", exported.Content, StringComparison.Ordinal);
+        var actual = Assert.IsType<HatchEntity>(Assert.Single(imported.Document.Entities));
+        Assert.Equal(hatch.Pattern, actual.Pattern);
+        Assert.Equal(hatch.PatternScale, actual.PatternScale, 8);
+        Assert.Equal(hatch.PatternAngleRadians, actual.PatternAngleRadians, 8);
+        Assert.Equal(4, actual.Boundary.Count);
+        Assert.Single(actual.Islands);
+        Assert.Equal(4, actual.Islands[0].Count);
+    }
+
+    [Fact]
     public void ImportSkipsUnsupportedEntitiesWithExplicitWarning()
     {
         const string dxf = """
@@ -83,7 +156,7 @@ SECTION
 2
 ENTITIES
 0
-SPLINE
+3DSOLID
 8
 0
 0
@@ -96,7 +169,7 @@ EOF
 
         Assert.Empty(result.Document.Entities);
         Assert.True(result.HasWarnings);
-        Assert.Contains(result.Warnings, warning => warning.Contains("SPLINE", StringComparison.Ordinal));
+        Assert.Contains(result.Warnings, warning => warning.Contains("3DSOLID", StringComparison.Ordinal));
     }
 
     [Fact]
