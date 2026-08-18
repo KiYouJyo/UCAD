@@ -160,6 +160,38 @@ public static class CadNativeDocumentCodec
                 StartAngleRadians = arc.StartAngleRadians,
                 SweepAngleRadians = arc.SweepAngleRadians
             },
+            PointEntity point => new EntityDto
+            {
+                Type = "point",
+                Position = ToDto(point.Position)
+            },
+            EllipseEntity ellipse => new EntityDto
+            {
+                Type = "ellipse",
+                Center = ToDto(ellipse.Center),
+                MajorAxis = ToDto(ellipse.MajorAxis),
+                Ratio = ellipse.Ratio,
+                StartParameter = ellipse.StartParameter,
+                EndParameter = ellipse.EndParameter
+            },
+            SplineEntity spline => new EntityDto
+            {
+                Type = "spline",
+                FitPoints = spline.FitPoints.Select(ToDto).ToList(),
+                Closed = spline.Closed
+            },
+            RayEntity ray => new EntityDto
+            {
+                Type = "ray",
+                Origin = ToDto(ray.Origin),
+                Direction = ToDto(ray.Direction)
+            },
+            XLineEntity xline => new EntityDto
+            {
+                Type = "xline",
+                Position = ToDto(xline.Point),
+                Direction = ToDto(xline.Direction)
+            },
             TextEntity text => new EntityDto
             {
                 Type = "text",
@@ -223,6 +255,22 @@ public static class CadNativeDocumentCodec
                 Positive(dto.Radius, "arc.radius"),
                 Finite(dto.StartAngleRadians, "arc.startAngleRadians"),
                 NonZeroFinite(dto.SweepAngleRadians, "arc.sweepAngleRadians")),
+            "point" => new PointEntity(FromDto(dto.Position, "point.position")),
+            "ellipse" => new EllipseEntity(
+                FromDto(dto.Center, "ellipse.center"),
+                FromDto(dto.MajorAxis, "ellipse.majorAxis"),
+                PositiveRatio(dto.Ratio, "ellipse.ratio"),
+                Finite(dto.StartParameter, "ellipse.startParameter"),
+                Finite(dto.EndParameter, "ellipse.endParameter")),
+            "spline" => new SplineEntity(
+                RequirePoints(dto.FitPoints, "spline.fitPoints", minimum: 2),
+                dto.Closed),
+            "ray" => new RayEntity(
+                FromDto(dto.Origin, "ray.origin"),
+                FromDto(dto.Direction, "ray.direction")),
+            "xline" => new XLineEntity(
+                FromDto(dto.Position, "xline.point"),
+                FromDto(dto.Direction, "xline.direction")),
             "text" => new TextEntity(
                 FromDto(dto.Position, "text.position"),
                 dto.Text ?? string.Empty,
@@ -249,11 +297,18 @@ public static class CadNativeDocumentCodec
     }
 
     private static PointDto ToDto(CadPoint point) => new() { X = point.X, Y = point.Y };
+    private static VectorDto ToDto(CadVector vector) => new() { X = vector.X, Y = vector.Y };
 
     private static CadPoint FromDto(PointDto? point, string path)
     {
         if (point is null) throw new FormatException($"Missing {path}.");
         return new CadPoint(Finite(point.X, path + ".x"), Finite(point.Y, path + ".y"));
+    }
+
+    private static CadVector FromDto(VectorDto? vector, string path)
+    {
+        if (vector is null) throw new FormatException($"Missing {path}.");
+        return new CadVector(Finite(vector.X, path + ".x"), Finite(vector.Y, path + ".y"));
     }
 
     private static IReadOnlyList<CadPoint> RequirePoints(List<PointDto>? points, string path, int minimum)
@@ -284,6 +339,12 @@ public static class CadNativeDocumentCodec
     {
         if (!double.IsFinite(value) || value <= 0) throw new FormatException($"{path} must be positive and finite.");
         return value;
+    }
+
+    private static double PositiveRatio(double value, string path)
+    {
+        if (!double.IsFinite(value) || value <= 0 || value > 1 + 1e-9) throw new FormatException($"{path} must be in (0, 1].");
+        return Math.Min(1, value);
     }
 
     private static double NonZeroFinite(double value, string path)
@@ -332,6 +393,13 @@ public static class CadNativeDocumentCodec
         public double StartAngleRadians { get; set; }
         public double SweepAngleRadians { get; set; }
         public PointDto? Position { get; set; }
+        public PointDto? Origin { get; set; }
+        public VectorDto? MajorAxis { get; set; }
+        public VectorDto? Direction { get; set; }
+        public double Ratio { get; set; }
+        public double StartParameter { get; set; }
+        public double EndParameter { get; set; }
+        public List<PointDto>? FitPoints { get; set; }
         public string? Text { get; set; }
         public double Height { get; set; }
         public double RotationRadians { get; set; }
@@ -358,6 +426,12 @@ public static class CadNativeDocumentCodec
     }
 
     private sealed class PointDto
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+    }
+
+    private sealed class VectorDto
     {
         public double X { get; set; }
         public double Y { get; set; }
