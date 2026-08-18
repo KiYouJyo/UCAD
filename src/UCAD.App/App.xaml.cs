@@ -35,6 +35,9 @@ public partial class App : Application
             mainWindow.EnsureExtendedDrawingUiInitialized();
             mainWindow.EnsureDraftingAidUiInitialized();
             mainWindow.EnsureModifyCompletionUiInitialized();
+            mainWindow.EnsureAnnotationCompletionUiInitialized();
+            mainWindow.EnsureAdvancedAuthoringUiInitialized();
+            mainWindow.EnsureLayoutPlotUiInitialized();
             mainWindow.EnsureFileUiInitialized();
             mainWindow.EnsureRecentFilesInitialized();
             mainWindow.EnsureFileCloseIntegration();
