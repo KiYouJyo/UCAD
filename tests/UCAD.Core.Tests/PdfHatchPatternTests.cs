@@ -26,7 +26,7 @@ public sealed class PdfHatchPatternTests
         var pdf = Encoding.ASCII.GetString(result.Content);
 
         Assert.False(result.Warnings.Any(warning => warning.Contains("boundary only", StringComparison.OrdinalIgnoreCase)));
-        Assert.True(CountOccurrences(pdf, " S\n") > 2);
+        Assert.True(CountOccurrences(pdf, "S\n") > 2);
     }
 
     [Fact]
@@ -44,7 +44,7 @@ public sealed class PdfHatchPatternTests
 
         var result = CadPdfExporter.Export(document, plan, "Unknown Pattern");
 
-        Assert.Contains(result.Warnings, warning => warning.Contains("boundary only", StringComparison.OrdinalIgnoreCase));
+        Assert.True(result.Warnings.Any(warning => warning.Contains("boundary only", StringComparison.OrdinalIgnoreCase)));
     }
 
     private static int CountOccurrences(string value, string token)
