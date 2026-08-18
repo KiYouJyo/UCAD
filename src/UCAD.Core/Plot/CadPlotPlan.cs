@@ -33,15 +33,23 @@ public sealed record CadPlotPlan
 
     public CadPoint ModelToPaper(CadPoint modelPoint)
     {
-        var dx = modelPoint.X - ModelCenter.X;
-        var dy = modelPoint.Y - ModelCenter.Y;
+        var offset = ModelVectorToPaper(modelPoint - ModelCenter);
+        return new CadPoint(PaperCenter.X + offset.X, PaperCenter.Y + offset.Y);
+    }
+
+    public CadVector ModelVectorToPaper(CadVector modelVector)
+    {
         var cosine = Math.Cos(-TwistAngleRadians);
         var sine = Math.Sin(-TwistAngleRadians);
-        var rotatedX = (dx * cosine) - (dy * sine);
-        var rotatedY = (dx * sine) + (dy * cosine);
-        return new CadPoint(
-            PaperCenter.X + (rotatedX / ScaleDenominator),
-            PaperCenter.Y + (rotatedY / ScaleDenominator));
+        return new CadVector(
+            ((modelVector.X * cosine) - (modelVector.Y * sine)) / ScaleDenominator,
+            ((modelVector.X * sine) + (modelVector.Y * cosine)) / ScaleDenominator);
+    }
+
+    public double ModelAngleToPaper(double modelAngleRadians)
+    {
+        if (!double.IsFinite(modelAngleRadians)) throw new ArgumentOutOfRangeException(nameof(modelAngleRadians));
+        return modelAngleRadians - TwistAngleRadians;
     }
 
     public CadPoint PaperToModel(CadPoint paperPoint)
