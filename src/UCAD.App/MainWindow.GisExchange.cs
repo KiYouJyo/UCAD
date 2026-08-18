@@ -128,7 +128,7 @@ public sealed partial class MainWindow
         var created = CreateWorkspaceForFile(
             built.Document,
             Path.GetFileNameWithoutExtension(file.Name) + " · GeoJSON",
-            filePath: null);
+            nativeFilePath: null);
         SetSessionStatus(created, string.Format(GisText("ImportedFormat"), built.Document.Entities.Count, Path.GetFileName(file.Path)));
         if (built.Warnings.Count > 0) await ShowGisWarningsAsync(built.Warnings);
         if (commandSession?.CommandSession.IsActive == true) commandSession.CommandSession.Complete();
@@ -180,7 +180,7 @@ public sealed partial class MainWindow
         var created = CreateWorkspaceForFile(
             built.Document,
             Path.GetFileNameWithoutExtension(file.Name) + " · CSV",
-            filePath: null);
+            nativeFilePath: null);
         SetSessionStatus(created, string.Format(GisText("ImportedFormat"), built.Document.Entities.Count, Path.GetFileName(file.Path)));
         if (built.Warnings.Count > 0) await ShowGisWarningsAsync(built.Warnings);
         if (commandSession?.CommandSession.IsActive == true) commandSession.CommandSession.Complete();
