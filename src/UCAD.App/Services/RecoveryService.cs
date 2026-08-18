@@ -114,7 +114,9 @@ public sealed class RecoveryService
     {
         ArgumentNullException.ThrowIfNull(candidate);
         var json = await File.ReadAllTextAsync(candidate.DocumentPath, cancellationToken);
-        return CadNativeDocumentCodec.Deserialize(json);
+        var document = CadNativeDocumentCodec.Deserialize(json);
+        document.ResetHistory();
+        return document;
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
