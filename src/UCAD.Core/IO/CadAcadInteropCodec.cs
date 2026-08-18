@@ -41,6 +41,7 @@ public static class CadAcadInteropCodec
         var imported = CadDxfAdvancedInteropCodec.Import(bridgeText);
         AppendWarnings(warnings, "UCAD DXF bridge", imported.Warnings);
         CadAcadDwgSemanticRepair.Apply(acadDocument, imported.Document, warnings);
+        CadAcadLayoutInterop.Import(acadDocument, imported.Document, warnings);
         imported.Document.ResetHistory();
 
         return new CadAcadImportResult(
@@ -81,6 +82,7 @@ public static class CadAcadInteropCodec
 
         var warnings = new List<string>();
         var acadDocument = BuildAcadDocument(document, warnings);
+        CadAcadLayoutInterop.Export(document, acadDocument, warnings);
         InjectNativeDimensions(document, acadDocument);
         PrepareAcadSharpDimensionsForDwgWriter(acadDocument, warnings);
         NormalizeAcadSharpSequencesForDwgWriter(acadDocument);
