@@ -1,0 +1,31 @@
+name: v0.8.1 Icon Registry Convergence
+
+on:
+  push:
+    branches:
+      - codex/v0.8-document-dxf-foundation
+
+permissions:
+  contents: write
+
+jobs:
+  converge:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+      - name: Apply icon registry convergence
+        run: python .github/scripts/converge_icon_registry_v081.py
+      - name: Commit converged icon registry
+        shell: pwsh
+        run: |
+          if (-not (git status --porcelain)) { exit 0 }
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/UCAD.App/App.xaml src/UCAD.App/MainWindow.xaml src/UCAD.App/Services/CadToolIconService.cs .github/scripts/Validate-UcadUi.ps1
+          git commit -m 'Fix v0.8.1 CAD icon instance materialization'
+          git push origin HEAD:codex/v0.8-document-dxf-foundation
