@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using ACadSharp;
 using ACadSharp.IO;
@@ -138,14 +139,65 @@ public static class CadAcadInteropCodec
 
         try
         {
-            var codePage = CadUtils.GetCodePage(document.Header.CodePage);
-            return Encoding.GetEncoding((int)codePage);
+            return Encoding.GetEncoding(ResolveCodePage(document.Header.CodePage));
         }
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException)
         {
             warnings.Add($"DXF bridge: code page '{document.Header.CodePage}' is unavailable; Windows-1252 fallback was used. {ex.Message}");
             return Encoding.GetEncoding(1252);
         }
+    }
+
+    private static int ResolveCodePage(string? codePage)
+    {
+        if (string.IsNullOrWhiteSpace(codePage)) return 1252;
+        var normalized = codePage.Trim().ToLowerInvariant().Replace('-', '_');
+        return normalized switch
+        {
+            "utf_8" or "utf8" => 65001,
+            "ascii" or "us_ascii" => 20127,
+            "gb2312" or "ansi_936" or "ansi936" => 936,
+            "big5" or "ansi_950" or "ansi950" => 950,
+            "kcs5601" or "ks_c_5601_1987" or "ansi_949" or "ansi949" => 949,
+            "johab" or "ansi_1361" or "ansi1361" => 1361,
+            "shift_jis" or "sjis" or "ansi_932" or "ansi932" or "dos932" => 932,
+            "ansi_874" or "ansi874" => 874,
+            "ansi_1250" or "ansi1250" => 1250,
+            "ansi_1251" or "ansi1251" => 1251,
+            "ansi_1252" or "ansi1252" => 1252,
+            "ansi_1253" or "ansi1253" => 1253,
+            "ansi_1254" or "ansi1254" => 1254,
+            "ansi_1255" or "ansi1255" => 1255,
+            "ansi_1256" or "ansi1256" => 1256,
+            "ansi_1257" or "ansi1257" => 1257,
+            "ansi_1258" or "ansi1258" => 1258,
+            "dos437" => 437,
+            "dos720" => 720,
+            "dos737" => 737,
+            "dos775" => 775,
+            "dos850" => 850,
+            "dos852" => 852,
+            "dos855" => 855,
+            "dos857" => 857,
+            "dos858" => 858,
+            "dos860" => 860,
+            "dos861" => 861,
+            "dos862" => 862,
+            "dos863" => 863,
+            "dos864" => 864,
+            "dos865" => 865,
+            "dos866" => 866,
+            "dos869" => 869,
+            _ => TryResolveNumericCodePage(normalized)
+        };
+    }
+
+    private static int TryResolveNumericCodePage(string normalized)
+    {
+        var digits = new string(normalized.Where(char.IsDigit).ToArray());
+        if (digits.Length > 0 && int.TryParse(digits, NumberStyles.None, CultureInfo.InvariantCulture, out var value) && value > 0)
+            return value;
+        throw new NotSupportedException($"Unknown AutoCAD code page '{normalized}'.");
     }
 
     private static void AddNotification(List<string> warnings, string phase, NotificationEventArgs args)
