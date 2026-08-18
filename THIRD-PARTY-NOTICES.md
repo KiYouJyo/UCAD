@@ -1,5 +1,36 @@
 # Third-Party Notices
 
-UCAD uses third-party open-source components, including the .NET runtime, Microsoft Windows App SDK, Microsoft Windows SDK Build Tools, and Win2D. These components remain subject to their own copyright notices and license terms as distributed by their respective maintainers.
+UCAD uses third-party open-source components, including the .NET runtime, Microsoft Windows App SDK, Microsoft Windows SDK Build Tools, Win2D, and ACadSharp. These components remain subject to their own copyright notices and license terms as distributed by their respective maintainers.
 
 This file is a project-level notice and does not replace the license metadata shipped with NuGet packages or upstream projects.
+
+## ACadSharp
+
+Project: ACadSharp  
+Upstream: `DomCR/ACadSharp`  
+Purpose in UCAD: DWG and binary/legacy DXF container transport for AutoCAD interoperability.  
+License: MIT
+
+```text
+MIT License
+
+Copyright (c) 2021 Albert Domenech
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
