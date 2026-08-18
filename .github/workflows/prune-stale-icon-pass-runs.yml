@@ -1,0 +1,42 @@
+name: Prune stale icon-pass runs
+
+on:
+  push:
+    branches:
+      - codex/v0.8-document-dxf-foundation
+
+permissions:
+  actions: write
+  contents: write
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Cancel stale branch runs
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          CURRENT_RUN: ${{ github.run_id }}
+          BRANCH: codex/v0.8-document-dxf-foundation
+        run: |
+          gh api "repos/$REPOSITORY/actions/runs?branch=$BRANCH&per_page=100" --paginate \
+            --jq '.workflow_runs[] | select((.status == "queued" or .status == "in_progress") and (.id|tostring) != env.CURRENT_RUN) | .id' \
+            | sort -u > stale-runs.txt
+          while read -r id; do
+            [ -z "$id" ] && continue
+            echo "Cancelling stale run $id"
+            gh api --method POST "repos/$REPOSITORY/actions/runs/$id/cancel" || true
+          done < stale-runs.txt
+      - name: Remove this temporary workflow
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/prune-stale-icon-pass-runs.yml
+          git commit -m 'Remove temporary stale-run pruner'
+          git push origin HEAD:codex/v0.8-document-dxf-foundation
