@@ -21,11 +21,15 @@ public sealed class ViewportTwistPlotTests
         var plan = CadPlotPlan.FromViewport(setup, viewport);
         var paper = plan.ModelToPaper(new CadPoint(11000, 5000));
         var restored = plan.PaperToModel(paper);
+        var paperVector = plan.ModelVectorToPaper(new CadVector(1000, 0));
 
         Assert.Equal(Math.PI / 2, plan.TwistAngleRadians, 10);
         Assert.Equal(plan.PaperCenter.X, paper.X, 10);
         Assert.Equal(plan.PaperCenter.Y - 10, paper.Y, 10);
         Assert.Equal(11000, restored.X, 8);
         Assert.Equal(5000, restored.Y, 8);
+        Assert.Equal(0, paperVector.X, 10);
+        Assert.Equal(-10, paperVector.Y, 10);
+        Assert.Equal(-Math.PI / 2, plan.ModelAngleToPaper(0), 10);
     }
 }
