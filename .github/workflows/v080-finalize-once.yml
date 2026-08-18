@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  statuses: write
 
 jobs:
   finalize:
@@ -137,3 +138,30 @@ jobs:
           path: ${{ env.ASSETS_PATH }}
           if-no-files-found: error
           retention-days: 14
+
+  report:
+    if: always()
+    needs: finalize
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish finalization status
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULT: ${{ needs.finalize.result }}
+          REPOSITORY: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ "$RESULT" = "success" ]; then
+            STATE=success
+            DESCRIPTION='v0.8.0 tests, build, signing and package validation passed'
+          else
+            STATE=failure
+            DESCRIPTION="v0.8.0 finalization: $RESULT"
+          fi
+          gh api --method POST "repos/$REPOSITORY/statuses/$SHA" \
+            -f state="$STATE" \
+            -f context='ucad/v0.8.0-finalize' \
+            -f description="$DESCRIPTION" \
+            -f target_url="$RUN_URL"
