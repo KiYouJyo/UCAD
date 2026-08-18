@@ -1,5 +1,6 @@
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Geometry;
+using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Controls;
@@ -143,17 +144,11 @@ public sealed class CadPlotPreviewControl : UserControl
                 DrawInfinite(ds, xline.Point, xline.Direction, false, page, plan, color, strokeWidth);
                 break;
             case TextEntity text:
-            {
-                var p = ModelToScreen(text.Position, page, plan);
-                ds.DrawText(text.Text, p, color);
+                DrawPreviewText(ds, text.Text, text.Position, text.Height, text.RotationRadians, page, plan, color);
                 break;
-            }
             case MTextEntity text:
-            {
-                var p = ModelToScreen(text.Position, page, plan);
-                ds.DrawText(string.Join("\n", text.ApproximateLines()), p, color);
+                DrawPreviewText(ds, string.Join("\n", text.ApproximateLines()), text.Position, text.TextHeight, text.RotationRadians, page, plan, color);
                 break;
-            }
             case LinearDimensionEntity dimension:
             {
                 var ends = dimension.GetDimensionLineEndpoints();
@@ -178,6 +173,29 @@ public sealed class CadPlotPreviewControl : UserControl
                 foreach (var child in block.Contents) DrawEntity(ds, child, page, plan, color, strokeWidth);
                 break;
         }
+    }
+
+    private static void DrawPreviewText(
+        CanvasDrawingSession ds,
+        string text,
+        CadPoint position,
+        double modelHeight,
+        double modelRotationRadians,
+        PageTransform page,
+        CadPlotPlan plan,
+        Color color)
+    {
+        var screen = ModelToScreen(position, page, plan);
+        var size = (float)Math.Max(6, (modelHeight / plan.ScaleDenominator) * page.Scale);
+        using var format = new CanvasTextFormat
+        {
+            FontSize = size,
+            WordWrapping = CanvasWordWrapping.NoWrap
+        };
+        var previous = ds.Transform;
+        ds.Transform = Matrix3x2.CreateRotation((float)-plan.ModelAngleToPaper(modelRotationRadians), screen);
+        ds.DrawText(text, screen, color, format);
+        ds.Transform = previous;
     }
 
     private static void DrawHatch(
