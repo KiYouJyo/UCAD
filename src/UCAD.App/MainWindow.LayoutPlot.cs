@@ -397,6 +397,12 @@ public sealed partial class MainWindow
             var viewport = state.ActiveLayout.Viewports.FirstOrDefault();
             if (viewport is not null) return CadPlotPlan.FromViewport(state.PageSetup, viewport);
         }
+        else if (state.PageSetup.PlotArea == CadPlotArea.Display)
+        {
+            if (!session.Viewport.TryGetVisibleModelRect(out var displayRect))
+                throw new InvalidOperationException(LayoutPlotText("DisplayUnavailable"));
+            return CadPlotPlan.FitExtents(state.PageSetup, displayRect);
+        }
         return _plotFileService.CreatePlan(session.Document, state.PageSetup);
     }
 
@@ -478,6 +484,7 @@ public sealed partial class MainWindow
             "WindowFirstPoint" => ja ? "印刷ウィンドウの1点目を指定:" : en ? "Specify first corner of plot window:" : "指定打印窗口第一角点：",
             "WindowSecondPoint" => ja ? "印刷ウィンドウの対角点を指定:" : en ? "Specify opposite corner of plot window:" : "指定打印窗口对角点：",
             "WindowTooSmall" => ja ? "印刷ウィンドウには面積が必要です。" : en ? "Plot window must have positive area." : "打印窗口必须具有有效面积。",
+            "DisplayUnavailable" => ja ? "現在の表示範囲を取得できません。" : en ? "The current display area is not available yet." : "当前显示区域尚不可用。",
             "PageSetupUpdated" => ja ? "ページ設定を更新しました。" : en ? "Page setup updated." : "页面设置已更新。",
             "LayoutManager" => ja ? "レイアウト管理" : en ? "Layout Manager" : "布局管理器",
             "Layout" => ja ? "レイアウト" : en ? "Layout" : "布局",
