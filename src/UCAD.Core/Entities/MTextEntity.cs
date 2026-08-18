@@ -44,6 +44,10 @@ public sealed record MTextEntity : ICadEntity
     public double RotationRadians { get; }
     public string StyleName { get; }
 
+    public CadPoint GetWidthGripPoint() => new(
+        Position.X + (Math.Cos(RotationRadians) * Width),
+        Position.Y + (Math.Sin(RotationRadians) * Width));
+
     public IReadOnlyList<string> ApproximateLines()
     {
         var maxCharacters = Math.Max(1, (int)Math.Floor(Width / (TextHeight * 0.6)));
