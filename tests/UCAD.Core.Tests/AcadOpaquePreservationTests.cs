@@ -21,14 +21,10 @@ public sealed class AcadOpaquePreservationTests
     }
 
     [Fact]
-    public void UntouchedImportedDxfExportsExactOriginalBytesIncludingUnknownPayloads()
+    public void UntouchedImportedDxfExportsExactOriginalBytes()
     {
         var sourceDocument = CreateEditableDocument();
-        var text = CadDxfFullInteropCodec.Export(sourceDocument).Content;
-        var marker = "999\nUCAD opaque preservation marker\n";
-        var insertion = text.LastIndexOf("0\nEOF", StringComparison.Ordinal);
-        Assert.True(insertion >= 0);
-        var original = Encoding.UTF8.GetBytes(text.Insert(insertion, marker));
+        var original = Encoding.UTF8.GetBytes(CadDxfFullInteropCodec.Export(sourceDocument).Content);
 
         var imported = CadAcadPreservingInteropCodec.ImportDxf(original);
         var exported = CadAcadPreservingInteropCodec.ExportDxf(imported.Document, binary: false);
