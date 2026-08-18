@@ -65,6 +65,7 @@ public sealed partial class MainWindow
             }
         }
 
+        EnsureAutoCadMigrationUi();
         ScheduleV05ModifySmokeIfRequested();
     }
 
