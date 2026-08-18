@@ -44,7 +44,9 @@ public sealed record AngularDimensionEntity : ICadEntity
     public string StyleName { get; }
     public double Radius => (ArcPoint - Vertex).Length;
 
-    public double MeasurementRadians
+    public double MeasurementRadians => Math.Abs(SignedMeasurementRadians);
+
+    public double SignedMeasurementRadians
     {
         get
         {
@@ -52,9 +54,39 @@ public sealed record AngularDimensionEntity : ICadEntity
             var second = SecondRayPoint - Vertex;
             var firstAngle = Math.Atan2(first.Y, first.X);
             var secondAngle = Math.Atan2(second.Y, second.X);
-            var sweep = (secondAngle - firstAngle) % Math.Tau;
-            if (sweep < 0) sweep += Math.Tau;
-            return sweep > Math.PI ? Math.Tau - sweep : sweep;
+            var sweep = NormalizeSignedMinor(secondAngle - firstAngle);
+            return sweep;
         }
+    }
+
+    public CadPoint GetArcMidpoint()
+    {
+        var first = FirstRayPoint - Vertex;
+        var firstAngle = Math.Atan2(first.Y, first.X);
+        var angle = firstAngle + (SignedMeasurementRadians / 2.0);
+        return new CadPoint(Vertex.X + (Math.Cos(angle) * Radius), Vertex.Y + (Math.Sin(angle) * Radius));
+    }
+
+    public IReadOnlyList<CadPoint> GetArcSamplePoints(int segmentCount = 48)
+    {
+        segmentCount = Math.Clamp(segmentCount, 8, 360);
+        var first = FirstRayPoint - Vertex;
+        var firstAngle = Math.Atan2(first.Y, first.X);
+        var sweep = SignedMeasurementRadians;
+        var points = new CadPoint[segmentCount + 1];
+        for (var i = 0; i <= segmentCount; i++)
+        {
+            var angle = firstAngle + (sweep * i / segmentCount);
+            points[i] = new CadPoint(Vertex.X + (Math.Cos(angle) * Radius), Vertex.Y + (Math.Sin(angle) * Radius));
+        }
+        return points;
+    }
+
+    private static double NormalizeSignedMinor(double angle)
+    {
+        var normalized = angle % Math.Tau;
+        if (normalized > Math.PI) normalized -= Math.Tau;
+        if (normalized < -Math.PI) normalized += Math.Tau;
+        return normalized;
     }
 }
