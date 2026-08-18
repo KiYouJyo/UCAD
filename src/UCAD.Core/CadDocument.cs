@@ -175,6 +175,60 @@ public sealed class CadDocument
         return matched;
     }
 
+    /// <summary>
+    /// Applies replacements, removals and additions as one undoable document mutation.
+    /// This is the transaction boundary for CAD commands such as FILLET, CHAMFER,
+    /// BREAK and JOIN whose visible result spans multiple entity-table operations.
+    /// </summary>
+    public bool ApplyCompoundEdit(
+        IEnumerable<ICadEntity>? replacements = null,
+        IEnumerable<Guid>? removals = null,
+        IEnumerable<(ICadEntity Entity, CadEntityProperties Properties)>? additions = null)
+    {
+        var replacementSnapshot = replacements?.ToArray() ?? [];
+        var removalSet = removals?.ToHashSet() ?? [];
+        var additionSnapshot = additions?.ToArray() ?? [];
+        if (replacementSnapshot.Length == 0 && removalSet.Count == 0 && additionSnapshot.Length == 0) return false;
+        if (replacementSnapshot.Any(entity => entity is null)) throw new ArgumentException("Replacement collection cannot contain null values.", nameof(replacements));
+        if (additionSnapshot.Any(item => item.Entity is null || item.Properties is null)) throw new ArgumentException("Addition collection cannot contain null values.", nameof(additions));
+
+        var existingIds = _entities.Select(entity => entity.Id).ToHashSet();
+        var replacementIds = replacementSnapshot.Select(entity => entity.Id).ToArray();
+        if (replacementIds.Distinct().Count() != replacementIds.Length) throw new ArgumentException("Replacement identities must be unique.", nameof(replacements));
+        if (replacementIds.Any(id => !existingIds.Contains(id))) throw new ArgumentException("Every replacement must match an existing entity Id.", nameof(replacements));
+        if (replacementIds.Any(removalSet.Contains)) throw new ArgumentException("An entity cannot be both replaced and removed in one compound edit.");
+        if (removalSet.Any(id => !existingIds.Contains(id))) throw new ArgumentException("Every removal must match an existing entity Id.", nameof(removals));
+
+        foreach (var addition in additionSnapshot) EnsureLayerExists(addition.Properties.LayerName);
+        var additionIds = additionSnapshot.Select(item => item.Entity.Id).ToArray();
+        if (additionIds.Distinct().Count() != additionIds.Length) throw new ArgumentException("Addition identities must be unique.", nameof(additions));
+        var survivingIds = existingIds.Where(id => !removalSet.Contains(id)).ToHashSet();
+        if (additionIds.Any(survivingIds.Contains)) throw new InvalidOperationException("A compound edit addition duplicates an existing entity identity.");
+
+        var replacementById = replacementSnapshot.ToDictionary(entity => entity.Id);
+        RecordMutation();
+
+        for (var i = 0; i < _entities.Count; i++)
+        {
+            if (replacementById.TryGetValue(_entities[i].Id, out var replacement)) _entities[i] = replacement;
+        }
+
+        if (removalSet.Count > 0)
+        {
+            _entities.RemoveAll(entity => removalSet.Contains(entity.Id));
+            foreach (var id in removalSet) _entityProperties.Remove(id);
+        }
+
+        foreach (var addition in additionSnapshot)
+        {
+            _entities.Add(addition.Entity);
+            _entityProperties[addition.Entity.Id] = addition.Properties;
+        }
+
+        RaiseChanged(CadDocumentChangeKind.CompoundEdit);
+        return true;
+    }
+
     public void Clear()
     {
         if (_entities.Count == 0) return;
