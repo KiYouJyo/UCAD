@@ -45,10 +45,6 @@ public static class CadNativeDocumentCodecV11
         var root = JsonNode.Parse(json)?.AsObject()
             ?? throw new FormatException("UCAD document JSON is empty.");
 
-        // Some older call sites (notably the v0.11 XREF path) still enter through this
-        // compatibility reader. Forward a newer paper-layout payload before stripping
-        // extensions. CadNativeDocumentCodecLayout removes only ucad.layout and delegates
-        // back through Current/V11 as needed, so legacy v11+layout files do not recurse.
         if (root[ExtensionsProperty] is JsonObject probe && probe[LayoutExtensionName] is not null)
             return CadNativeDocumentCodecLayout.Deserialize(json);
 
@@ -82,6 +78,9 @@ public static class CadNativeDocumentCodecV11
     {
         var hatchMetadata = new List<HatchMetadataDto>();
         var blockReferenceMetadata = new List<BlockReferenceMetadataDto>();
+        var indexById = document.Entities
+            .Select((entity, index) => (entity.Id, index))
+            .ToDictionary(pair => pair.Id, pair => pair.index);
 
         for (var index = 0; index < document.Entities.Count; index++)
         {
@@ -94,6 +93,9 @@ public static class CadNativeDocumentCodecV11
                         Islands = hatch.Islands.Select(loop => loop.Select(ToDto).ToList()).ToList(),
                         Associative = hatch.Associative,
                         SourceEntityIds = hatch.SourceEntityIds.ToList(),
+                        SourceEntityIndices = hatch.SourceEntityIds
+                            .Select(sourceId => indexById.TryGetValue(sourceId, out var sourceIndex) ? sourceIndex : -1)
+                            .ToList(),
                         IslandDetection = hatch.IslandDetection.ToString()
                     });
                     break;
@@ -148,7 +150,7 @@ public static class CadNativeDocumentCodecV11
                     .Select((point, pointIndex) => FromDto(point, $"hatches[{metadata.EntityIndex}].islands[{loopIndex}][{pointIndex}]"))
                     .ToArray())
                 .ToArray();
-            var sourceIds = metadata.SourceEntityIds ?? [];
+            var sourceIds = ResolveSourceIds(document, metadata);
             var islandDetection = ParseIslandDetection(metadata.IslandDetection);
             var advanced = new HatchEntity(
                 hatch.Boundary,
@@ -195,6 +197,25 @@ public static class CadNativeDocumentCodecV11
         }
     }
 
+    private static IReadOnlyList<Guid> ResolveSourceIds(CadDocument document, HatchMetadataDto metadata)
+    {
+        if (metadata.SourceEntityIndices is { Count: > 0 })
+        {
+            var ids = new List<Guid>(metadata.SourceEntityIndices.Count);
+            foreach (var sourceIndex in metadata.SourceEntityIndices)
+            {
+                if (sourceIndex < 0 || sourceIndex >= document.Entities.Count)
+                    throw new FormatException($"v0.11 associative hatch source index {sourceIndex} is outside the entity table.");
+                ids.Add(document.Entities[sourceIndex].Id);
+            }
+            return ids;
+        }
+
+        var legacyIds = metadata.SourceEntityIds ?? [];
+        if (!metadata.Associative) return legacyIds;
+        return legacyIds.Where(id => document.Entities.Any(entity => entity.Id == id)).ToArray();
+    }
+
     private static bool HatchNeedsExtension(HatchEntity hatch) =>
         hatch.Islands.Count > 0 ||
         hatch.Associative ||
@@ -237,6 +258,7 @@ public static class CadNativeDocumentCodecV11
         public List<List<PointDto>?>? Islands { get; set; }
         public bool Associative { get; set; }
         public List<Guid>? SourceEntityIds { get; set; }
+        public List<int>? SourceEntityIndices { get; set; }
         public string? IslandDetection { get; set; }
     }
 
