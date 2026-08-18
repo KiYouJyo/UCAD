@@ -9,8 +9,9 @@ namespace UCAD.Core.IO;
 
 /// <summary>
 /// AutoCAD transport bridge for formats whose container is not implemented natively by UCAD.
-/// ACadSharp owns DWG/binary-DXF parsing and writing; UCAD's DXF codec remains the semantic
-/// boundary into the UCAD document model so all interoperability paths share one entity mapping.
+/// ACadSharp owns DWG/binary-DXF parsing and writing; UCAD's advanced DXF semantic bridge
+/// remains the boundary into the UCAD document model so all interoperability paths share
+/// one entity, annotation, block and style mapping.
 /// </summary>
 public static class CadAcadInteropCodec
 {
@@ -32,7 +33,7 @@ public static class CadAcadInteropCodec
         var acadDocument = reader.Read();
 
         var bridgeText = WriteAsciiDxfBridge(acadDocument, warnings);
-        var imported = CadDxfCodec.Import(bridgeText);
+        var imported = CadDxfAdvancedInteropCodec.Import(bridgeText);
         AppendWarnings(warnings, "UCAD DXF bridge", imported.Warnings);
         imported.Document.ResetHistory();
 
@@ -53,7 +54,7 @@ public static class CadAcadInteropCodec
         var acadDocument = reader.Read();
 
         var bridgeText = WriteAsciiDxfBridge(acadDocument, warnings);
-        var imported = CadDxfCodec.Import(bridgeText);
+        var imported = CadDxfAdvancedInteropCodec.Import(bridgeText);
         AppendWarnings(warnings, "UCAD DXF bridge", imported.Warnings);
         imported.Document.ResetHistory();
 
@@ -110,7 +111,7 @@ public static class CadAcadInteropCodec
 
     private static AcadDocument BuildAcadDocument(UcadDocument document, List<string> warnings)
     {
-        var dxf = CadDxfCodec.Export(document);
+        var dxf = CadDxfAdvancedInteropCodec.Export(document);
         AppendWarnings(warnings, "UCAD DXF export", dxf.Warnings);
 
         using var input = new MemoryStream(Utf8NoBom.GetBytes(dxf.Content), writable: false);
