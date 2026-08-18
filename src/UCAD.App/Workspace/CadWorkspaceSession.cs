@@ -86,5 +86,11 @@ public sealed class CadWorkspaceSession
             _ => ObjectSnapMode.Endpoint | ObjectSnapMode.Midpoint | ObjectSnapMode.Center | ObjectSnapMode.Intersection
         };
         Interaction.OrthoEnabled = settings.DefaultOrtho;
+        Interaction.GridDisplayEnabled = settings.ShowGrid;
+        Interaction.GridSnapEnabled = false;
+        Interaction.GridSnapSpacing = 10;
+        Interaction.PolarTrackingEnabled = false;
+        Interaction.PolarIncrementDegrees = 45;
+        Interaction.ObjectSnapTrackingEnabled = false;
     }
 }
