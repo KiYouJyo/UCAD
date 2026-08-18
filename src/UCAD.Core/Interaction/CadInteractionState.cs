@@ -5,6 +5,7 @@ public sealed class CadInteractionState
     private bool _objectSnapEnabled;
     private ObjectSnapMode _objectSnapModes = ObjectSnapMode.Endpoint | ObjectSnapMode.Midpoint | ObjectSnapMode.Intersection;
     private bool _orthoEnabled;
+    private bool _gridDisplayEnabled = true;
     private bool _gridSnapEnabled;
     private double _gridSnapSpacing = 10;
     private bool _polarTrackingEnabled;
@@ -49,6 +50,17 @@ public sealed class CadInteractionState
         {
             if (_orthoEnabled == value) return;
             _orthoEnabled = value;
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    public bool GridDisplayEnabled
+    {
+        get => _gridDisplayEnabled;
+        set
+        {
+            if (_gridDisplayEnabled == value) return;
+            _gridDisplayEnabled = value;
             Changed?.Invoke(this, EventArgs.Empty);
         }
     }
