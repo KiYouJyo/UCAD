@@ -77,6 +77,7 @@ public static class CadAcadInteropCodec
 
         var warnings = new List<string>();
         var acadDocument = BuildAcadDocument(document, warnings);
+        PrepareAcadSharpDimensionsForDwgWriter(acadDocument, warnings);
         NormalizeAcadSharpSequencesForDwgWriter(acadDocument);
 
         using var output = new MemoryStream();
@@ -120,6 +121,27 @@ public static class CadAcadInteropCodec
         using var input = new MemoryStream(Utf8NoBom.GetBytes(dxf.Content), writable: false);
         using var reader = CreateDxfReaderWithDefaults(input, warnings, "DXF bridge read");
         return reader.Read();
+    }
+
+    /// <summary>
+    /// A DWG DIMENSION references an anonymous *D block containing its rendered picture. The DXF
+    /// bridge carries the semantic dimension fields even when group 2 is absent, but ACadSharp's DWG
+    /// writer expects the anonymous block reference to exist. UpdateBlock creates/registers that block;
+    /// without this normalization a valid semantic DIMENSION can disappear after DWG write/read.
+    /// </summary>
+    private static void PrepareAcadSharpDimensionsForDwgWriter(AcadDocument document, List<string> warnings)
+    {
+        foreach (var dimension in document.Entities.OfType<ACadSharp.Entities.Dimension>())
+        {
+            try
+            {
+                dimension.UpdateBlock();
+            }
+            catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or NotSupportedException)
+            {
+                warnings.Add($"DWG dimension block generation for {dimension.GetType().Name} failed: {ex.Message}");
+            }
+        }
     }
 
     /// <summary>
