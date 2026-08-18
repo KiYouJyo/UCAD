@@ -11,6 +11,8 @@ namespace UCAD.Core.Plot;
 /// Dependency-free one-page vector PDF writer used by the v0.12 plot foundation.
 /// Geometry remains vector paths. The built-in PDF Type1 font is ASCII-only; Unicode
 /// annotation text is explicitly replaced and reported instead of corrupting the PDF.
+/// Multiple paper-space viewports are emitted into the same physical page with an
+/// independent clip rectangle and model transform for each viewport.
 /// </summary>
 public static class CadPdfExporter
 {
@@ -19,35 +21,60 @@ public static class CadPdfExporter
 
     public static CadPdfExportResult Export(CadDocument document, CadPlotPlan plan, string title = "UCAD Drawing")
     {
-        ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(plan);
-        var warnings = new List<string>();
-        var content = BuildContent(document, plan, warnings);
-        var pdf = BuildPdf(plan.PageSetup, title, content);
-        return new CadPdfExportResult(pdf, warnings);
+        return Export(document, [plan], title);
     }
 
-    private static string BuildContent(CadDocument document, CadPlotPlan plan, List<string> warnings)
+    public static CadPdfExportResult Export(
+        CadDocument document,
+        IReadOnlyList<CadPlotPlan> plans,
+        string title = "UCAD Drawing")
     {
-        var sb = new StringBuilder(8192);
-        sb.AppendLine("q");
-        var printable = plan.PageSetup.PrintablePaperRectMm;
-        var clipLeft = MmToPt(printable.Left);
-        var clipBottom = MmToPt(printable.Bottom);
-        var clipWidth = MmToPt(printable.Width);
-        var clipHeight = MmToPt(printable.Height);
-        sb.AppendFormat(Invariant, "{0} {1} {2} {3} re W n\n", F(clipLeft), F(clipBottom), F(clipWidth), F(clipHeight));
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(plans);
+        if (plans.Count == 0) throw new ArgumentException("At least one plot plan is required.", nameof(plans));
+        if (plans.Any(plan => plan is null)) throw new ArgumentException("Plot plan collection cannot contain null values.", nameof(plans));
 
-        foreach (var entity in document.VisibleEntities)
+        var pageSetup = plans[0].PageSetup;
+        foreach (var plan in plans.Skip(1))
         {
-            var properties = document.GetEntityProperties(entity.Id);
-            var layer = document.GetLayer(properties.LayerName);
-            var lineWeightMm = properties.LineWeight ?? layer.LineWeight;
-            sb.AppendFormat(Invariant, "{0} w\n", F(Math.Max(0.1, MmToPt(lineWeightMm))));
-            WritePlotColor(sb, properties.ColorHex ?? layer.ColorHex, plan.PageSetup.PlotStyle);
-            WriteEntity(sb, document, entity, plan, warnings);
+            if (Math.Abs(plan.PageSetup.PaperWidthMm - pageSetup.PaperWidthMm) > 1e-6 ||
+                Math.Abs(plan.PageSetup.PaperHeightMm - pageSetup.PaperHeightMm) > 1e-6)
+            {
+                throw new ArgumentException("All plot plans on one PDF page must use the same physical paper size and orientation.", nameof(plans));
+            }
         }
-        sb.AppendLine("Q");
+
+        var warnings = new List<string>();
+        var content = BuildContent(document, plans, warnings);
+        var pdf = BuildPdf(pageSetup, title, content);
+        return new CadPdfExportResult(pdf, warnings.Distinct(StringComparer.Ordinal).ToArray());
+    }
+
+    private static string BuildContent(CadDocument document, IReadOnlyList<CadPlotPlan> plans, List<string> warnings)
+    {
+        var sb = new StringBuilder(Math.Max(8192, plans.Count * 8192));
+        foreach (var plan in plans)
+        {
+            sb.AppendLine("q");
+            var clip = plan.PaperRectMm;
+            var clipLeft = MmToPt(clip.Left);
+            var clipBottom = MmToPt(clip.Bottom);
+            var clipWidth = MmToPt(clip.Width);
+            var clipHeight = MmToPt(clip.Height);
+            sb.AppendFormat(Invariant, "{0} {1} {2} {3} re W n\n", F(clipLeft), F(clipBottom), F(clipWidth), F(clipHeight));
+
+            foreach (var entity in document.VisibleEntities)
+            {
+                var properties = document.GetEntityProperties(entity.Id);
+                var layer = document.GetLayer(properties.LayerName);
+                var lineWeightMm = properties.LineWeight ?? layer.LineWeight;
+                sb.AppendFormat(Invariant, "{0} w\n", F(Math.Max(0.1, MmToPt(lineWeightMm))));
+                WritePlotColor(sb, properties.ColorHex ?? layer.ColorHex, plan.PageSetup.PlotStyle);
+                WriteEntity(sb, document, entity, plan, warnings);
+            }
+            sb.AppendLine("Q");
+        }
         return sb.ToString();
     }
 
