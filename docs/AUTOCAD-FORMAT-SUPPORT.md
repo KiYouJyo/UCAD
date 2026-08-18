@@ -7,7 +7,7 @@ UCAD distinguishes **container transport**, **resource parsing**, and **semantic
 | Format | Open / Import | Export | Current transport | Current fidelity boundary |
 | --- | --- | --- | --- | --- |
 | `.dwg` | Yes | Yes | ACadSharp DWG + UCAD semantic repair | High-value 2D entities, annotation, blocks and paper layouts; unsupported/custom objects are reported rather than claimed as preserved |
-| `.dxf` | Yes | Yes | IxMilia text/binary DXF + UCAD advanced DXF bridge | Entity semantics are shared with DWG; paper-layout import is best-effort and DXF layout export is not yet claimed |
+| `.dxf` | Yes | Yes | IxMilia text/binary DXF + UCAD advanced DXF bridge | High-value entity/annotation/block semantics; paper-layout metadata is not claimed in the current DXF path |
 | `.dxb` | Yes | Yes | IxMilia DXB 1.0 geometry codec | Legacy 2D geometry only; unsupported/3D/property downgrades are explicit warnings |
 | `.dwt` | Yes | Yes | DWG-compatible template container | Uses the DWG semantic/layout transport; template-only/custom metadata may still be reduced |
 | `.dws` | Yes | No | DWG-compatible standards container | Geometry/tables can be imported; standards rules are not authored |
@@ -51,7 +51,6 @@ The shared semantic bridge preserves UCAD's foundational 2D geometry plus the fo
 - `LEADER` with linked MTEXT annotation. DWG import repairs the relationship from the native object graph when the upstream DWG-to-DXF serializer drops the annotation pointer.
 - `BLOCK` / `INSERT` / `ATTDEF` / `ATTRIB`, including block base point, positive uniform scale, rotation and attribute values. Mirrored/non-uniform INSERT transforms are rejected with a warning instead of silently distorting geometry.
 - DWG/DWT paper layouts, page setup and rectangular paper-space viewports: paper size/orientation, printable margins, plot area, plot scale, basic CTB style classification, viewport paper rectangle, model target, scale, twist and lock state.
-- DXF paper layout/viewports are imported through a non-authoritative sidecar parser. This path is intentionally **best-effort** because producer-specific PlotSettings can normalize or omit fields such as unprintable margins. Use DWG/DWT when page-setup fidelity is required.
 
 ### Explicit fidelity boundaries
 
@@ -60,7 +59,7 @@ Still pending for stronger AutoCAD compatibility:
 1. Radius/diameter/ordinate dimensions, richer leader/MLEADER and annotation-style semantics.
 2. Dynamic/custom block metadata and mirrored/non-uniform block references.
 3. Edge-based/bulged hatch boundaries and full hatch/style tables.
-4. Non-rectangular viewport clipping, advanced page setup dictionaries and **DXF layout export**.
+4. DXF paper-layout/PageSetup/viewport import-export, non-rectangular viewport clipping and advanced page setup dictionaries.
 5. Explicit opaque proxy/raw-payload preservation for unsupported/custom ObjectARX objects.
 6. Multi-version real-world DWG/DXF fixture corpus and large-drawing regression.
 7. DWF/DWFx, plot-style/configuration, sheet-set and customization adapters listed above.
@@ -69,9 +68,8 @@ Still pending for stronger AutoCAD compatibility:
 
 UCAD does not force every AutoCAD format through one third-party object model:
 
-- **DWG/DWT/DWS/recovery containers:** ACadSharp provides DWG transport. UCAD supplements it with native-object semantic repair for known serializer gaps.
-- **Text/binary DXF:** IxMilia.Dxf provides container normalization so DIMENSION/BLOCK group codes are not lost by an unnecessary object-model conversion; UCAD's advanced DXF codec remains authoritative for entities.
-- **DXF layout sidecar:** ACadSharp is used only to inspect layout/PlotSettings/viewport OBJECTS metadata after the primary DXF entity import has already succeeded. Sidecar failure is non-fatal.
+- **DWG/DWT/DWS/recovery containers:** ACadSharp provides DWG transport. UCAD supplements it with native-object semantic repair for known serializer gaps and a native paper-layout adapter.
+- **Text/binary DXF:** IxMilia.Dxf provides container normalization so DIMENSION/BLOCK group codes are not lost by an unnecessary object-model conversion; UCAD's advanced DXF codec remains authoritative for entities. An ACadSharp layout-sidecar experiment was explicitly rejected because it did not reliably reconstruct DXF paper-layout OBJECTS.
 - **DXB:** IxMilia.Dxf handles the bounded DXB 1.0 geometry stream directly.
 
 This split keeps interoperability truthful and minimizes cross-format regressions.
