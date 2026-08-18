@@ -138,6 +138,7 @@ public sealed class AcadLargeDrawingRegressionTests
                     new CadPoint(x, y),
                     new CadPoint(x + 30, y),
                     new CadPoint(x, y + 5),
+                    textOverride: null,
                     styleName: dimensionStyle.Name),
                 new CadEntityProperties("ANNO")));
         }
