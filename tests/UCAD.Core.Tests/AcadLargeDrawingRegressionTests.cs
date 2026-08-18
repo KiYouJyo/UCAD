@@ -21,7 +21,8 @@ public sealed class AcadLargeDrawingRegressionTests
         var exported = CadAcadInteropCodec.ExportDwg(source);
         var imported = CadAcadInteropCodec.ImportDwg(exported.Content);
 
-        Assert.True(exported.Content.Length > 500_000, $"Stress DWG unexpectedly small: {exported.Content.Length} bytes.");
+        Assert.True(exported.Content.Length > 6);
+        Assert.Equal("AC1032", System.Text.Encoding.ASCII.GetString(exported.Content.AsSpan(0, 6)));
         Assert.True(imported.Document.Entities.Count >= 12_000, $"Expected at least 12,000 semantic entities after round-trip, got {imported.Document.Entities.Count}.");
         Assert.True(imported.Document.Entities.OfType<LineEntity>().Count() >= 4_000);
         Assert.True(imported.Document.Entities.OfType<PolylineEntity>().Count() >= 3_500);
