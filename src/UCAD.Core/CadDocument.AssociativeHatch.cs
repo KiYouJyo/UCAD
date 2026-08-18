@@ -1,4 +1,5 @@
 using UCAD.Core.Entities;
+using UCAD.Core.Geometry;
 
 namespace UCAD.Core;
 
@@ -90,7 +91,7 @@ public sealed partial class CadDocument
         return true;
     }
 
-    private static bool PointsEqual(IReadOnlyList<Geometry.CadPoint> first, IReadOnlyList<Geometry.CadPoint> second)
+    private static bool PointsEqual(IReadOnlyList<CadPoint> first, IReadOnlyList<CadPoint> second)
     {
         if (first.Count != second.Count) return false;
         for (var index = 0; index < first.Count; index++)
