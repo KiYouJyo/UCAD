@@ -24,11 +24,7 @@ public sealed class CadDocumentFileService
         return document;
     }
 
-    public async Task SaveNativeAsync(
-        string filePath,
-        CadDocument document,
-        bool createBackup,
-        CancellationToken cancellationToken = default)
+    public async Task SaveNativeAsync(string filePath, CadDocument document, bool createBackup, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         ArgumentNullException.ThrowIfNull(document);
@@ -45,9 +41,7 @@ public sealed class CadDocumentFileService
         return new DxfImportResult(import.Document, import.Warnings);
     }
 
-    public async Task<CadAcadImportResult> OpenAutoCadAsync(
-        string filePath,
-        CancellationToken cancellationToken = default)
+    public async Task<CadAcadImportResult> OpenAutoCadAsync(string filePath, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         var descriptor = CadAcadFileFormatRegistry.GetRequiredByPath(filePath);
@@ -56,31 +50,21 @@ public sealed class CadDocumentFileService
 
         var extension = descriptor.Extension;
         var bytes = await File.ReadAllBytesAsync(Path.GetFullPath(filePath), cancellationToken);
-        if (string.Equals(extension, ".dxf", StringComparison.OrdinalIgnoreCase))
-            return CadAcadInteropCodec.ImportDxf(bytes, extension);
-        if (string.Equals(extension, ".dxb", StringComparison.OrdinalIgnoreCase))
-            return CadDxbCodec.Import(bytes);
+        if (string.Equals(extension, ".dxf", StringComparison.OrdinalIgnoreCase)) return CadAcadInteropCodec.ImportDxf(bytes, extension);
+        if (string.Equals(extension, ".dxb", StringComparison.OrdinalIgnoreCase)) return CadDxbCodec.Import(bytes);
         return CadAcadPreservingInteropCodec.ImportDwg(bytes, extension);
     }
 
-    public async Task<DxfExportResult> ExportDxfAsync(
-        string filePath,
-        CadDocument document,
-        bool createBackup,
-        CancellationToken cancellationToken = default)
+    public async Task<DxfExportResult> ExportDxfAsync(string filePath, CadDocument document, bool createBackup, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         ArgumentNullException.ThrowIfNull(document);
-        var export = CadDxfAdvancedInteropCodec.Export(document);
+        var export = CadDxfFullInteropCodec.Export(document);
         await WriteAtomicTextAsync(filePath, export.Content, createBackup, cancellationToken);
         return export;
     }
 
-    public async Task<CadAcadBinaryExportResult> ExportAutoCadBinaryAsync(
-        string filePath,
-        CadDocument document,
-        bool createBackup,
-        CancellationToken cancellationToken = default)
+    public async Task<CadAcadBinaryExportResult> ExportAutoCadBinaryAsync(string filePath, CadDocument document, bool createBackup, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         ArgumentNullException.ThrowIfNull(document);
@@ -89,13 +73,9 @@ public sealed class CadDocumentFileService
             throw new NotSupportedException($"{descriptor.DisplayName} is recognized but cannot be exported by the current UCAD interoperability layer.");
 
         CadAcadBinaryExportResult export;
-        if (string.Equals(descriptor.Extension, ".dxf", StringComparison.OrdinalIgnoreCase))
-            export = CadAcadInteropCodec.ExportBinaryDxf(document);
-        else if (string.Equals(descriptor.Extension, ".dxb", StringComparison.OrdinalIgnoreCase))
-            export = CadDxbCodec.Export(document);
-        else
-            export = CadAcadPreservingInteropCodec.ExportDwg(document, descriptor.Extension);
-
+        if (string.Equals(descriptor.Extension, ".dxf", StringComparison.OrdinalIgnoreCase)) export = CadAcadInteropCodec.ExportBinaryDxf(document);
+        else if (string.Equals(descriptor.Extension, ".dxb", StringComparison.OrdinalIgnoreCase)) export = CadDxbCodec.Export(document);
+        else export = CadAcadPreservingInteropCodec.ExportDwg(document, descriptor.Extension);
         await WriteAtomicBytesAsync(filePath, export.Content, createBackup, cancellationToken);
         return export;
     }
@@ -103,46 +83,23 @@ public sealed class CadDocumentFileService
     public static string GetAutoSavePath(string sourcePath)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sourcePath);
-        var fullPath = Path.GetFullPath(sourcePath);
-        return fullPath + ".autosave" + CadNativeDocumentCodec.FileExtension;
+        return Path.GetFullPath(sourcePath) + ".autosave" + CadNativeDocumentCodec.FileExtension;
     }
 
-    private static async Task WriteAtomicTextAsync(
-        string filePath,
-        string content,
-        bool createBackup,
-        CancellationToken cancellationToken)
+    private static async Task WriteAtomicTextAsync(string filePath, string content, bool createBackup, CancellationToken cancellationToken)
     {
         var fullPath = PrepareAtomicWrite(filePath, createBackup);
         var tempPath = fullPath + ".tmp";
-        try
-        {
-            await File.WriteAllTextAsync(tempPath, content, Utf8NoBom, cancellationToken);
-            File.Move(tempPath, fullPath, overwrite: true);
-        }
-        finally
-        {
-            if (File.Exists(tempPath)) File.Delete(tempPath);
-        }
+        try { await File.WriteAllTextAsync(tempPath, content, Utf8NoBom, cancellationToken); File.Move(tempPath, fullPath, overwrite: true); }
+        finally { if (File.Exists(tempPath)) File.Delete(tempPath); }
     }
 
-    private static async Task WriteAtomicBytesAsync(
-        string filePath,
-        byte[] content,
-        bool createBackup,
-        CancellationToken cancellationToken)
+    private static async Task WriteAtomicBytesAsync(string filePath, byte[] content, bool createBackup, CancellationToken cancellationToken)
     {
         var fullPath = PrepareAtomicWrite(filePath, createBackup);
         var tempPath = fullPath + ".tmp";
-        try
-        {
-            await File.WriteAllBytesAsync(tempPath, content, cancellationToken);
-            File.Move(tempPath, fullPath, overwrite: true);
-        }
-        finally
-        {
-            if (File.Exists(tempPath)) File.Delete(tempPath);
-        }
+        try { await File.WriteAllBytesAsync(tempPath, content, cancellationToken); File.Move(tempPath, fullPath, overwrite: true); }
+        finally { if (File.Exists(tempPath)) File.Delete(tempPath); }
     }
 
     private static string PrepareAtomicWrite(string filePath, bool createBackup)
@@ -150,10 +107,7 @@ public sealed class CadDocumentFileService
         var fullPath = Path.GetFullPath(filePath);
         var directory = Path.GetDirectoryName(fullPath);
         if (!string.IsNullOrWhiteSpace(directory)) Directory.CreateDirectory(directory);
-
-        if (createBackup && File.Exists(fullPath))
-            File.Copy(fullPath, fullPath + ".bak", overwrite: true);
-
+        if (createBackup && File.Exists(fullPath)) File.Copy(fullPath, fullPath + ".bak", overwrite: true);
         return fullPath;
     }
 }
