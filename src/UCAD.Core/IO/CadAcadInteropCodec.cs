@@ -36,6 +36,7 @@ public static class CadAcadInteropCodec
         var bridgeText = WriteAsciiDxfBridge(acadDocument, warnings);
         var imported = CadDxfAdvancedInteropCodec.Import(bridgeText);
         AppendWarnings(warnings, "UCAD DXF bridge", imported.Warnings);
+        CadAcadDwgSemanticRepair.Apply(acadDocument, imported.Document, warnings);
         imported.Document.ResetHistory();
 
         return new CadAcadImportResult(
