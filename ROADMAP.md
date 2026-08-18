@@ -136,7 +136,48 @@ UCAD aims to become a lightweight Windows-native 2D CAD focused on architecture 
 - [x] spatial index and larger-drawing query foundation
 - [x] release-signed acceptance package gate
 
-## v0.9–v1.0
+## v0.9 — AutoCAD Format Interoperability
+
+### Drawing containers
+
+- [x] central AutoCAD format capability registry with truthful Open / Import / Export flags
+- [x] MIT-licensed ACadSharp transport dependency compatible with UCAD's GPL-2.0-only licensing
+- [x] `.dwg` read/write transport through the shared UCAD DXF semantic bridge
+- [x] `.dxf` ASCII foundation retained and binary/legacy DXF normalization added
+- [x] `.dwt` drawing-template read/write transport
+- [x] `.dws` standards-file container import without claiming standards-rule authoring
+- [x] `.bak` and `.sv$` recovery-source import
+- [x] WinUI file picker, file activation and AutoCAD export UI for implemented drawing containers
+- [x] DWG / DWT / binary-DXF round-trip regression tests
+- [ ] expand DXF semantic fidelity for dimensions, MTEXT, hatch patterns, blocks/attributes, layouts and advanced object tables
+- [ ] preserve unsupported AutoCAD objects as explicit proxy payloads instead of dropping them during round-trip
+- [ ] multi-version DWG/DXF fixture corpus and large-drawing regression suite
+
+### Published / plotting formats
+
+- [ ] `.dwf` import/export adapter
+- [ ] `.dwfx` import/export adapter
+- [ ] `.ctb` / `.stb` plot-style import/export
+- [ ] `.pc3` / `.pmp` plot configuration import
+
+### Resource / customization formats
+
+- [ ] `.pat` hatch-pattern import/export
+- [ ] `.lin` linetype-definition import/export
+- [ ] `.shx` shape/font resource loading with safe fallback
+- [ ] `.cuix` customization migration tooling
+- [ ] `.arg` profile/settings migration tooling
+- [ ] `.dxb` legacy interchange adapter
+
+### Automation compatibility
+
+- [ ] `.scr` command-script compatibility layer
+- [ ] `.lsp` source-level compatibility plan
+- [ ] `.fas` / `.vlx` remain recognized but are not executable without a compatible AutoLISP/Visual LISP runtime
+
+**Interoperability gate:** UCAD must distinguish file-container support from semantic round-trip fidelity. A recognized extension is never surfaced as Open/Import/Export capable until a real adapter exists, and external AutoCAD drawings open as imported documents so normal Save cannot silently overwrite source data that UCAD may not yet preserve.
+
+## v1.0
 
 - advanced interoperability and round-trip fidelity
 - performance profiling and large-drawing regression suite
@@ -150,6 +191,6 @@ UCAD aims to become a lightweight Windows-native 2D CAD focused on architecture 
 - rendering
 - point clouds
 - mechanical/electrical toolsets
-- full AutoCAD plug-in compatibility
-- full DWG editing compatibility
+- full AutoCAD plug-in binary compatibility
+- lossless editing of every proprietary/custom DWG object until proxy preservation and semantic adapters exist
 - cloud collaboration as a core dependency
