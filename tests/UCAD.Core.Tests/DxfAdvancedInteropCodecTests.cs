@@ -74,9 +74,9 @@ public sealed class DxfAdvancedInteropCodecTests
         var reference = CadBlockFactory.CreateReference(
             definition,
             new CadPoint(100, 20),
-            scale: 2,
-            rotationRadians: Math.PI / 2,
-            attributeValues: new Dictionary<string, string> { ["ID"] = "B7" });
+            2,
+            Math.PI / 2,
+            new Dictionary<string, string> { ["ID"] = "B7" });
         document.Add(reference);
 
         var exported = CadDxfAdvancedInteropCodec.Export(document);
