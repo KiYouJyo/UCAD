@@ -9,19 +9,20 @@ public sealed class CadPlotFileService
     public async Task<CadPdfExportResult> ExportPdfAsync(
         string filePath,
         CadDocument document,
-        CadPlotPlan plan,
+        CadPlotPlan fallbackPlan,
         string title,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         ArgumentNullException.ThrowIfNull(document);
-        ArgumentNullException.ThrowIfNull(plan);
+        ArgumentNullException.ThrowIfNull(fallbackPlan);
 
         var fullPath = Path.GetFullPath(filePath);
         var directory = Path.GetDirectoryName(fullPath);
         if (!string.IsNullOrWhiteSpace(directory)) Directory.CreateDirectory(directory);
 
-        var result = CadPdfExporter.Export(document, plan, title);
+        var plans = CreateOutputPlans(document, fallbackPlan);
+        var result = CadPdfExporter.Export(document, plans, title);
         var tempPath = fullPath + ".tmp";
         try
         {
@@ -33,6 +34,18 @@ public sealed class CadPlotFileService
         {
             if (File.Exists(tempPath)) File.Delete(tempPath);
         }
+    }
+
+    public IReadOnlyList<CadPlotPlan> CreateOutputPlans(CadDocument document, CadPlotPlan fallbackPlan)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(fallbackPlan);
+
+        var layout = document.ActiveLayout;
+        if (layout.Viewports.Count == 0) return [fallbackPlan];
+        return layout.Viewports
+            .Select(viewport => CadPlotPlan.FromViewport(layout.PageSetup, viewport))
+            .ToArray();
     }
 
     public CadPlotPlan CreatePlan(CadDocument document, CadPageSetup pageSetup)
