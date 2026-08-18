@@ -19,18 +19,22 @@ public sealed class AdvancedNativeMetadataTests
             new CadPoint(20, 20),
             new CadPoint(0, 20)
         ], closed: true);
+        var island = new PolylineEntity([
+            new CadPoint(5, 5),
+            new CadPoint(10, 5),
+            new CadPoint(10, 10),
+            new CadPoint(5, 10)
+        ], closed: true);
         document.Add(source);
+        document.Add(island);
         var hatch = new HatchEntity(
             source.Points,
             "ANSI31",
             2,
             Math.PI / 4,
-            islands:
-            [
-                [new CadPoint(5, 5), new CadPoint(10, 5), new CadPoint(10, 10), new CadPoint(5, 10)]
-            ],
+            islands: [island.Points],
             associative: true,
-            sourceEntityIds: [source.Id],
+            sourceEntityIds: [source.Id, island.Id],
             islandDetection: HatchIslandDetection.Outer);
         document.Add(hatch);
 
@@ -38,11 +42,13 @@ public sealed class AdvancedNativeMetadataTests
         var restored = CadNativeDocumentCodecV11.Deserialize(json);
 
         Assert.True(CadNativeDocumentCodecV11.HasV11Extension(json));
-        var restoredHatch = Assert.IsType<HatchEntity>(restored.Entities[1]);
+        var restoredHatch = Assert.IsType<HatchEntity>(restored.Entities[2]);
         Assert.Single(restoredHatch.Islands);
         Assert.True(restoredHatch.Associative);
         Assert.Equal(HatchIslandDetection.Outer, restoredHatch.IslandDetection);
-        Assert.Single(restoredHatch.SourceEntityIds);
+        Assert.Equal(2, restoredHatch.SourceEntityIds.Count);
+        Assert.Equal(restored.Entities[0].Id, restoredHatch.SourceEntityIds[0]);
+        Assert.Equal(restored.Entities[1].Id, restoredHatch.SourceEntityIds[1]);
     }
 
     [Fact]
