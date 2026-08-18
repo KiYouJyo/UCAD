@@ -37,6 +37,7 @@ public partial class App : Application
             mainWindow.EnsureModifyCompletionUiInitialized();
             mainWindow.EnsureAnnotationCompletionUiInitialized();
             mainWindow.EnsureAdvancedAuthoringUiInitialized();
+            mainWindow.EnsureAdvancedAuthoringToolbarBridgeInitialized();
             mainWindow.EnsureLayoutPlotUiInitialized();
             mainWindow.EnsureFileUiInitialized();
             mainWindow.EnsureRecentFilesInitialized();
