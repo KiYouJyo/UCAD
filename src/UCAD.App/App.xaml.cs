@@ -32,6 +32,8 @@ public partial class App : Application
             mainWindow.RefreshLocalization();
             mainWindow.EnsureInteractionUiInitialized();
             mainWindow.EnsureAuthoringUiInitialized();
+            mainWindow.EnsureFileUiInitialized();
+            mainWindow.EnsureRecentFilesInitialized();
             mainWindow.ScheduleLocalizationSmoke();
             mainWindow.ScheduleInteractionSmoke();
             mainWindow.ScheduleAuthoringSmoke();
