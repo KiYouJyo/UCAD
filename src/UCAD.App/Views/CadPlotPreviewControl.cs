@@ -6,6 +6,7 @@ using System.Numerics;
 using UCAD.Core.Entities;
 using UCAD.Core.Geometry;
 using UCAD.Core.Plot;
+using Windows.Foundation;
 using Windows.UI;
 
 namespace UCAD.Views;
@@ -14,7 +15,7 @@ public sealed class CadPlotPreviewControl : UserControl
 {
     private readonly CanvasControl _canvas = new();
     private CadDocument? _document;
-    private CadPlotPlan? _plan;
+    private IReadOnlyList<CadPlotPlan> _plans = [];
 
     public CadPlotPreviewControl()
     {
@@ -24,11 +25,26 @@ public sealed class CadPlotPreviewControl : UserControl
         Content = _canvas;
     }
 
-    public void SetPlot(CadDocument document, CadPlotPlan plan)
+    public void SetPlot(CadDocument document, CadPlotPlan fallbackPlan)
     {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(fallbackPlan);
+        var layout = document.ActiveLayout;
+        var plans = layout.Viewports.Count > 0
+            ? layout.Viewports.Select(viewport => CadPlotPlan.FromViewport(layout.PageSetup, viewport)).ToArray()
+            : [fallbackPlan];
+        SetPlots(document, plans);
+    }
+
+    public void SetPlots(CadDocument document, IReadOnlyList<CadPlotPlan> plans)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(plans);
+        if (plans.Count == 0) throw new ArgumentException("At least one plot plan is required.", nameof(plans));
+        if (plans.Any(plan => plan is null)) throw new ArgumentException("Plot plan collection cannot contain null values.", nameof(plans));
         if (_document is not null) _document.Changed -= Document_Changed;
-        _document = document ?? throw new ArgumentNullException(nameof(document));
-        _plan = plan ?? throw new ArgumentNullException(nameof(plan));
+        _document = document;
+        _plans = plans.ToArray();
         _document.Changed += Document_Changed;
         _canvas.Invalidate();
     }
@@ -39,15 +55,16 @@ public sealed class CadPlotPreviewControl : UserControl
     {
         var ds = args.DrawingSession;
         ds.Clear(ColorHelper.FromArgb(255, 36, 36, 39));
-        if (_document is null || _plan is null) return;
+        if (_document is null || _plans.Count == 0) return;
 
-        var page = GetPageTransform(sender.ActualWidth, sender.ActualHeight, _plan);
+        var pagePlan = _plans[0];
+        var page = GetPageTransform(sender.ActualWidth, sender.ActualHeight, pagePlan);
         ds.FillRectangle(page.Left, page.Top, page.Width, page.Height, Colors.White);
         ds.DrawRectangle(page.Left, page.Top, page.Width, page.Height, ColorHelper.FromArgb(255, 150, 150, 155), 1);
 
-        var printable = _plan.PageSetup.PrintablePaperRectMm;
-        var printableTopLeft = PaperToScreen(new CadPoint(printable.Left, printable.Top), page, _plan);
-        var printableBottomRight = PaperToScreen(new CadPoint(printable.Right, printable.Bottom), page, _plan);
+        var printable = pagePlan.PageSetup.PrintablePaperRectMm;
+        var printableTopLeft = PaperToScreen(new CadPoint(printable.Left, printable.Top), page, pagePlan);
+        var printableBottomRight = PaperToScreen(new CadPoint(printable.Right, printable.Bottom), page, pagePlan);
         ds.DrawRectangle(
             printableTopLeft.X,
             printableTopLeft.Y,
@@ -56,8 +73,26 @@ public sealed class CadPlotPreviewControl : UserControl
             ColorHelper.FromArgb(150, 120, 120, 125),
             1);
 
-        foreach (var entity in _document.VisibleEntities)
-            DrawEntity(ds, entity, page, _plan, ColorHelper.FromArgb(255, 20, 20, 22), 1.0f);
+        foreach (var plan in _plans)
+        {
+            var clipTopLeft = PaperToScreen(new CadPoint(plan.PaperRectMm.Left, plan.PaperRectMm.Top), page, plan);
+            var clipBottomRight = PaperToScreen(new CadPoint(plan.PaperRectMm.Right, plan.PaperRectMm.Bottom), page, plan);
+            var clip = new Rect(
+                clipTopLeft.X,
+                clipTopLeft.Y,
+                Math.Max(0, clipBottomRight.X - clipTopLeft.X),
+                Math.Max(0, clipBottomRight.Y - clipTopLeft.Y));
+            if (clip.Width <= 0 || clip.Height <= 0) continue;
+
+            using (ds.CreateLayer(1f, clip))
+            {
+                foreach (var entity in _document.VisibleEntities)
+                    DrawEntity(ds, entity, page, plan, ColorHelper.FromArgb(255, 20, 20, 22), 1.0f);
+            }
+
+            if (_plans.Count > 1)
+                ds.DrawRectangle(clip, ColorHelper.FromArgb(130, 90, 90, 96), 1);
+        }
     }
 
     private void DrawEntity(
