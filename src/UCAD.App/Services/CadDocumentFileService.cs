@@ -41,7 +41,7 @@ public sealed class CadDocumentFileService
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         var fullPath = Path.GetFullPath(filePath);
         var text = await File.ReadAllTextAsync(fullPath, Utf8NoBom, cancellationToken);
-        var import = CadDxfCodec.Import(text);
+        var import = CadDxfAdvancedInteropCodec.Import(text);
         import.Document.ResetHistory();
         return import;
     }
@@ -72,7 +72,7 @@ public sealed class CadDocumentFileService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         ArgumentNullException.ThrowIfNull(document);
-        var export = CadDxfCodec.Export(document);
+        var export = CadDxfAdvancedInteropCodec.Export(document);
         await WriteAtomicTextAsync(filePath, export.Content, createBackup, cancellationToken);
         return export;
     }
