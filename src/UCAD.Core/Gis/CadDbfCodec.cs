@@ -70,9 +70,9 @@ public static class CadDbfCodec
         BinaryPrimitives.WriteUInt16LittleEndian(header[10..12], (ushort)recordLength);
         stream.Write(header);
 
+        Span<byte> descriptor = stackalloc byte[32];
         foreach (var field in fields)
         {
-            Span<byte> descriptor = stackalloc byte[32];
             descriptor.Clear();
             var nameBytes = Encoding.ASCII.GetBytes(field.Name);
             nameBytes.CopyTo(descriptor[..Math.Min(11, nameBytes.Length)]);

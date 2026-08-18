@@ -34,7 +34,7 @@ public static class CadNativeDocumentCodecV11
         var extension = BuildExtension(document);
         if (extension is not null)
         {
-            root[ExtensionsProperty] = new JsonObject { [ExtensionName] = extension };
+            root[ExtensionsProperty] = new JsonObject { [ExtensionName] = JsonSerializer.SerializeToNode(extension, JsonOptions) };
         }
         return root.ToJsonString(JsonOptions);
     }
@@ -90,7 +90,7 @@ public static class CadNativeDocumentCodecV11
                     hatchMetadata.Add(new HatchMetadataDto
                     {
                         EntityIndex = index,
-                        Islands = hatch.Islands.Select(loop => loop.Select(ToDto).ToList()).ToList(),
+                        Islands = hatch.Islands.Select(loop => (List<PointDto>?)loop.Select(ToDto).ToList()).ToList(),
                         Associative = hatch.Associative,
                         SourceEntityIds = hatch.SourceEntityIds.ToList(),
                         SourceEntityIndices = hatch.SourceEntityIds

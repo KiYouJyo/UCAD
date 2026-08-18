@@ -133,7 +133,7 @@ public static class CadGeoJsonCodec
                     ? PolygonGeometry(spline.SamplePoints(options.CurveSegments), [])
                     : LineStringGeometry(spline.SamplePoints(options.CurveSegments));
             case HatchEntity hatch when options.IncludeHatches:
-                return PolygonGeometry(hatch.Boundary, hatch.EffectiveIslandLoops);
+                return PolygonGeometry(hatch.Boundary, hatch.EffectiveIslandLoops.ToArray());
             case HatchEntity:
                 return null;
             case BlockReferenceEntity block:

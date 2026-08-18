@@ -96,7 +96,7 @@ public static class CadNativeDocumentCodecCurrent
                     hatches.Add(new HatchMetadataDto
                     {
                         EntityIndex = index,
-                        Islands = hatch.Islands.Select(loop => loop.Select(ToDto).ToList()).ToList(),
+                        Islands = hatch.Islands.Select(loop => (List<PointDto>?)loop.Select(ToDto).ToList()).ToList(),
                         Associative = hatch.Associative,
                         SourceEntityIndices = sourceIndices,
                         IslandDetection = hatch.IslandDetection.ToString()

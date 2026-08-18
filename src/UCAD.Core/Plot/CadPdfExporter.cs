@@ -394,8 +394,9 @@ public static class CadPdfExporter
         Guid sourceId,
         ICadPdfTextOutlineProvider? textOutlineProvider)
     {
+        string? outlineWarning = null;
         if (textOutlineProvider is not null &&
-            textOutlineProvider.TryCreateOutline(value, textStyle, out var outline, out var outlineWarning) &&
+            textOutlineProvider.TryCreateOutline(value, textStyle, out var outline, out outlineWarning) &&
             outline is not null)
         {
             WriteTextOutline(sb, outline, modelPosition, modelHeight, rotationRadians, plan);
