@@ -53,7 +53,10 @@ public static class ObjectSnapResolver
         {
             if (modes.HasFlag(ObjectSnapMode.Endpoint))
             {
-                foreach (var point in CadEntityGeometry.GetEndpoints(entity))
+                var endpoints = CadExtendedEntityGeometry.Supports(entity)
+                    ? CadExtendedEntityGeometry.GetEndpoints(entity)
+                    : CadEntityGeometry.GetEndpoints(entity);
+                foreach (var point in endpoints)
                 {
                     best = Choose(best, Candidate(point, ObjectSnapKind.Endpoint, entity.Id, null, cursor), aperture);
                 }
@@ -61,7 +64,10 @@ public static class ObjectSnapResolver
 
             if (modes.HasFlag(ObjectSnapMode.Midpoint))
             {
-                foreach (var point in CadEntityGeometry.GetMidpoints(entity))
+                var midpoints = CadExtendedEntityGeometry.Supports(entity)
+                    ? CadExtendedEntityGeometry.GetMidpoints(entity)
+                    : CadEntityGeometry.GetMidpoints(entity);
+                foreach (var point in midpoints)
                 {
                     best = Choose(best, Candidate(point, ObjectSnapKind.Midpoint, entity.Id, null, cursor), aperture);
                 }
@@ -69,12 +75,14 @@ public static class ObjectSnapResolver
 
             if (modes.HasFlag(ObjectSnapMode.Center))
             {
-                var center = entity switch
-                {
-                    CircleEntity circle => circle.Center,
-                    ArcEntity arc => arc.Center,
-                    _ => (CadPoint?)null
-                };
+                var center = CadExtendedEntityGeometry.Supports(entity)
+                    ? CadExtendedEntityGeometry.GetCenter(entity)
+                    : entity switch
+                    {
+                        CircleEntity circle => circle.Center,
+                        ArcEntity arc => arc.Center,
+                        _ => (CadPoint?)null
+                    };
                 if (center is CadPoint point)
                 {
                     best = Choose(best, Candidate(point, ObjectSnapKind.Center, entity.Id, null, cursor), aperture);
@@ -90,6 +98,7 @@ public static class ObjectSnapResolver
                 cursor.X + aperture,
                 cursor.Y + aperture);
             var nearby = snapshot
+                .Where(entity => !CadExtendedEntityGeometry.Supports(entity))
                 .Where(entity => CadEntityGeometry.GetBounds(entity).Intersects(apertureRect))
                 .ToArray();
 
