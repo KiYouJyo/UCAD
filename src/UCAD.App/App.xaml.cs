@@ -33,6 +33,7 @@ public partial class App : Application
             mainWindow.EnsureInteractionUiInitialized();
             mainWindow.EnsureAuthoringUiInitialized();
             mainWindow.EnsureExtendedDrawingUiInitialized();
+            mainWindow.EnsureDraftingAidUiInitialized();
             mainWindow.EnsureFileUiInitialized();
             mainWindow.EnsureRecentFilesInitialized();
             mainWindow.EnsureFileCloseIntegration();
