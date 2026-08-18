@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
+using UCAD.Core.IO;
 using UCAD.Workspace;
 using Windows.ApplicationModel.Activation;
 using Windows.Storage;
@@ -50,19 +51,20 @@ public sealed partial class MainWindow
             try
             {
                 var extension = Path.GetExtension(path);
-                if (string.Equals(extension, ".dxf", StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(extension, CadNativeDocumentCodec.FileExtension, StringComparison.OrdinalIgnoreCase))
                 {
-                    await OpenImportedDxfAsync(path);
+                    var document = await _documentFileService.OpenNativeAsync(path);
+                    var session = CreateWorkspaceForFile(document, Path.GetFileName(path), path);
+                    SetSessionStatus(session, FileText("Opened"));
+                    await Services.RecentFilesService.Current.RecordAsync(path, _settingsService.Settings.RecentFileCount);
+                    RefreshStartRecentFiles();
                     continue;
                 }
-                if (!string.Equals(extension, Core.IO.CadNativeDocumentCodec.FileExtension, StringComparison.OrdinalIgnoreCase))
+
+                if (!CadAcadFileFormatRegistry.TryGetByPath(path, out var format) || !format.CanOpen || format.Family != CadFileFormatFamily.AutoCadDrawing)
                     continue;
 
-                var document = await _documentFileService.OpenNativeAsync(path);
-                var session = CreateWorkspaceForFile(document, Path.GetFileName(path), path);
-                SetSessionStatus(session, FileText("Opened"));
-                await Services.RecentFilesService.Current.RecordAsync(path, _settingsService.Settings.RecentFileCount);
-                RefreshStartRecentFiles();
+                await OpenImportedAutoCadAsync(path);
             }
             catch (Exception ex)
             {
