@@ -13,14 +13,13 @@ namespace UCAD.Core.IO;
 /// </summary>
 public static class CadAcadEcosystemResourceCodec
 {
-    private static readonly UTF8Encoding Utf8NoBom = new(false);
     private static readonly Regex LispCommand = new(
-        @"\(\s*command(?:-s)?\s+\"(?<name>[^\"]+)\"",
+        "\\(\\s*command(?:-s)?\\s+\"(?<name>[^\"]+)\"",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     private static readonly HashSet<string> LosslessBinaryResources = new(StringComparer.OrdinalIgnoreCase)
     {
-        ".ctb", ".stb", ".pc3", ".pmp", ".psf", ".pss", ".shx", ".mnc", ".sld", ".slb",
+        ".dwf", ".dst", ".ctb", ".stb", ".pc3", ".pmp", ".psf", ".pss", ".shx", ".mnc", ".sld", ".slb",
         ".fas", ".vlx", ".dvb"
     };
 
@@ -43,6 +42,8 @@ public static class CadAcadEcosystemResourceCodec
             ["sha256"] = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant(),
             ["kind"] = normalized switch
             {
+                ".dwf" => "classic Design Web Format package",
+                ".dst" => "sheet set package",
                 ".ctb" => "color-dependent plot style",
                 ".stb" => "named plot style",
                 ".pc3" => "plotter configuration",
@@ -68,6 +69,10 @@ public static class CadAcadEcosystemResourceCodec
             warnings.Add("Plot-style bytes are preserved exactly; semantic CTB/STB table editing is not claimed by this adapter.");
         if (normalized is ".pc3" or ".pmp")
             warnings.Add("Plot configuration bytes are preserved exactly; device-driver execution is not performed by UCAD.");
+        if (normalized == ".dwf")
+            warnings.Add("Classic DWF is preserved as an exact published package; editable geometry extraction requires a separately licensed/compatible DWF parser and is not falsely claimed.");
+        if (normalized == ".dst")
+            warnings.Add("DST sheet-set bytes are preserved exactly; proprietary sheet-set database semantics are not rewritten by UCAD.");
 
         return new CadAcadOpaqueResource(normalized, bytes, metadata, warnings);
     }
@@ -128,7 +133,6 @@ public static class CadAcadEcosystemResourceCodec
         ArgumentNullException.ThrowIfNull(resource);
         if (!TextMigrationResources.Contains(resource.Extension))
             throw new NotSupportedException($"'{resource.Extension}' is not a registered text migration resource.");
-        // Preserve the exact source text unless callers explicitly build a new resource model.
         return resource.OriginalText;
     }
 
