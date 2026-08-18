@@ -9,8 +9,9 @@ public sealed record LineEntity : ICadEntity
     {
     }
 
-    internal LineEntity(CadPoint start, CadPoint end, Guid id)
+    public LineEntity(CadPoint start, CadPoint end, Guid id)
     {
+        if (id == Guid.Empty) throw new ArgumentException("Entity id cannot be empty.", nameof(id));
         Start = start;
         End = end;
         Id = id;
