@@ -20,7 +20,14 @@ public static class CadAcadPreservingInteropCodec
             imported.SourceExtension,
             imported.SourceCadVersion,
             preservationReasons: [PreservationReason]));
-        return imported;
+
+        // ACadSharp reports unsupported custom dictionaries and other non-graphical objects through
+        // the same notification channel as real geometry/semantic problems. Since UCAD retains the
+        // exact original DWG-compatible container, source-only metadata remains recoverable and must
+        // not turn a successful drawing open into a blocking warning wall. Keep all actionable
+        // graphical/semantic diagnostics, but remove only explicitly classified opaque metadata noise.
+        var actionableWarnings = CadAcadInteropDiagnostics.KeepActionableWarnings(imported.Warnings);
+        return imported with { Warnings = actionableWarnings };
     }
 
     public static CadAcadBinaryExportResult ExportDwg(CadDocument document, string targetExtension = ".dwg")
