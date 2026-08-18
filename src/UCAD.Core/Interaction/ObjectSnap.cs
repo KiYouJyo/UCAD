@@ -18,7 +18,10 @@ public enum ObjectSnapKind
     Endpoint,
     Midpoint,
     Intersection,
-    Center
+    Center,
+    Grid,
+    Polar,
+    Tracking
 }
 
 public sealed record ObjectSnapResult(
