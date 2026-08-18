@@ -31,7 +31,12 @@ internal static class CadAcadDxfLayoutSidecar
                 if (!warnings.Contains(message, StringComparer.Ordinal)) warnings.Add(message);
             };
             var document = reader.Read();
+            var hasPaperLayouts = document.Layouts.Any(layout => layout.IsPaperSpace);
             CadAcadLayoutInterop.Import(document, target, warnings);
+            if (hasPaperLayouts)
+            {
+                warnings.Add("DXF paper layouts/viewports were imported on a best-effort basis. Producer-specific PlotSettings such as unprintable margins can be reduced or normalized; use DWG/DWT when page-setup fidelity is required.");
+            }
         }
         catch (Exception ex)
         {
