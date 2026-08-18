@@ -1,3 +1,4 @@
+using ACadSharp.IO;
 using UCAD.Core.Geometry;
 using UCAD.Core.IO;
 using UCAD.Core.Layout;
@@ -9,6 +10,58 @@ public sealed class AcadLayoutInteropTests
 {
     [Fact]
     public void DwgRoundTripPreservesPaperLayoutPageSetupAndViewport()
+    {
+        var document = CreateLayoutDocument();
+
+        var exported = CadAcadInteropCodec.ExportDwg(document);
+        var imported = CadAcadInteropCodec.ImportDwg(exported.Content);
+
+        Assert.NotEmpty(exported.Content);
+        AssertImportedLayout(imported.Document);
+    }
+
+    [Fact]
+    public void DwtUsesTheSameLayoutTransportAsDwg()
+    {
+        var document = new CadDocument();
+        document.SetLayoutTable(
+            [new CadLayoutDefinition(
+                "Layout1",
+                new CadPageSetup(CadPaperSize.A4, landscape: false, plotScaleDenominator: 50))],
+            "Layout1");
+
+        var exported = CadAcadInteropCodec.ExportDwg(document, ".dwt");
+        var imported = CadAcadInteropCodec.ImportDwg(exported.Content, ".dwt");
+
+        Assert.Equal(".dwt", exported.TargetExtension);
+        Assert.Equal(".dwt", imported.SourceExtension);
+        var page = imported.Document.GetLayout("Layout1").PageSetup;
+        Assert.False(page.Landscape);
+        Assert.Equal(CadPaperSize.A4.Name, page.PaperSize.Name);
+        Assert.Equal(50, page.PlotScaleDenominator, 5);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void DxfImportSidecarPreservesLayoutsWithoutReplacingEntityCodec(bool binary)
+    {
+        var source = CreateLayoutDocument();
+        var dwg = CadAcadInteropCodec.ExportDwg(source);
+
+        using var dwgStream = new MemoryStream(dwg.Content, writable: false);
+        using var dwgReader = new DwgReader(dwgStream);
+        var acadDocument = dwgReader.Read();
+        using var dxfStream = new MemoryStream();
+        using (var dxfWriter = new DxfWriter(dxfStream, acadDocument, binary))
+            dxfWriter.Write();
+
+        var imported = CadAcadInteropCodec.ImportDxf(dxfStream.ToArray());
+
+        AssertImportedLayout(imported.Document);
+    }
+
+    private static CadDocument CreateLayoutDocument()
     {
         var document = new CadDocument();
         var page = new CadPageSetup(
@@ -31,12 +84,12 @@ public sealed class AcadLayoutInteropTests
         document.SetLayoutTable(
             [new CadLayoutDefinition("Layout1", page, [viewport])],
             "Layout1");
+        return document;
+    }
 
-        var exported = CadAcadInteropCodec.ExportDwg(document);
-        var imported = CadAcadInteropCodec.ImportDwg(exported.Content);
-
-        Assert.NotEmpty(exported.Content);
-        var layout = imported.Document.GetLayout("Layout1");
+    private static void AssertImportedLayout(CadDocument document)
+    {
+        var layout = document.GetLayout("Layout1");
         Assert.Equal(CadPaperSize.A3.Name, layout.PageSetup.PaperSize.Name);
         Assert.True(layout.PageSetup.Landscape);
         Assert.Equal(12, layout.PageSetup.MarginLeftMm, 5);
@@ -53,26 +106,5 @@ public sealed class AcadLayoutInteropTests
         Assert.Equal(500, importedViewport.ScaleDenominator, 5);
         Assert.Equal(0.125, importedViewport.TwistAngleRadians, 8);
         Assert.True(importedViewport.Locked);
-    }
-
-    [Fact]
-    public void DwtUsesTheSameLayoutTransportAsDwg()
-    {
-        var document = new CadDocument();
-        document.SetLayoutTable(
-            [new CadLayoutDefinition(
-                "Layout1",
-                new CadPageSetup(CadPaperSize.A4, landscape: false, plotScaleDenominator: 50))],
-            "Layout1");
-
-        var exported = CadAcadInteropCodec.ExportDwg(document, ".dwt");
-        var imported = CadAcadInteropCodec.ImportDwg(exported.Content, ".dwt");
-
-        Assert.Equal(".dwt", exported.TargetExtension);
-        Assert.Equal(".dwt", imported.SourceExtension);
-        var page = imported.Document.GetLayout("Layout1").PageSetup;
-        Assert.False(page.Landscape);
-        Assert.Equal(CadPaperSize.A4.Name, page.PaperSize.Name);
-        Assert.Equal(50, page.PlotScaleDenominator, 5);
     }
 }
