@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using UCAD.Core.Entities;
 using UCAD.Core.Geometry;
+using UCAD.Core.Hatching;
 using UCAD.Core.Layout;
 using UCAD.Core.Styles;
 
@@ -222,11 +223,23 @@ public static class CadPdfExporter
             return;
         }
 
-        // Pattern engine is intentionally explicit: v0.12 foundation does not fake
-        // ANSI/user patterns as solid fills. Boundary is plotted and a warning returned.
+        if (string.Equals(hatch.Pattern, "ANSI31", StringComparison.OrdinalIgnoreCase))
+        {
+            var pattern = CadHatchPatternGenerator.Generate(hatch);
+            foreach (var segment in pattern.Segments)
+                StrokeChain(sb, [segment.Start, segment.End], false, plan);
+            if (pattern.DensityReduced)
+            {
+                warnings.Add(
+                    $"PDF export reduced ANSI31 render density for hatch {hatch.Id}; " +
+                    $"requested spacing {F(pattern.RequestedSpacing)}, effective spacing {F(pattern.EffectiveSpacing)}.");
+            }
+            return;
+        }
+
         StrokeChain(sb, hatch.Boundary, true, plan);
         foreach (var island in hatch.EffectiveIslandLoops) StrokeChain(sb, island, true, plan);
-        warnings.Add($"PDF export plotted hatch '{hatch.Pattern}' boundary only; pattern strokes are not yet emitted ({hatch.Id}).");
+        warnings.Add($"PDF export plotted hatch '{hatch.Pattern}' boundary only because that pattern is not implemented ({hatch.Id}).");
     }
 
     private static void WriteCircle(StringBuilder sb, CadPoint center, double radius, CadPlotPlan plan)
