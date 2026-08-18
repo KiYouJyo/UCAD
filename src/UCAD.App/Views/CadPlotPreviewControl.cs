@@ -1,0 +1,212 @@
+using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.UI.Xaml;
+using Microsoft.UI;
+using Microsoft.UI.Xaml.Controls;
+using System.Numerics;
+using UCAD.Core.Entities;
+using UCAD.Core.Geometry;
+using UCAD.Core.Plot;
+using Windows.UI;
+
+namespace UCAD.Views;
+
+public sealed class CadPlotPreviewControl : UserControl
+{
+    private readonly CanvasControl _canvas = new();
+    private CadDocument? _document;
+    private CadPlotPlan? _plan;
+
+    public CadPlotPreviewControl()
+    {
+        MinWidth = 720;
+        MinHeight = 520;
+        _canvas.Draw += Canvas_Draw;
+        Content = _canvas;
+    }
+
+    public void SetPlot(CadDocument document, CadPlotPlan plan)
+    {
+        if (_document is not null) _document.Changed -= Document_Changed;
+        _document = document ?? throw new ArgumentNullException(nameof(document));
+        _plan = plan ?? throw new ArgumentNullException(nameof(plan));
+        _document.Changed += Document_Changed;
+        _canvas.Invalidate();
+    }
+
+    private void Document_Changed(object? sender, CadDocumentChangedEventArgs e) => _canvas.Invalidate();
+
+    private void Canvas_Draw(CanvasControl sender, CanvasDrawEventArgs args)
+    {
+        var ds = args.DrawingSession;
+        ds.Clear(ColorHelper.FromArgb(255, 36, 36, 39));
+        if (_document is null || _plan is null) return;
+
+        var page = GetPageTransform(sender.ActualWidth, sender.ActualHeight, _plan);
+        ds.FillRectangle(page.Left, page.Top, page.Width, page.Height, Colors.White);
+        ds.DrawRectangle(page.Left, page.Top, page.Width, page.Height, ColorHelper.FromArgb(255, 150, 150, 155), 1);
+
+        var printable = _plan.PageSetup.PrintablePaperRectMm;
+        var printableTopLeft = PaperToScreen(new CadPoint(printable.Left, printable.Top), page, _plan);
+        var printableBottomRight = PaperToScreen(new CadPoint(printable.Right, printable.Bottom), page, _plan);
+        ds.DrawRectangle(
+            printableTopLeft.X,
+            printableTopLeft.Y,
+            printableBottomRight.X - printableTopLeft.X,
+            printableBottomRight.Y - printableTopLeft.Y,
+            ColorHelper.FromArgb(150, 120, 120, 125),
+            1);
+
+        foreach (var entity in _document.VisibleEntities)
+            DrawEntity(ds, entity, page, _plan, ColorHelper.FromArgb(255, 20, 20, 22), 1.0f);
+    }
+
+    private void DrawEntity(
+        CanvasDrawingSession ds,
+        ICadEntity entity,
+        PageTransform page,
+        CadPlotPlan plan,
+        Color color,
+        float strokeWidth)
+    {
+        switch (entity)
+        {
+            case LineEntity line:
+                DrawChain(ds, [line.Start, line.End], false, page, plan, color, strokeWidth);
+                break;
+            case PolylineEntity polyline:
+                DrawChain(ds, polyline.Points, polyline.Closed, page, plan, color, strokeWidth);
+                break;
+            case CircleEntity circle:
+            {
+                var center = ModelToScreen(circle.Center, page, plan);
+                var edge = ModelToScreen(new CadPoint(circle.Center.X + circle.Radius, circle.Center.Y), page, plan);
+                ds.DrawCircle(center, Vector2.Distance(center, edge), color, strokeWidth);
+                break;
+            }
+            case ArcEntity arc:
+                DrawChain(ds, arc.SamplePoints(), false, page, plan, color, strokeWidth);
+                break;
+            case PointEntity point:
+            {
+                var p = ModelToScreen(point.Position, page, plan);
+                ds.DrawLine(p.X - 3, p.Y, p.X + 3, p.Y, color, strokeWidth);
+                ds.DrawLine(p.X, p.Y - 3, p.X, p.Y + 3, color, strokeWidth);
+                break;
+            }
+            case EllipseEntity ellipse:
+                DrawChain(ds, ellipse.SamplePoints(), ellipse.IsFullEllipse, page, plan, color, strokeWidth);
+                break;
+            case SplineEntity spline:
+                DrawChain(ds, spline.SamplePoints(), spline.Closed, page, plan, color, strokeWidth);
+                break;
+            case RayEntity ray:
+                DrawInfinite(ds, ray.Origin, ray.Direction, true, page, plan, color, strokeWidth);
+                break;
+            case XLineEntity xline:
+                DrawInfinite(ds, xline.Point, xline.Direction, false, page, plan, color, strokeWidth);
+                break;
+            case TextEntity text:
+            {
+                var p = ModelToScreen(text.Position, page, plan);
+                ds.DrawText(text.Text, p, color);
+                break;
+            }
+            case MTextEntity text:
+            {
+                var p = ModelToScreen(text.Position, page, plan);
+                ds.DrawText(string.Join("\n", text.ApproximateLines()), p, color);
+                break;
+            }
+            case LinearDimensionEntity dimension:
+            {
+                var ends = dimension.GetDimensionLineEndpoints();
+                DrawChain(ds, [dimension.FirstExtensionPoint, ends.First], false, page, plan, color, strokeWidth);
+                DrawChain(ds, [dimension.SecondExtensionPoint, ends.Second], false, page, plan, color, strokeWidth);
+                DrawChain(ds, [ends.First, ends.Second], false, page, plan, color, strokeWidth);
+                break;
+            }
+            case AngularDimensionEntity dimension:
+                DrawChain(ds, dimension.GetArcSamplePoints(), false, page, plan, color, strokeWidth);
+                break;
+            case RadialDimensionEntity dimension:
+                DrawChain(ds, [dimension.Center, dimension.PointOnCircle, dimension.TextPoint], false, page, plan, color, strokeWidth);
+                break;
+            case LeaderEntity leader:
+                DrawChain(ds, leader.Points, false, page, plan, color, strokeWidth);
+                break;
+            case HatchEntity hatch:
+                DrawChain(ds, hatch.Boundary, true, page, plan, color, strokeWidth);
+                foreach (var island in hatch.EffectiveIslandLoops) DrawChain(ds, island, true, page, plan, color, strokeWidth);
+                break;
+            case BlockReferenceEntity block:
+                foreach (var child in block.Contents) DrawEntity(ds, child, page, plan, color, strokeWidth);
+                break;
+        }
+    }
+
+    private static void DrawChain(
+        CanvasDrawingSession ds,
+        IReadOnlyList<CadPoint> points,
+        bool closed,
+        PageTransform page,
+        CadPlotPlan plan,
+        Color color,
+        float strokeWidth)
+    {
+        if (points.Count < 2) return;
+        var previous = ModelToScreen(points[0], page, plan);
+        for (var i = 1; i < points.Count; i++)
+        {
+            var current = ModelToScreen(points[i], page, plan);
+            ds.DrawLine(previous, current, color, strokeWidth);
+            previous = current;
+        }
+        if (closed)
+            ds.DrawLine(previous, ModelToScreen(points[0], page, plan), color, strokeWidth);
+    }
+
+    private static void DrawInfinite(
+        CanvasDrawingSession ds,
+        CadPoint anchor,
+        CadVector direction,
+        bool rayOnly,
+        PageTransform page,
+        CadPlotPlan plan,
+        Color color,
+        float strokeWidth)
+    {
+        if (direction.Length <= 1e-9) return;
+        var unit = new CadVector(direction.X / direction.Length, direction.Y / direction.Length);
+        var modelSpan = Math.Max(plan.PageSetup.PaperWidthMm, plan.PageSetup.PaperHeightMm) * plan.ScaleDenominator * 4;
+        var start = rayOnly
+            ? anchor
+            : new CadPoint(anchor.X - (unit.X * modelSpan), anchor.Y - (unit.Y * modelSpan));
+        var end = new CadPoint(anchor.X + (unit.X * modelSpan), anchor.Y + (unit.Y * modelSpan));
+        ds.DrawLine(ModelToScreen(start, page, plan), ModelToScreen(end, page, plan), color, strokeWidth);
+    }
+
+    private static PageTransform GetPageTransform(double width, double height, CadPlotPlan plan)
+    {
+        const double padding = 28;
+        var availableWidth = Math.Max(1, width - (padding * 2));
+        var availableHeight = Math.Max(1, height - (padding * 2));
+        var scale = Math.Min(availableWidth / plan.PageSetup.PaperWidthMm, availableHeight / plan.PageSetup.PaperHeightMm);
+        var pageWidth = (float)(plan.PageSetup.PaperWidthMm * scale);
+        var pageHeight = (float)(plan.PageSetup.PaperHeightMm * scale);
+        return new PageTransform(
+            (float)((width - pageWidth) / 2),
+            (float)((height - pageHeight) / 2),
+            pageWidth,
+            pageHeight,
+            (float)scale);
+    }
+
+    private static Vector2 ModelToScreen(CadPoint model, PageTransform page, CadPlotPlan plan) =>
+        PaperToScreen(plan.ModelToPaper(model), page, plan);
+
+    private static Vector2 PaperToScreen(CadPoint paper, PageTransform page, CadPlotPlan plan) => new(
+        page.Left + ((float)paper.X * page.Scale),
+        page.Top + page.Height - ((float)paper.Y * page.Scale));
+
+    private readonly record struct PageTransform(float Left, float Top, float Width, float Height, float Scale);
+}
