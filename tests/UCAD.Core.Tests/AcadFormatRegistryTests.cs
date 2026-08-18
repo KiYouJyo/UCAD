@@ -26,18 +26,54 @@ public sealed class AcadFormatRegistryTests
     [InlineData("plot.ctb")]
     [InlineData("plot.stb")]
     [InlineData("font.shx")]
-    [InlineData("hatch.pat")]
-    [InlineData("linetype.lin")]
     [InlineData("profile.arg")]
     [InlineData("script.scr")]
     [InlineData("routine.lsp")]
+    [InlineData("sheetset.dst")]
+    [InlineData("plugin.arx")]
     public void PendingAutoCadFormatsAreRecognizedWithoutFalseOpenOrExportClaims(string path)
     {
         Assert.True(CadAcadFileFormatRegistry.TryGetByPath(path, out var format));
         Assert.True(format.Capabilities.HasFlag(CadFileFormatCapabilities.Recognized));
         Assert.False(format.CanOpen);
+        Assert.False(format.CanImport);
         Assert.False(format.CanExport);
         Assert.Contains("Pending", format.Transport, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData("pattern.pat")]
+    [InlineData("linetype.lin")]
+    [InlineData("aliases.pgp")]
+    public void TextResourcesExposeRealImportExportCapabilities(string path)
+    {
+        Assert.True(CadAcadFileFormatRegistry.TryGetByPath(path, out var format));
+        Assert.Equal(CadFileFormatFamily.AutoCadResource, format.Family);
+        Assert.True(format.CanImport);
+        Assert.True(format.CanExport);
+        Assert.True(format.Capabilities.HasFlag(CadFileFormatCapabilities.Resource));
+        Assert.Contains("UCAD", format.Transport, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void AutoCadEcosystemInventoryIncludesNativeSupportAndExecutableFamilies()
+    {
+        var extensions = CadAcadFileFormatRegistry.Formats
+            .Select(format => format.Extension)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        Assert.Contains(".dst", extensions);
+        Assert.Contains(".dsd", extensions);
+        Assert.Contains(".dcl", extensions);
+        Assert.Contains(".fmp", extensions);
+        Assert.Contains(".cuix", extensions);
+        Assert.Contains(".mnl", extensions);
+        Assert.Contains(".dvb", extensions);
+        Assert.Contains(".arx", extensions);
+        Assert.Contains(".crx", extensions);
+        Assert.Contains(".dbx", extensions);
+        Assert.Contains(".pdf", extensions);
+        Assert.Contains(".dgn", extensions);
     }
 
     [Fact]
@@ -55,5 +91,6 @@ public sealed class AcadFormatRegistryTests
         Assert.Contains(".bak", extensions);
         Assert.Contains(".sv$", extensions);
         Assert.DoesNotContain(".dwf", extensions);
+        Assert.DoesNotContain(".dst", extensions);
     }
 }
