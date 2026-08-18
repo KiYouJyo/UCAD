@@ -1,10 +1,11 @@
 using UCAD.Core.Blocks;
 using UCAD.Core.Entities;
 using UCAD.Core.Layers;
+using UCAD.Core.Styles;
 
 namespace UCAD.Core;
 
-public sealed class CadDocument
+public sealed partial class CadDocument
 {
     private readonly List<ICadEntity> _entities = [];
     private readonly List<CadLayer> _layers = [CadLayer.CreateDefault()];
@@ -175,11 +176,6 @@ public sealed class CadDocument
         return matched;
     }
 
-    /// <summary>
-    /// Applies replacements, removals and additions as one undoable document mutation.
-    /// This is the transaction boundary for CAD commands such as FILLET, CHAMFER,
-    /// BREAK and JOIN whose visible result spans multiple entity-table operations.
-    /// </summary>
     public bool ApplyCompoundEdit(
         IEnumerable<ICadEntity>? replacements = null,
         IEnumerable<Guid>? removals = null,
@@ -207,11 +203,8 @@ public sealed class CadDocument
 
         var replacementById = replacementSnapshot.ToDictionary(entity => entity.Id);
         RecordMutation();
-
         for (var i = 0; i < _entities.Count; i++)
-        {
             if (replacementById.TryGetValue(_entities[i].Id, out var replacement)) _entities[i] = replacement;
-        }
 
         if (removalSet.Count > 0)
         {
@@ -382,11 +375,6 @@ public sealed class CadDocument
         return true;
     }
 
-    /// <summary>
-    /// Establishes the current document state as a persistence/load baseline without
-    /// changing geometry or revision. Opening/importing a file must not let the user
-    /// undo through the codec's construction mutations back into an empty document.
-    /// </summary>
     public void ResetHistory()
     {
         _undo.Clear();
@@ -404,7 +392,11 @@ public sealed class CadDocument
         _layers.ToArray(),
         _blocks.ToArray(),
         _entityProperties.ToDictionary(pair => pair.Key, pair => pair.Value),
-        _currentLayerName);
+        _currentLayerName,
+        _textStyles.ToArray(),
+        _dimensionStyles.ToArray(),
+        _currentTextStyleName,
+        _currentDimensionStyleName);
 
     private void Restore(DocumentSnapshot snapshot)
     {
@@ -417,6 +409,12 @@ public sealed class CadDocument
         _entityProperties.Clear();
         foreach (var pair in snapshot.EntityProperties) _entityProperties[pair.Key] = pair.Value;
         _currentLayerName = snapshot.CurrentLayerName;
+        _textStyles.Clear();
+        _textStyles.AddRange(snapshot.TextStyles);
+        _dimensionStyles.Clear();
+        _dimensionStyles.AddRange(snapshot.DimensionStyles);
+        _currentTextStyleName = snapshot.CurrentTextStyleName;
+        _currentDimensionStyleName = snapshot.CurrentDimensionStyleName;
     }
 
     private void EnsureLayerExists(string name)
@@ -444,5 +442,9 @@ public sealed class CadDocument
         CadLayer[] Layers,
         CadBlockDefinition[] Blocks,
         Dictionary<Guid, CadEntityProperties> EntityProperties,
-        string CurrentLayerName);
+        string CurrentLayerName,
+        CadTextStyle[] TextStyles,
+        CadDimensionStyle[] DimensionStyles,
+        string CurrentTextStyleName,
+        string CurrentDimensionStyleName);
 }
