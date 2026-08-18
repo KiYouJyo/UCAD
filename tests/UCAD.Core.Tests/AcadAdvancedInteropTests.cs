@@ -38,9 +38,9 @@ public sealed class AcadAdvancedInteropTests
         document.Add(CadBlockFactory.CreateReference(
             definition,
             new CadPoint(50, 50),
-            scale: 1.5,
-            rotationRadians: Math.PI / 6,
-            attributeValues: new Dictionary<string, string> { ["NO"] = "A-12" }));
+            1.5,
+            Math.PI / 6,
+            new Dictionary<string, string> { ["NO"] = "A-12" }));
 
         var exported = CadAcadInteropCodec.ExportDwg(document);
         var imported = CadAcadInteropCodec.ImportDwg(exported.Content);
