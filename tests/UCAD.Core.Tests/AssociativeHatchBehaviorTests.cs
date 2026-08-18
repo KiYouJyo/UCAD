@@ -1,5 +1,6 @@
 using UCAD.Core.Entities;
 using UCAD.Core.Geometry;
+using UCAD.Core.Modify;
 using Xunit;
 
 namespace UCAD.Core.Tests;
@@ -20,12 +21,7 @@ public sealed class AssociativeHatchBehaviorTests
         var hatch = CadHatchFactory.CreateFromClosedPolyline(boundary, "Solid", 1, 0, associative: true);
         document.Add(hatch);
 
-        var movedBoundary = new PolylineEntity([
-            new CadPoint(5, 7),
-            new CadPoint(15, 7),
-            new CadPoint(15, 17),
-            new CadPoint(5, 17)
-        ], closed: true, boundary.Id);
+        var movedBoundary = Assert.IsType<PolylineEntity>(CadEntityTransform.Translate(boundary, new CadVector(5, 7)));
         document.ReplaceRange([movedBoundary]);
 
         var refreshed = Assert.IsType<HatchEntity>(document.Entities.Single(entity => entity.Id == hatch.Id));
