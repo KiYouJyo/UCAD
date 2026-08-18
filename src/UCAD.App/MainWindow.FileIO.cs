@@ -258,6 +258,7 @@ public sealed partial class MainWindow
         picker.FileTypeChoices.Add(FileText("DwgDrawingType"), [".dwg"]);
         picker.FileTypeChoices.Add(FileText("DwtDrawingType"), [".dwt"]);
         picker.FileTypeChoices.Add(FileText("DxfDrawingType"), [".dxf"]);
+        picker.FileTypeChoices.Add(FileText("DxbDrawingType"), [".dxb"]);
         picker.DefaultFileExtension = ".dwg";
         InitializePicker(picker);
         var file = await picker.PickSaveFileAsync();
@@ -402,6 +403,7 @@ public sealed partial class MainWindow
             "DwgDrawingType" => ja ? "AutoCAD DWG 図面" : en ? "AutoCAD DWG Drawing" : "AutoCAD DWG 图纸",
             "DwtDrawingType" => ja ? "AutoCAD DWT テンプレート" : en ? "AutoCAD DWT Template" : "AutoCAD DWT 模板",
             "DxfDrawingType" => ja ? "DXF 図面" : en ? "DXF Drawing" : "DXF 图纸",
+            "DxbDrawingType" => ja ? "AutoCAD DXB 1.0 図面" : en ? "AutoCAD DXB 1.0 Drawing" : "AutoCAD DXB 1.0 图纸",
             "Opened" => ja ? "図面を開きました。" : en ? "Drawing opened." : "图纸已打开。",
             "Saved" => ja ? "図面を保存しました。" : en ? "Drawing saved." : "图纸已保存。",
             "AutoCadImportedFormat" => ja ? "{0} ({1}) を読み込みました。完全な編集状態を保持するには UCAD 形式で保存してください。" : en ? "Imported {0} ({1}). Save as UCAD to preserve the complete editing model." : "已导入 {0}（{1}）。请另存为 UCAD 格式以完整保留编辑模型。",
