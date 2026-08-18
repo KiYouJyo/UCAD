@@ -8,13 +8,15 @@ UCAD distinguishes **container transport**, **resource parsing**, and **semantic
 | --- | --- | --- | --- | --- |
 | `.dwg` | Yes | Yes | ACadSharp DWG ↔ shared DXF bridge | UCAD-supported DXF entities/tables |
 | `.dxf` | Yes | Yes | UCAD ASCII DXF + ACadSharp binary/legacy normalization | UCAD-supported DXF entities/tables |
+| `.dxb` | Yes | Yes | IxMilia DXB 1.0 geometry codec | Legacy 2D geometry only; unsupported/3D/property downgrades are explicit warnings |
 | `.dwt` | Yes | Yes | DWG-compatible template container | Template-specific metadata may be reduced |
 | `.dws` | Yes | No | DWG-compatible standards container | Geometry/tables only; standards rules are not authored |
 | `.bak` | Yes | No | DWG-compatible recovery source | Recovery import only |
 | `.sv$` | Yes | No | DWG-compatible recovery source | Recovery import only |
-| `.dxb` | No | No | Pending legacy adapter | DXB is not binary DXF and is not falsely routed through the DXF reader |
 
 Imported AutoCAD files are intentionally opened without a native UCAD save path. Normal **Save** therefore asks for a `.ucad` destination instead of silently overwriting a source file that may contain unsupported objects.
+
+DXB is intentionally treated differently from DWG/DXF. UCAD supports the legacy DXB 1.0 geometry stream for line, point, circle, arc, polyline and planar boundary data. Bulged polylines are expanded to exact LINE/ARC geometry, non-zero Z values are flattened only with warnings, and modern annotation/property data that DXB cannot carry is reported instead of silently dropped.
 
 ## Text support resources
 
