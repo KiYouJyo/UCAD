@@ -1,8 +1,10 @@
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using UCAD.Core.Commands;
 using UCAD.Core.Entities;
 using UCAD.Core.Geometry;
 using UCAD.Workspace;
+using Windows.System;
 
 namespace UCAD;
 
@@ -22,10 +24,32 @@ public sealed partial class MainWindow
             throw new InvalidOperationException("Modify smoke visible ERASE control is not available.");
         }
 
+        var deleteAccelerator = RootLayout.KeyboardAccelerators
+            .FirstOrDefault(accelerator => accelerator.Key == VirtualKey.Delete);
+        if (deleteAccelerator is null)
+        {
+            throw new InvalidOperationException("Modify smoke physical Delete KeyboardAccelerator is not registered on the window root.");
+        }
+
         var line = new LineEntity(new CadPoint(0, 0), new CadPoint(10, 0));
         var circle = new CircleEntity(new CadPoint(20, 0), 5);
         session.Document.Add(line);
         session.Document.Add(circle);
+        session.Interaction.Selection.Replace(line.Id);
+
+        // Exercise the same focus-independent helper used by the KeyboardAccelerator.
+        // Focus a non-text control first so the production text-editing guard remains active.
+        eraseButton.Focus(FocusState.Programmatic);
+        if (!TryExecuteDeleteShortcut() ||
+            session.Document.Entities.Count != 1 ||
+            session.Document.Entities.Any(entity => entity.Id == line.Id))
+        {
+            throw new InvalidOperationException("Modify smoke physical Delete accelerator command path failed.");
+        }
+        if (!session.Document.Undo() || session.Document.Entities.Count != 2)
+        {
+            throw new InvalidOperationException("Modify smoke physical Delete accelerator Undo failed.");
+        }
         session.Interaction.Selection.Replace(line.Id);
 
         StartModifySmokeCommand(session, "MOVE");
@@ -104,7 +128,7 @@ public sealed partial class MainWindow
         var extended = RequireLine(session, extendTarget.Id);
         AssertModifyClose(new CadPoint(10, 20), extended.End, "EXTEND end");
 
-        App.WriteStartupEvent("Modify smoke: MOVE + COPY + ROTATE + SCALE + MIRROR + OFFSET + TRIM + EXTEND initialized; visible ERASE control verified");
+        App.WriteStartupEvent("Modify smoke: physical Delete accelerator + ERASE + MOVE + COPY + ROTATE + SCALE + MIRROR + OFFSET + TRIM + EXTEND initialized");
     }
 
     private void StartModifySmokeCommand(CadWorkspaceSession session, string token)
