@@ -27,6 +27,10 @@ Imported AutoCAD files are intentionally opened without a native UCAD save path.
 
 The current ACadSharp bridge targets the AC1032 generation for UCAD exports. Reader/writer version coverage is constrained by the upstream transport library and UCAD's own semantic mapping. Version-specific regression fixtures will be added before v0.9 acceptance.
 
+## Validation gate
+
+The v0.9 foundation is not considered accepted solely because an extension appears in this table. Core round-trip tests, the Release WinUI build, UI/release contract validation, and later fixture-based AutoCAD interoperability checks must pass before a capability is promoted beyond preview status.
+
 ## v0.9 fidelity priorities
 
 1. Dimensions and annotation: `DIMENSION`, `MTEXT`, leaders and styles.
