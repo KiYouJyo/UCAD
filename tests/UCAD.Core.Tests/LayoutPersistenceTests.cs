@@ -92,7 +92,7 @@ public sealed class LayoutPersistenceTests
             new CadPoint(0, 80)
         ], closed: true);
         document.Add(boundary);
-        document.Add(CadHatchFactory.CreateFromClosedPolyline(boundary, associative: true));
+        document.Add(CadHatchFactory.CreateFromClosedPolyline(boundary, "Solid", 1, 0, associative: true));
         var setup = new CadPageSetup(CadPaperSize.A3, plotScaleDenominator: 200);
         document.SetLayoutTable([new CadLayoutDefinition("Plan", setup)], "Plan");
 
