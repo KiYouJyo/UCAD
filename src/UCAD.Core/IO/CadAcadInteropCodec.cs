@@ -64,7 +64,6 @@ public static class CadAcadInteropCodec
 
         var imported = CadDxfAdvancedInteropCodec.Import(bridgeText);
         AppendWarnings(warnings, "UCAD DXF bridge", imported.Warnings);
-        CadAcadDxfLayoutSidecar.Import(bridgeText, imported.Document, warnings);
         imported.Document.ResetHistory();
 
         return new CadAcadImportResult(
