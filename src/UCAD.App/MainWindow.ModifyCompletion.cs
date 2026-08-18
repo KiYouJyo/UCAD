@@ -8,6 +8,8 @@ using UCAD.Core.Geometry;
 using UCAD.Core.Modify;
 using UCAD.Workspace;
 
+using UCAD.Services;
+
 namespace UCAD;
 
 public sealed partial class MainWindow
@@ -85,6 +87,7 @@ public sealed partial class MainWindow
                 Spacing = 1,
                 Children =
                 {
+                    CadToolIconService.Create(command),
                     new TextBlock { Text = command, FontSize = 10, HorizontalAlignment = HorizontalAlignment.Center },
                     new TextBlock
                     {

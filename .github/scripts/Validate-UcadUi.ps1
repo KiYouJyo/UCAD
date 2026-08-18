@@ -30,11 +30,18 @@ foreach ($pair in @(
   if (-not $tokens.Contains($needle)) { throw "Frozen Figma token mismatch: $($pair[0])" }
 }
 
+# CAD icon system: professional tool surfaces must use centralized filled Geometry resources.
+$cadIcons = Get-Content src/UCAD.App/Styles/UcadCadIcons.xaml -Raw
+Assert-Contains $cadIcons @('UcadIconLine','UcadIconPolyline','UcadIconCircle','UcadIconArc','UcadIconHatch','UcadIconMove','UcadIconTrim','UcadIconEllipse','UcadIconSpline','UcadIconFillet','UcadIconArray') 'CAD icon resources'
+$iconService = Get-Content src/UCAD.App/Services/CadToolIconService.cs -Raw
+Assert-Contains $iconService @('CadToolIconService','UcadIconLine','UcadIconDimension','UcadIconBlock','UcadIconStretch') 'CAD icon service'
+if ($xaml -match 'Data="M2,14 L14,2"|Data="M2,13 L6,7 L10,11 L14,3"|Glyph="&#xE7C2;"|Glyph="&#xE8C8;"|Glyph="&#xE78A;"') { throw 'Legacy/broken CAD toolbar icon markup remains.' }
+
 # Version SSOT.
 $version = (Get-Content VERSION -Raw).Trim()
 $release = Get-Content release/release.json -Raw | ConvertFrom-Json
 [xml]$package = Get-Content src/UCAD.App/Package.appxmanifest -Raw
-if ($version -ne '0.8.0') { throw "Expected VERSION 0.8.0, got $version" }
+if ($version -ne '0.8.1') { throw "Expected VERSION 0.8.1, got $version" }
 if ($release.product.version -ne $version) { throw 'release.json version must match VERSION.' }
 if ($release.product.packageVersion -ne "$version.0") { throw 'release packageVersion must be VERSION + .0.' }
 if ($package.Package.Identity.Version -ne "$version.0") { throw 'MSIX Identity.Version must match VERSION + .0.' }
