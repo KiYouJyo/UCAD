@@ -202,10 +202,11 @@ public sealed partial class MainWindow
         var paperSize = CadPaperSize.IsoA.FirstOrDefault(item => item.Name == paper.SelectedItem?.ToString()) ?? CadPaperSize.A3;
         var uniformMargin = double.IsNaN(margin.Value) ? 10 : margin.Value;
         var plotArea = Enum.TryParse<CadPlotArea>(area.SelectedItem?.ToString(), out var parsedArea) ? parsedArea : CadPlotArea.Layout;
-        // Window selection is a separate interactive operation; until a window exists,
-        // fall back to Extents instead of creating an invalid setup.
-        if (plotArea == CadPlotArea.Window) plotArea = CadPlotArea.Extents;
         var plotStyle = Enum.TryParse<CadPlotStyleMode>(style.SelectedItem?.ToString(), out var parsedStyle) ? parsedStyle : CadPlotStyleMode.Monochrome;
+        CadRect? modelWindow = null;
+        if (plotArea == CadPlotArea.Window)
+            modelWindow = await RequestPlotWindowAsync(session);
+
         var setup = new CadPageSetup(
             paperSize,
             landscape.IsOn,
@@ -215,10 +216,21 @@ public sealed partial class MainWindow
             uniformMargin,
             double.IsNaN(scale.Value) ? 100 : scale.Value,
             plotArea,
-            plotStyle);
+            plotStyle,
+            modelWindow);
         state.PageSetup = setup;
         state.ReplaceActiveLayoutPageSetup(setup);
         CompleteLayoutPlot(session, LayoutPlotText("PageSetupUpdated"));
+    }
+
+    private async Task<CadRect> RequestPlotWindowAsync(CadWorkspaceSession session)
+    {
+        var first = await RequestLayoutPointAsync(session, LayoutPlotText("WindowFirstPoint"));
+        var second = await RequestLayoutPointAsync(session, LayoutPlotText("WindowSecondPoint"));
+        var window = CadRect.FromPoints(first, second);
+        if (window.Width <= 1e-9 || window.Height <= 1e-9)
+            throw new InvalidOperationException(LayoutPlotText("WindowTooSmall"));
+        return window;
     }
 
     private async Task RunLayoutManagerAsync(CadWorkspaceSession session)
@@ -380,10 +392,12 @@ public sealed partial class MainWindow
     private CadPlotPlan CreateCurrentPlotPlan(CadWorkspaceSession session)
     {
         var state = GetLayoutState(session);
-        var viewport = state.ActiveLayout.Viewports.FirstOrDefault();
-        return viewport is not null
-            ? CadPlotPlan.FromViewport(state.PageSetup, viewport)
-            : _plotFileService.CreatePlan(session.Document, state.PageSetup);
+        if (state.PageSetup.PlotArea == CadPlotArea.Layout)
+        {
+            var viewport = state.ActiveLayout.Viewports.FirstOrDefault();
+            if (viewport is not null) return CadPlotPlan.FromViewport(state.PageSetup, viewport);
+        }
+        return _plotFileService.CreatePlan(session.Document, state.PageSetup);
     }
 
     private async Task ShowPlotWarningsAsync(IReadOnlyList<string> warnings)
@@ -424,6 +438,7 @@ public sealed partial class MainWindow
         {
             session.Viewport.ModifyPointAccepted -= Accepted;
             session.CommandSession.Changed -= Changed;
+            session.Viewport.CancelModifyInput();
         }
     }
 
@@ -460,6 +475,9 @@ public sealed partial class MainWindow
             "Margin" => ja ? "余白 (mm)" : en ? "Margin (mm)" : "页边距（mm）",
             "PlotArea" => ja ? "印刷範囲" : en ? "Plot area" : "打印区域",
             "PlotStyle" => ja ? "印刷スタイル" : en ? "Plot style" : "打印样式",
+            "WindowFirstPoint" => ja ? "印刷ウィンドウの1点目を指定:" : en ? "Specify first corner of plot window:" : "指定打印窗口第一角点：",
+            "WindowSecondPoint" => ja ? "印刷ウィンドウの対角点を指定:" : en ? "Specify opposite corner of plot window:" : "指定打印窗口对角点：",
+            "WindowTooSmall" => ja ? "印刷ウィンドウには面積が必要です。" : en ? "Plot window must have positive area." : "打印窗口必须具有有效面积。",
             "PageSetupUpdated" => ja ? "ページ設定を更新しました。" : en ? "Page setup updated." : "页面设置已更新。",
             "LayoutManager" => ja ? "レイアウト管理" : en ? "Layout Manager" : "布局管理器",
             "Layout" => ja ? "レイアウト" : en ? "Layout" : "布局",
@@ -497,7 +515,7 @@ public sealed partial class MainWindow
     {
         private readonly List<CadLayoutDefinition> _layouts;
 
-        private LayoutSessionState(CadPageSetup pageSetup, IEnumerable<CadLayoutDefinition> layouts, string activeLayoutName)
+        internal LayoutSessionState(CadPageSetup pageSetup, IEnumerable<CadLayoutDefinition> layouts, string activeLayoutName)
         {
             PageSetup = pageSetup;
             _layouts = layouts.ToList();
