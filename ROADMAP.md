@@ -149,38 +149,58 @@ UCAD aims to become a lightweight Windows-native 2D CAD focused on architecture 
 - [x] `.bak` and `.sv$` recovery-source import
 - [x] WinUI file picker, file activation and AutoCAD export UI for implemented drawing containers
 - [x] DWG / DWT / binary-DXF round-trip regression tests
-- [ ] expand DXF semantic fidelity for dimensions, MTEXT, hatch patterns, blocks/attributes, layouts and advanced object tables
-- [ ] preserve unsupported AutoCAD objects as explicit proxy payloads instead of dropping them during round-trip
-- [ ] multi-version DWG/DXF fixture corpus and large-drawing regression suite
+- [x] DXF/DWG semantic fidelity for TEXT/MTEXT, DIMSTYLE, aligned/angular/radius/diameter dimensions, closed-polyline hatch islands/patterns, blocks/attributes and DWG/DWT paper layouts
+- [x] preserve exact original DWG/DWT/DWS/BAK/SV$/DXF source containers for proxy/custom/XDATA/unknown payload recovery and byte-for-byte untouched re-export
+- [x] multi-version DWG/DXF fixture corpus plus deterministic 12,000-entity regression suite
+- [x] v0.9.1 filter non-graphical custom-dictionary warning noise without suppressing visible/semantic failures
+- [x] v0.9.2 focus-independent physical Delete `KeyboardAccelerator`, sharing the same ERASE transaction while preserving Delete inside text editors
 
 ### Published / plotting formats
 
-- [ ] `.dwf` import/export adapter
-- [ ] `.dwfx` import/export adapter
-- [ ] `.ctb` / `.stb` plot-style import/export
-- [ ] `.pc3` / `.pmp` plot configuration import
+- [x] `.dwf` exact package migration/re-export adapter; classic DWF remains a published opaque package rather than falsely claiming editable WHIP semantics
+- [x] `.dwfx` XPS FixedPage vector import/export for the verified M/L/Z vector subset with explicit text/raster metadata warnings
+- [x] `.ctb` / `.stb` lossless plot-style migration/re-export with SHA-256 integrity; semantic plot-table editing is not falsely claimed
+- [x] `.pc3` / `.pmp` lossless plot-configuration migration/re-export without loading device drivers
+- [x] `.psf` / `.pss` support-resource migration/re-export
+- [x] `.dst` exact sheet-set package preservation plus `.dsd` / `.bp3` publication-list text migration
 
 ### Resource / customization formats
 
-- [ ] `.pat` hatch-pattern import/export
-- [ ] `.lin` linetype-definition import/export
-- [ ] `.shx` shape/font resource loading with safe fallback
-- [ ] `.cuix` customization migration tooling
-- [ ] `.arg` profile/settings migration tooling
-- [ ] `.dxb` legacy interchange adapter
+- [x] `.pat` hatch-pattern import/export
+- [x] `.lin` linetype-definition import/export
+- [x] `.pgp` safe command-alias migration while ignoring external-process definitions
+- [x] `.shx` exact resource preservation/inventory with safe UI-font fallback; SHX bytecode is not executed
+- [x] `.cuix` ZIP/XML customization inventory plus exact re-export; embedded binaries/macros are not auto-executed
+- [x] `.arg` profile/settings migration tooling
+- [x] `.fmp`, `.dcl`, `.unt`, `.cfg`, `.cui`, `.mnu`, `.mns`, `.atc` bounded text/customization migration
+- [x] `.mnc`, `.sld`, `.slb` exact non-executing binary migration
+- [x] `.dxb` legacy interchange adapter
+- [x] File-menu migration route that exposes implemented resource/customization adapters without pretending they are drawing Open operations
 
 ### Automation compatibility
 
-- [ ] `.scr` command-script compatibility layer
-- [ ] `.lsp` source-level compatibility plan
-- [ ] `.fas` / `.vlx` remain recognized but are not executable without a compatible AutoLISP/Visual LISP runtime
+- [x] `.scr` parser plus safe registered-command dispatch for bounded noninteractive statements; unsupported/interactively incomplete statements are reported instead of guessed
+- [x] `.lsp` / `.mnl` source-level compatibility analyzer for DEFUN and command-invocation inventory; no Lisp evaluation
+- [x] `.fas` / `.vlx` exact migration inventory/re-export while remaining deliberately non-executable without a compatible AutoLISP/Visual LISP runtime
+- [x] `.dvb` exact migration inventory/re-export while remaining non-executable without an embedded VBA runtime
+- [x] `.rx` application-list metadata migration without auto-loading referenced binaries
 
-**Interoperability gate:** UCAD must distinguish file-container support from semantic round-trip fidelity. A recognized extension is never surfaced as Open/Import/Export capable until a real adapter exists, and external AutoCAD drawings open as imported documents so normal Save cannot silently overwrite source data that UCAD may not yet preserve.
+### Deliberate compatibility boundaries moved to v1.0 or kept out of scope
+
+- [ ] standards-based DXF paper-layout/PageSetup/viewport **export** and richer advanced OBJECTS table editing; original DXF OBJECTS are already protected by the exact source envelope
+- [ ] reinject/merge arbitrary ObjectARX/proxy/custom payloads into an **edited** DWG/DXF; exact original recovery/untouched re-export is implemented, but blind handle-graph reinjection would corrupt files
+- [ ] `.js` AutoCAD JavaScript runtime compatibility; arbitrary JavaScript is not executed
+- [ ] `.arx` / `.crx` / `.dbx` / `.hdi` / generic `.dll` AutoCAD binary ABI compatibility; inventory recognition only
+- [ ] `.dgn` / `.wmf` / `.bmp` / `.dxx` bounded 2D exchange adapters where a compatible parser and concrete planning workflow are justified
+- [ ] `.sat` / `.igs` / `.iges` / `.stl` 3D exchange authoring, intentionally outside UCAD 1.x 2D scope
+
+**Interoperability gate:** UCAD distinguishes drawing-open support, bounded migration, exact opaque preservation, and editable semantic fidelity. A format is never advertised beyond the adapter that actually exists. Executable/customization formats are never auto-run merely because they are recognized or migratable.
 
 ## v1.0
 
-- advanced interoperability and round-trip fidelity
-- performance profiling and large-drawing regression suite
+- standards-based DXF paper-layout/advanced OBJECTS editing
+- edited-container proxy/custom-object reinjection only where handle/reference integrity can be proven
+- broader production/customer fixture corpus and performance profiling
 - professional architecture/planning workflow refinement
 - UI/interaction polish against the Figma visual SSOT
 
@@ -192,5 +212,6 @@ UCAD aims to become a lightweight Windows-native 2D CAD focused on architecture 
 - point clouds
 - mechanical/electrical toolsets
 - full AutoCAD plug-in binary compatibility
-- lossless editing of every proprietary/custom DWG object until proxy preservation and semantic adapters exist
+- arbitrary executable AutoLISP/VBA/JavaScript/ObjectARX compatibility without a sandboxed compatible runtime
+- lossless semantic editing of every proprietary/custom DWG object when no safe writer exists; exact source recovery remains the safety boundary
 - cloud collaboration as a core dependency
