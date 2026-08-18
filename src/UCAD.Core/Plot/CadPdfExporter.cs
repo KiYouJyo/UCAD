@@ -258,13 +258,14 @@ public static class CadPdfExporter
     private static void WriteInfiniteLine(StringBuilder sb, CadPoint anchor, CadVector direction, bool rayOnly, CadPlotPlan plan)
     {
         var paperAnchor = plan.ModelToPaper(anchor);
+        var paperDirection = plan.ModelVectorToPaper(direction);
+        if (paperDirection.Length <= 1e-12) return;
+        var unit = new CadVector(paperDirection.X / paperDirection.Length, paperDirection.Y / paperDirection.Length);
         var length = Math.Sqrt((plan.PageSetup.PaperWidthMm * plan.PageSetup.PaperWidthMm) + (plan.PageSetup.PaperHeightMm * plan.PageSetup.PaperHeightMm)) * 4;
-        var unit = Unit(direction);
-        var paperDirection = new CadVector(unit.X, unit.Y);
         var start = rayOnly
             ? paperAnchor
-            : new CadPoint(paperAnchor.X - (paperDirection.X * length), paperAnchor.Y - (paperDirection.Y * length));
-        var end = new CadPoint(paperAnchor.X + (paperDirection.X * length), paperAnchor.Y + (paperDirection.Y * length));
+            : new CadPoint(paperAnchor.X - (unit.X * length), paperAnchor.Y - (unit.Y * length));
+        var end = new CadPoint(paperAnchor.X + (unit.X * length), paperAnchor.Y + (unit.Y * length));
         StrokePaperChain(sb, [start, end], false);
     }
 
@@ -284,8 +285,9 @@ public static class CadPdfExporter
         var x = MmToPt(paper.X);
         var y = MmToPt(paper.Y);
         var fontSize = Math.Max(5, MmToPt(modelHeight / plan.ScaleDenominator));
-        var cosine = Math.Cos(rotationRadians);
-        var sine = Math.Sin(rotationRadians);
+        var paperRotation = plan.ModelAngleToPaper(rotationRadians);
+        var cosine = Math.Cos(paperRotation);
+        var sine = Math.Sin(paperRotation);
         sb.AppendLine("BT");
         sb.AppendFormat(Invariant, "/F1 {0} Tf\n", F(fontSize));
         sb.AppendFormat(Invariant, "{0} {1} {2} {3} {4} {5} Tm\n", F(cosine), F(sine), F(-sine), F(cosine), F(x), F(y));
