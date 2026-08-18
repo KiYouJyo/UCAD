@@ -6,8 +6,8 @@ namespace UCAD.Services;
 
 /// <summary>
 /// File-system boundary for the document lifecycle. Native .ucad files preserve
-/// the complete current authoring model; DXF remains the interoperable exchange format.
-/// WinUI pickers stay in the shell while encoding, backup and atomic replacement live here.
+/// the complete current authoring model including advanced metadata and paper layouts;
+/// DXF remains the interoperable exchange format.
 /// </summary>
 public sealed class CadDocumentFileService
 {
@@ -18,7 +18,7 @@ public sealed class CadDocumentFileService
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         var fullPath = Path.GetFullPath(filePath);
         var text = await File.ReadAllTextAsync(fullPath, Utf8NoBom, cancellationToken);
-        var document = CadNativeDocumentCodecCurrent.Deserialize(text);
+        var document = CadNativeDocumentCodecLayout.Deserialize(text);
         document.ResetHistory();
         return document;
     }
@@ -31,7 +31,7 @@ public sealed class CadDocumentFileService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         ArgumentNullException.ThrowIfNull(document);
-        var content = CadNativeDocumentCodecCurrent.Serialize(document);
+        var content = CadNativeDocumentCodecLayout.Serialize(document);
         await WriteAtomicAsync(filePath, content, createBackup, cancellationToken);
     }
 
