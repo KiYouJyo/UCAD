@@ -40,7 +40,7 @@ if ($xaml -match '\{StaticResource UcadIcon|Data="M2,14 L14,2"|Data="M2,13 L6,7 
 $version = (Get-Content VERSION -Raw).Trim()
 $release = Get-Content release/release.json -Raw | ConvertFrom-Json
 [xml]$package = Get-Content src/UCAD.App/Package.appxmanifest -Raw
-if ($version -ne '0.8.1') { throw "Expected VERSION 0.8.1, got $version" }
+if ($version -notmatch '^\d+\.\d+\.\d+$') { throw "VERSION must be a three-part numeric version, got $version" }
 if ($release.product.version -ne $version) { throw 'release.json version must match VERSION.' }
 if ($release.product.packageVersion -ne "$version.0") { throw 'release packageVersion must be VERSION + .0.' }
 if ($package.Package.Identity.Version -ne "$version.0") { throw 'MSIX Identity.Version must match VERSION + .0.' }
