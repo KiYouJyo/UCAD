@@ -79,7 +79,8 @@ public static class CadAcadFileFormatRegistry
             CadFileFormatCapabilities.Recognized | CadFileFormatCapabilities.Open | CadFileFormatCapabilities.Import | CadFileFormatCapabilities.Recovery,
             "DWG-compatible recovery container", "Opened as a recovery source and never overwritten automatically."),
         new(".dxb", "Drawing Interchange Binary", CadFileFormatFamily.AutoCadDrawing,
-            CadFileFormatCapabilities.Recognized, "Pending DXB adapter", "Legacy DXB is distinct from binary DXF and is not claimed as supported yet."),
+            CadFileFormatCapabilities.Recognized | CadFileFormatCapabilities.Open | CadFileFormatCapabilities.Import | CadFileFormatCapabilities.Export,
+            "IxMilia DXB 1.0 geometry codec", "Legacy DXB 1.0 2D geometry is supported with explicit warnings for annotation, modern entities, 3D flattening and unsupported properties."),
 
         // Sheet sets and publishing data.
         new(".dst", "AutoCAD Sheet Set Data", CadFileFormatFamily.AutoCadSheetSet,
