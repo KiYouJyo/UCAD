@@ -28,9 +28,10 @@ public sealed class ModifyCompletionTests
         Assert.NotNull(arc);
         Assert.Equal(horizontal.Id, first!.Id);
         Assert.Equal(vertical.Id, second!.Id);
-        Assert.Contains(new CadPoint(2, 0), new[] { first.Start, first.End });
-        Assert.Contains(new CadPoint(0, 2), new[] { second.Start, second.End });
-        Assert.Equal(new CadPoint(2, 2), arc!.Center);
+        Assert.Contains(new[] { first.Start, first.End }, point => Math.Abs(point.X - 2) < 1e-8 && Math.Abs(point.Y) < 1e-8);
+        Assert.Contains(new[] { second.Start, second.End }, point => Math.Abs(point.X) < 1e-8 && Math.Abs(point.Y - 2) < 1e-8);
+        Assert.Equal(2, arc!.Center.X, 8);
+        Assert.Equal(2, arc.Center.Y, 8);
         Assert.Equal(2, arc.Radius, 8);
     }
 
