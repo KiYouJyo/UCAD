@@ -32,6 +32,7 @@ public partial class App : Application
             mainWindow.RefreshLocalization();
             mainWindow.EnsureInteractionUiInitialized();
             mainWindow.EnsureAuthoringUiInitialized();
+            mainWindow.EnsureExtendedDrawingUiInitialized();
             mainWindow.EnsureFileUiInitialized();
             mainWindow.EnsureRecentFilesInitialized();
             mainWindow.EnsureFileCloseIntegration();
