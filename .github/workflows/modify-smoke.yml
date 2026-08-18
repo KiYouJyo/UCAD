@@ -27,7 +27,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Restore failed: $LASTEXITCODE" }
           dotnet build src/UCAD.App/UCAD.App.csproj -c Release --no-restore -p:Platform=x64 -r win-x64
           if ($LASTEXITCODE -ne 0) { throw "Build failed: $LASTEXITCODE" }
-      - name: Validate all v0.5 Modify commands in one running process
+      - name: Validate Modify and physical Delete in one running process
         shell: pwsh
         run: |
           $log = Join-Path $env:LOCALAPPDATA 'UCAD\Logs\startup.log'
@@ -50,13 +50,13 @@ jobs:
           if ($process.HasExited) {
             throw "UCAD exited during Modify smoke with code $($process.ExitCode)."
           }
-          if ($startupLog -notmatch 'Modify smoke: MOVE \+ COPY \+ ROTATE \+ SCALE \+ MIRROR \+ OFFSET \+ TRIM \+ EXTEND initialized') {
+          if ($startupLog -notmatch 'Modify smoke: physical Delete accelerator \+ ERASE \+ MOVE \+ COPY \+ ROTATE \+ SCALE \+ MIRROR \+ OFFSET \+ TRIM \+ EXTEND initialized') {
             Stop-Process -Id $process.Id -Force
-            throw 'The v0.5 Modify smoke marker was not written.'
+            throw 'The physical Delete + Modify smoke marker was not written.'
           }
           if ($startupLog -match 'ModifySmoke|UnhandledException|MissingResource:') {
             Stop-Process -Id $process.Id -Force
-            throw 'UCAD reported a v0.5 Modify runtime failure.'
+            throw 'UCAD reported a Modify runtime failure.'
           }
 
           Stop-Process -Id $process.Id -Force
