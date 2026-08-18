@@ -18,7 +18,9 @@ public sealed class CadDocumentFileService
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         var fullPath = Path.GetFullPath(filePath);
         var text = await File.ReadAllTextAsync(fullPath, Utf8NoBom, cancellationToken);
-        return CadNativeDocumentCodec.Deserialize(text);
+        var document = CadNativeDocumentCodec.Deserialize(text);
+        document.ResetHistory();
+        return document;
     }
 
     public async Task SaveNativeAsync(
@@ -38,7 +40,9 @@ public sealed class CadDocumentFileService
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         var fullPath = Path.GetFullPath(filePath);
         var text = await File.ReadAllTextAsync(fullPath, Utf8NoBom, cancellationToken);
-        return CadDxfCodec.Import(text);
+        var import = CadDxfCodec.Import(text);
+        import.Document.ResetHistory();
+        return import;
     }
 
     public async Task<DxfExportResult> ExportDxfAsync(
