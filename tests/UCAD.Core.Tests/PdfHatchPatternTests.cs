@@ -23,9 +23,9 @@ public sealed class PdfHatchPatternTests
             CadRect.FromPoints(new CadPoint(0, 0), new CadPoint(100, 100)));
 
         var result = CadPdfExporter.Export(document, plan, "ANSI31");
-        var pdf = Encoding.ASCII.GetString(result.Content);
+        var pdf = Encoding.ASCII.GetString(result.Content).Replace("\r\n", "\n", StringComparison.Ordinal);
 
-        Assert.False(result.Warnings.Any(warning => warning.Contains("boundary only", StringComparison.OrdinalIgnoreCase)));
+        Assert.DoesNotContain(result.Warnings, warning => warning.Contains("boundary only", StringComparison.OrdinalIgnoreCase));
         Assert.True(CountOccurrences(pdf, "S\n") > 2);
     }
 
@@ -44,7 +44,7 @@ public sealed class PdfHatchPatternTests
 
         var result = CadPdfExporter.Export(document, plan, "Unknown Pattern");
 
-        Assert.True(result.Warnings.Any(warning => warning.Contains("boundary only", StringComparison.OrdinalIgnoreCase)));
+        Assert.Contains(result.Warnings, warning => warning.Contains("boundary only", StringComparison.OrdinalIgnoreCase));
     }
 
     private static int CountOccurrences(string value, string token)
