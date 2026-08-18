@@ -138,12 +138,13 @@ public static class CadAcadInteropCodec
 
         try
         {
-            return Encoding.GetEncoding(document.Header.CodePage);
+            var codePage = CadUtils.GetCodePage(document.Header.CodePage);
+            return Encoding.GetEncoding((int)codePage);
         }
-        catch (ArgumentException ex)
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException)
         {
-            warnings.Add($"DXF bridge: code page {document.Header.CodePage} is unavailable; UTF-8 fallback was used. {ex.Message}");
-            return Utf8NoBom;
+            warnings.Add($"DXF bridge: code page '{document.Header.CodePage}' is unavailable; Windows-1252 fallback was used. {ex.Message}");
+            return Encoding.GetEncoding(1252);
         }
     }
 
