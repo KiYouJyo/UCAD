@@ -1,3 +1,4 @@
+using Microsoft.UI.Xaml.Controls;
 using UCAD.Core.Commands;
 using UCAD.Core.Entities;
 using UCAD.Core.Geometry;
@@ -12,6 +13,14 @@ public sealed partial class MainWindow
         CreateNewWorkspace();
         var session = ActiveSession ?? throw new InvalidOperationException("Modify smoke could not create a Drawing workspace.");
         EnsureSessionInteractionSubscribed(session);
+
+        var eraseButton = ModifyToolShelf.Children
+            .OfType<Button>()
+            .FirstOrDefault(button => string.Equals(button.Tag as string, "ERASE", StringComparison.Ordinal));
+        if (eraseButton is null || !eraseButton.IsHitTestVisible || !eraseButton.IsEnabled || eraseButton.Opacity < 0.99)
+        {
+            throw new InvalidOperationException("Modify smoke visible ERASE control is not available.");
+        }
 
         var line = new LineEntity(new CadPoint(0, 0), new CadPoint(10, 0));
         var circle = new CircleEntity(new CadPoint(20, 0), 5);
@@ -95,7 +104,7 @@ public sealed partial class MainWindow
         var extended = RequireLine(session, extendTarget.Id);
         AssertModifyClose(new CadPoint(10, 20), extended.End, "EXTEND end");
 
-        App.WriteStartupEvent("Modify smoke: MOVE + COPY + ROTATE + SCALE + MIRROR + OFFSET + TRIM + EXTEND initialized");
+        App.WriteStartupEvent("Modify smoke: visible ERASE + MOVE + COPY + ROTATE + SCALE + MIRROR + OFFSET + TRIM + EXTEND initialized");
     }
 
     private void StartModifySmokeCommand(CadWorkspaceSession session, string token)
