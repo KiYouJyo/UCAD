@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "product": {
     "name": "UCAD",
-    "version": "0.9.1",
-    "packageVersion": "0.9.1.0",
-    "releaseTitle": "AutoCAD Import Compatibility Hotfix",
+    "version": "0.9.2",
+    "packageVersion": "0.9.2.0",
+    "releaseTitle": "AutoCAD Ecosystem Integration and Keyboard Reliability",
     "packageIdentityName": "F1BD5F25-4ED6-4037-B9FE-BB7D4B326E25",
     "publisher": "CN=AppPublisher",
     "applicationId": "App"
