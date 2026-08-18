@@ -5,6 +5,11 @@ public sealed class CadInteractionState
     private bool _objectSnapEnabled;
     private ObjectSnapMode _objectSnapModes = ObjectSnapMode.Endpoint | ObjectSnapMode.Midpoint | ObjectSnapMode.Intersection;
     private bool _orthoEnabled;
+    private bool _gridSnapEnabled;
+    private double _gridSnapSpacing = 10;
+    private bool _polarTrackingEnabled;
+    private double _polarIncrementDegrees = 45;
+    private bool _objectSnapTrackingEnabled;
 
     public CadInteractionState(CadDocument document)
     {
@@ -44,6 +49,63 @@ public sealed class CadInteractionState
         {
             if (_orthoEnabled == value) return;
             _orthoEnabled = value;
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    public bool GridSnapEnabled
+    {
+        get => _gridSnapEnabled;
+        set
+        {
+            if (_gridSnapEnabled == value) return;
+            _gridSnapEnabled = value;
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    public double GridSnapSpacing
+    {
+        get => _gridSnapSpacing;
+        set
+        {
+            if (!double.IsFinite(value) || value <= 0) throw new ArgumentOutOfRangeException(nameof(value));
+            if (Math.Abs(_gridSnapSpacing - value) <= 1e-9) return;
+            _gridSnapSpacing = value;
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    public bool PolarTrackingEnabled
+    {
+        get => _polarTrackingEnabled;
+        set
+        {
+            if (_polarTrackingEnabled == value) return;
+            _polarTrackingEnabled = value;
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    public double PolarIncrementDegrees
+    {
+        get => _polarIncrementDegrees;
+        set
+        {
+            if (!double.IsFinite(value) || value <= 0 || value > 180) throw new ArgumentOutOfRangeException(nameof(value));
+            if (Math.Abs(_polarIncrementDegrees - value) <= 1e-9) return;
+            _polarIncrementDegrees = value;
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    public bool ObjectSnapTrackingEnabled
+    {
+        get => _objectSnapTrackingEnabled;
+        set
+        {
+            if (_objectSnapTrackingEnabled == value) return;
+            _objectSnapTrackingEnabled = value;
             Changed?.Invoke(this, EventArgs.Empty);
         }
     }
