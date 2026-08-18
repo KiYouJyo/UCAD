@@ -4,11 +4,14 @@ using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Controls;
+using System.Globalization;
 using System.Numerics;
 using UCAD.Core.Entities;
 using UCAD.Core.Geometry;
 using UCAD.Core.Hatching;
+using UCAD.Core.Layout;
 using UCAD.Core.Plot;
+using UCAD.Core.Styles;
 using Windows.Foundation;
 using Windows.UI;
 
@@ -90,7 +93,14 @@ public sealed class CadPlotPreviewControl : UserControl
             using (ds.CreateLayer(1f, clip))
             {
                 foreach (var entity in _document.VisibleEntities)
-                    DrawEntity(ds, entity, page, plan, ColorHelper.FromArgb(255, 20, 20, 22), 1.0f);
+                {
+                    var properties = _document.GetEntityProperties(entity.Id);
+                    var layer = _document.GetLayer(properties.LayerName);
+                    var color = ResolvePlotColor(properties.ColorHex ?? layer.ColorHex, plan.PageSetup.PlotStyle);
+                    var lineWeightMm = properties.LineWeight ?? layer.LineWeight;
+                    var strokeWidth = (float)Math.Clamp(lineWeightMm * page.Scale, 0.5, 6.0);
+                    DrawEntity(ds, entity, page, plan, color, strokeWidth);
+                }
             }
 
             if (_plans.Count > 1)
@@ -150,21 +160,17 @@ public sealed class CadPlotPreviewControl : UserControl
                 DrawPreviewText(ds, string.Join("\n", text.ApproximateLines()), text.Position, text.TextHeight, text.RotationRadians, page, plan, color);
                 break;
             case LinearDimensionEntity dimension:
-            {
-                var ends = dimension.GetDimensionLineEndpoints();
-                DrawChain(ds, [dimension.FirstExtensionPoint, ends.First], false, page, plan, color, strokeWidth);
-                DrawChain(ds, [dimension.SecondExtensionPoint, ends.Second], false, page, plan, color, strokeWidth);
-                DrawChain(ds, [ends.First, ends.Second], false, page, plan, color, strokeWidth);
+                DrawLinearDimension(ds, dimension, page, plan, color, strokeWidth);
                 break;
-            }
             case AngularDimensionEntity dimension:
-                DrawChain(ds, dimension.GetArcSamplePoints(), false, page, plan, color, strokeWidth);
+                DrawAngularDimension(ds, dimension, page, plan, color, strokeWidth);
                 break;
             case RadialDimensionEntity dimension:
-                DrawChain(ds, [dimension.Center, dimension.PointOnCircle, dimension.TextPoint], false, page, plan, color, strokeWidth);
+                DrawRadialDimension(ds, dimension, page, plan, color, strokeWidth);
                 break;
             case LeaderEntity leader:
                 DrawChain(ds, leader.Points, false, page, plan, color, strokeWidth);
+                DrawPreviewText(ds, leader.Text, leader.Points[^1], leader.TextHeight, 0, page, plan, color);
                 break;
             case HatchEntity hatch:
                 DrawHatch(ds, hatch, page, plan, color, strokeWidth);
@@ -174,6 +180,63 @@ public sealed class CadPlotPreviewControl : UserControl
                 break;
         }
     }
+
+    private void DrawLinearDimension(
+        CanvasDrawingSession ds,
+        LinearDimensionEntity dimension,
+        PageTransform page,
+        CadPlotPlan plan,
+        Color color,
+        float strokeWidth)
+    {
+        var ends = dimension.GetDimensionLineEndpoints();
+        DrawChain(ds, [dimension.FirstExtensionPoint, ends.First], false, page, plan, color, strokeWidth);
+        DrawChain(ds, [dimension.SecondExtensionPoint, ends.Second], false, page, plan, color, strokeWidth);
+        DrawChain(ds, [ends.First, ends.Second], false, page, plan, color, strokeWidth);
+        var style = ResolveDimensionStyle(dimension.StyleName);
+        var label = dimension.TextOverride ?? style.Format(dimension.Measurement);
+        DrawPreviewText(ds, label, Midpoint(ends.First, ends.Second), style.TextHeight, 0, page, plan, color);
+    }
+
+    private void DrawAngularDimension(
+        CanvasDrawingSession ds,
+        AngularDimensionEntity dimension,
+        PageTransform page,
+        CadPlotPlan plan,
+        Color color,
+        float strokeWidth)
+    {
+        var radius = dimension.Radius;
+        var firstRay = Unit(dimension.FirstRayPoint - dimension.Vertex);
+        var secondRay = Unit(dimension.SecondRayPoint - dimension.Vertex);
+        DrawChain(ds, [dimension.Vertex, Add(dimension.Vertex, firstRay, radius)], false, page, plan, color, strokeWidth);
+        DrawChain(ds, [dimension.Vertex, Add(dimension.Vertex, secondRay, radius)], false, page, plan, color, strokeWidth);
+        DrawChain(ds, dimension.GetArcSamplePoints(), false, page, plan, color, strokeWidth);
+        var style = ResolveDimensionStyle(dimension.StyleName);
+        var degrees = dimension.MeasurementRadians * 180.0 / Math.PI;
+        var label = dimension.TextOverride ?? style.Format(degrees) + " deg";
+        DrawPreviewText(ds, label, dimension.GetArcMidpoint(), style.TextHeight, 0, page, plan, color);
+    }
+
+    private void DrawRadialDimension(
+        CanvasDrawingSession ds,
+        RadialDimensionEntity dimension,
+        PageTransform page,
+        CadPlotPlan plan,
+        Color color,
+        float strokeWidth)
+    {
+        DrawChain(ds, [dimension.Center, dimension.PointOnCircle, dimension.TextPoint], false, page, plan, color, strokeWidth);
+        var style = ResolveDimensionStyle(dimension.StyleName);
+        var prefix = dimension.Diameter ? "D" : "R";
+        var label = dimension.TextOverride ?? prefix + style.Format(dimension.Measurement);
+        DrawPreviewText(ds, label, dimension.TextPoint, style.TextHeight, 0, page, plan, color);
+    }
+
+    private CadDimensionStyle ResolveDimensionStyle(string name) =>
+        _document is not null && _document.TryGetDimensionStyle(name, out var style) && style is not null
+            ? style
+            : CadDimensionStyle.CreateDefault();
 
     private static void DrawPreviewText(
         CanvasDrawingSession ds,
@@ -285,6 +348,41 @@ public sealed class CadPlotPreviewControl : UserControl
         var end = new CadPoint(anchor.X + (unit.X * modelSpan), anchor.Y + (unit.Y * modelSpan));
         ds.DrawLine(ModelToScreen(start, page, plan), ModelToScreen(end, page, plan), color, strokeWidth);
     }
+
+    private static Color ResolvePlotColor(string value, CadPlotStyleMode mode)
+    {
+        if (mode == CadPlotStyleMode.Monochrome) return Colors.Black;
+        if (!TryParseRgb(value, out var red, out var green, out var blue)) return Colors.Black;
+        if (mode == CadPlotStyleMode.Grayscale)
+        {
+            var gray = (byte)Math.Clamp((int)Math.Round((0.2126 * red) + (0.7152 * green) + (0.0722 * blue)), 0, 255);
+            return Color.FromArgb(255, gray, gray, gray);
+        }
+        return Color.FromArgb(255, red, green, blue);
+    }
+
+    private static bool TryParseRgb(string value, out byte red, out byte green, out byte blue)
+    {
+        red = green = blue = 0;
+        var text = value.Trim().TrimStart('#');
+        if (text.Length != 6 || !int.TryParse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var rgb)) return false;
+        red = (byte)((rgb >> 16) & 0xFF);
+        green = (byte)((rgb >> 8) & 0xFF);
+        blue = (byte)(rgb & 0xFF);
+        return true;
+    }
+
+    private static CadPoint Midpoint(CadPoint first, CadPoint second) =>
+        new((first.X + second.X) / 2, (first.Y + second.Y) / 2);
+
+    private static CadVector Unit(CadVector vector)
+    {
+        var length = vector.Length;
+        return length <= 1e-9 ? new CadVector(1, 0) : new CadVector(vector.X / length, vector.Y / length);
+    }
+
+    private static CadPoint Add(CadPoint point, CadVector direction, double distance) =>
+        new(point.X + (direction.X * distance), point.Y + (direction.Y * distance));
 
     private static PageTransform GetPageTransform(double width, double height, CadPlotPlan plan)
     {
