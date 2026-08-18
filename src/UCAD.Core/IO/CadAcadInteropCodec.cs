@@ -49,8 +49,7 @@ public static class CadAcadInteropCodec
         var warnings = new List<string>();
 
         using var input = new MemoryStream(content.ToArray(), writable: false);
-        using var reader = new DxfReader(input);
-        reader.OnNotification += (_, args) => AddNotification(warnings, "DXF read", args);
+        using var reader = CreateDxfReaderWithDefaults(input, warnings, "DXF read");
         var acadDocument = reader.Read();
 
         var bridgeText = WriteAsciiDxfBridge(acadDocument, warnings);
@@ -115,9 +114,16 @@ public static class CadAcadInteropCodec
         AppendWarnings(warnings, "UCAD DXF export", dxf.Warnings);
 
         using var input = new MemoryStream(Utf8NoBom.GetBytes(dxf.Content), writable: false);
-        using var reader = new DxfReader(input);
-        reader.OnNotification += (_, args) => AddNotification(warnings, "DXF bridge read", args);
+        using var reader = CreateDxfReaderWithDefaults(input, warnings, "DXF bridge read");
         return reader.Read();
+    }
+
+    private static DxfReader CreateDxfReaderWithDefaults(Stream input, List<string> warnings, string phase)
+    {
+        var reader = new DxfReader(input);
+        reader.Configuration.CreateDefaults = true;
+        reader.OnNotification += (_, args) => AddNotification(warnings, phase, args);
+        return reader;
     }
 
     private static string WriteAsciiDxfBridge(AcadDocument acadDocument, List<string> warnings)
