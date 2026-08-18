@@ -47,7 +47,7 @@ public sealed class ShapefileMappedDocumentBuilderTests
     private static byte[] BuildTwoPartPolylineShp()
     {
         const int headerBytes = 100;
-        const int contentBytes = 112;
+        const int contentBytes = 116;
         var file = new byte[headerBytes + 8 + contentBytes];
         BinaryPrimitives.WriteInt32BigEndian(file.AsSpan(0, 4), 9994);
         BinaryPrimitives.WriteInt32BigEndian(file.AsSpan(24, 4), file.Length / 2);
