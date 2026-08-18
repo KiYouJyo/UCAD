@@ -7,10 +7,9 @@ using UCAD.Core.Layers;
 namespace UCAD.Core.IO;
 
 /// <summary>
-/// Lightweight ASCII DXF codec for UCAD's 2D-first exchange path.
-/// The initial v0.8 contract intentionally targets the authoring primitives that can
-/// round-trip without lossy approximation: LINE, LWPOLYLINE, CIRCLE, ARC and TEXT.
-/// Unsupported entity records are reported to the caller instead of being fabricated.
+/// Lightweight ASCII DXF codec for UCAD's 2D-first exchange path. The codec preserves
+/// supported geometry as native DXF entities and reports unsupported records instead of
+/// silently approximating them.
 /// </summary>
 public static class CadDxfCodec
 {
@@ -35,7 +34,7 @@ public static class CadDxfCodec
     {
         ArgumentNullException.ThrowIfNull(document);
         var warnings = new List<string>();
-        var sb = new StringBuilder(capacity: Math.Max(4096, document.Entities.Count * 160));
+        var sb = new StringBuilder(capacity: Math.Max(4096, document.Entities.Count * 180));
 
         WritePair(sb, 0, "SECTION");
         WritePair(sb, 2, "HEADER");
@@ -43,6 +42,8 @@ public static class CadDxfCodec
         WritePair(sb, 1, AcadVersion);
         WritePair(sb, 9, "$DWGCODEPAGE");
         WritePair(sb, 3, "UTF-8");
+        WritePair(sb, 9, "$INSUNITS");
+        WritePair(sb, 70, 4); // millimeters
         WritePair(sb, 9, "$CLAYER");
         WritePair(sb, 8, document.CurrentLayerName);
         WritePair(sb, 0, "ENDSEC");
@@ -77,15 +78,11 @@ public static class CadDxfCodec
             lineNumber++;
             var valueLine = reader.ReadLine();
             if (valueLine is null)
-            {
                 throw new FormatException($"DXF group code at line {lineNumber} has no value line.");
-            }
             lineNumber++;
 
             if (!int.TryParse(codeLine.Trim().TrimStart('\uFEFF'), NumberStyles.Integer, Invariant, out var code))
-            {
                 throw new FormatException($"Invalid DXF group code '{codeLine}' at line {lineNumber - 1}.");
-            }
             result.Add(new DxfPair(code, valueLine.Trim()));
         }
         return result;
@@ -133,10 +130,7 @@ public static class CadDxfCodec
             var pair = pairs[i];
             if (pair.Code == 0 && EqualsToken(pair.Value, "SECTION"))
             {
-                if (i + 1 < pairs.Count && pairs[i + 1].Code == 2)
-                {
-                    section = pairs[++i].Value;
-                }
+                if (i + 1 < pairs.Count && pairs[i + 1].Code == 2) section = pairs[++i].Value;
                 continue;
             }
             if (pair.Code == 0 && EqualsToken(pair.Value, "ENDSEC"))
@@ -158,13 +152,18 @@ public static class CadDxfCodec
                     "LWPOLYLINE" => ParseLightweightPolyline(record),
                     "CIRCLE" => ParseCircle(record),
                     "ARC" => ParseArc(record),
+                    "POINT" => ParsePoint(record),
+                    "ELLIPSE" => ParseEllipse(record),
+                    "SPLINE" => ParseSpline(record),
+                    "RAY" => ParseRay(record),
+                    "XLINE" => ParseXLine(record),
                     "TEXT" => ParseText(record),
                     _ => null
                 };
 
                 if (entity is null)
                 {
-                    warnings.Add($"DXF entity '{type}' is not supported by the v0.8 exchange foundation and was skipped.");
+                    warnings.Add($"DXF entity '{type}' is not supported by the exchange foundation and was skipped.");
                     continue;
                 }
 
@@ -221,14 +220,14 @@ public static class CadDxfCodec
 
     private static ICadEntity ParseLightweightPolyline(IReadOnlyList<DxfPair> record)
     {
+        if (record.Any(pair => pair.Code == 42 && Math.Abs(ParseDouble(pair.Value, 42)) > 1e-12))
+            throw new FormatException("LWPOLYLINE bulge arcs are not yet supported; the entity was not flattened.");
+
         var points = new List<CadPoint>();
         double? x = null;
         foreach (var pair in record)
         {
-            if (pair.Code == 10)
-            {
-                x = ParseDouble(pair.Value, 10);
-            }
+            if (pair.Code == 10) x = ParseDouble(pair.Value, 10);
             else if (pair.Code == 20 && x is not null)
             {
                 points.Add(new CadPoint(x.Value, ParseDouble(pair.Value, 20)));
@@ -240,6 +239,42 @@ public static class CadDxfCodec
         return new PolylineEntity(points, closed);
     }
 
+    private static ICadEntity ParsePoint(IReadOnlyList<DxfPair> record) =>
+        new PointEntity(new CadPoint(RequiredDouble(record, 10), RequiredDouble(record, 20)));
+
+    private static ICadEntity ParseEllipse(IReadOnlyList<DxfPair> record)
+    {
+        var center = new CadPoint(RequiredDouble(record, 10), RequiredDouble(record, 20));
+        var majorAxis = new CadVector(RequiredDouble(record, 11), RequiredDouble(record, 21));
+        var ratio = RequiredDouble(record, 40);
+        var start = GetDouble(record, 41, 0);
+        var end = GetDouble(record, 42, Math.Tau);
+        return new EllipseEntity(center, majorAxis, ratio, start, end);
+    }
+
+    private static ICadEntity ParseSpline(IReadOnlyList<DxfPair> record)
+    {
+        var fitPoints = ReadRepeatedPoints(record, 11, 21);
+        if (fitPoints.Count < 2)
+        {
+            var controlPoints = ReadRepeatedPoints(record, 10, 20);
+            if (controlPoints.Count < 2) throw new FormatException("SPLINE requires at least two fit or control points.");
+            fitPoints = controlPoints;
+        }
+        var closed = (GetInt(record, 70, 0) & 1) != 0;
+        return new SplineEntity(fitPoints, closed);
+    }
+
+    private static ICadEntity ParseRay(IReadOnlyList<DxfPair> record) =>
+        new RayEntity(
+            new CadPoint(RequiredDouble(record, 10), RequiredDouble(record, 20)),
+            new CadVector(RequiredDouble(record, 11), RequiredDouble(record, 21)));
+
+    private static ICadEntity ParseXLine(IReadOnlyList<DxfPair> record) =>
+        new XLineEntity(
+            new CadPoint(RequiredDouble(record, 10), RequiredDouble(record, 20)),
+            new CadVector(RequiredDouble(record, 11), RequiredDouble(record, 21)));
+
     private static ICadEntity ParseText(IReadOnlyList<DxfPair> record)
     {
         var position = new CadPoint(RequiredDouble(record, 10), RequiredDouble(record, 20));
@@ -247,6 +282,22 @@ public static class CadDxfCodec
         var height = GetDouble(record, 40, 2.5);
         var rotation = DegreesToRadians(GetDouble(record, 50, 0));
         return new TextEntity(position, text, height, rotation);
+    }
+
+    private static List<CadPoint> ReadRepeatedPoints(IReadOnlyList<DxfPair> record, int xCode, int yCode)
+    {
+        var points = new List<CadPoint>();
+        double? x = null;
+        foreach (var pair in record)
+        {
+            if (pair.Code == xCode) x = ParseDouble(pair.Value, xCode);
+            else if (pair.Code == yCode && x is not null)
+            {
+                points.Add(new CadPoint(x.Value, ParseDouble(pair.Value, yCode)));
+                x = null;
+            }
+        }
+        return points;
     }
 
     private static CadEntityProperties ParseEntityProperties(IReadOnlyList<DxfPair> record, CadDocument document)
@@ -324,11 +375,50 @@ public static class CadDxfCodec
                 }
                 else
                 {
-                    // DXF ARC is counter-clockwise. A clockwise UCAD arc is the same geometric
-                    // segment when exported from its end point back to its start point.
                     WritePair(sb, 50, NormalizeDegrees(RadiansToDegrees(arc.StartAngleRadians + arc.SweepAngleRadians)));
                     WritePair(sb, 51, NormalizeDegrees(RadiansToDegrees(arc.StartAngleRadians)));
                 }
+                return true;
+
+            case PointEntity point:
+                WritePair(sb, 0, "POINT");
+                WriteEntityProperties(sb, properties);
+                WritePoint(sb, 10, 20, point.Position);
+                return true;
+
+            case EllipseEntity ellipse:
+                WritePair(sb, 0, "ELLIPSE");
+                WriteEntityProperties(sb, properties);
+                WritePoint(sb, 10, 20, ellipse.Center);
+                WriteVector(sb, 11, 21, ellipse.MajorAxis);
+                WritePair(sb, 40, ellipse.Ratio);
+                WritePair(sb, 41, ellipse.StartParameter);
+                WritePair(sb, 42, ellipse.StartParameter + ellipse.SweepParameter);
+                return true;
+
+            case SplineEntity spline:
+                WritePair(sb, 0, "SPLINE");
+                WriteEntityProperties(sb, properties);
+                WritePair(sb, 70, spline.Closed ? 1 : 0);
+                WritePair(sb, 71, Math.Min(3, spline.FitPoints.Count - 1));
+                WritePair(sb, 72, 0);
+                WritePair(sb, 73, 0);
+                WritePair(sb, 74, spline.FitPoints.Count);
+                foreach (var fit in spline.FitPoints) WritePoint(sb, 11, 21, fit);
+                return true;
+
+            case RayEntity ray:
+                WritePair(sb, 0, "RAY");
+                WriteEntityProperties(sb, properties);
+                WritePoint(sb, 10, 20, ray.Origin);
+                WriteVector(sb, 11, 21, ray.Direction);
+                return true;
+
+            case XLineEntity xline:
+                WritePair(sb, 0, "XLINE");
+                WriteEntityProperties(sb, properties);
+                WritePoint(sb, 10, 20, xline.Point);
+                WriteVector(sb, 11, 21, xline.Direction);
                 return true;
 
             case TextEntity text:
@@ -357,6 +447,12 @@ public static class CadDxfCodec
     {
         WritePair(sb, xCode, point.X);
         WritePair(sb, yCode, point.Y);
+    }
+
+    private static void WriteVector(StringBuilder sb, int xCode, int yCode, CadVector vector)
+    {
+        WritePair(sb, xCode, vector.X);
+        WritePair(sb, yCode, vector.Y);
     }
 
     private static IReadOnlyList<DxfPair> ReadRecord(IReadOnlyList<DxfPair> pairs, int start, out int nextIndex)
