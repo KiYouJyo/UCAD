@@ -60,7 +60,7 @@ public sealed class CadDocumentFileService
             return CadAcadInteropCodec.ImportDxf(bytes, extension);
         if (string.Equals(extension, ".dxb", StringComparison.OrdinalIgnoreCase))
             return CadDxbCodec.Import(bytes);
-        return CadAcadInteropCodec.ImportDwg(bytes, extension);
+        return CadAcadPreservingInteropCodec.ImportDwg(bytes, extension);
     }
 
     public async Task<DxfExportResult> ExportDxfAsync(
@@ -94,7 +94,7 @@ public sealed class CadDocumentFileService
         else if (string.Equals(descriptor.Extension, ".dxb", StringComparison.OrdinalIgnoreCase))
             export = CadDxbCodec.Export(document);
         else
-            export = CadAcadInteropCodec.ExportDwg(document, descriptor.Extension);
+            export = CadAcadPreservingInteropCodec.ExportDwg(document, descriptor.Extension);
 
         await WriteAtomicBytesAsync(filePath, export.Content, createBackup, cancellationToken);
         return export;
