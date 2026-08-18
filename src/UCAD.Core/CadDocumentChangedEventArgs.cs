@@ -8,6 +8,7 @@ public enum CadDocumentChangeKind
     RemoveRange,
     Replace,
     ReplaceRange,
+    CompoundEdit,
     Clear,
     LayerTable,
     CurrentLayer,
