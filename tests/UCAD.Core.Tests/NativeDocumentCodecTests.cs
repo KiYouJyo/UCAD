@@ -22,13 +22,18 @@ public sealed class NativeDocumentCodecTests
             new CircleEntity(new CadPoint(1, 1), 0.5)
         };
         document.DefineBlock(new CadBlockDefinition("TREE", new CadPoint(0, 0), blockGeometry));
+        Assert.True(ArcEntity.TryCreateFromThreePoints(
+            new CadPoint(36, 30),
+            new CadPoint(30, 36),
+            new CadPoint(24, 30),
+            out var arc));
 
         var entities = new ICadEntity[]
         {
             new LineEntity(new CadPoint(0, 0), new CadPoint(10, 0)),
             new PolylineEntity([new CadPoint(0, 0), new CadPoint(5, 0), new CadPoint(5, 5)], closed: true),
             new CircleEntity(new CadPoint(20, 20), 4),
-            ArcEntity.Create(new CadPoint(30, 30), 6, Math.PI / 4, Math.PI / 2),
+            arc!,
             new TextEntity(new CadPoint(2, 3), "规划", 2.5, 0.25),
             new LinearDimensionEntity(new CadPoint(0, 0), new CadPoint(10, 0), new CadPoint(0, 3), "10.00"),
             new HatchEntity([new CadPoint(0, 0), new CadPoint(4, 0), new CadPoint(4, 4), new CadPoint(0, 4)], "ANSI31", 2, Math.PI / 4),
