@@ -3,15 +3,16 @@ using System.Text;
 using ACadSharp;
 using ACadSharp.IO;
 using AcadDocument = ACadSharp.CadDocument;
+using IxDxfFile = IxMilia.Dxf.DxfFile;
 using UcadDocument = UCAD.Core.CadDocument;
 
 namespace UCAD.Core.IO;
 
 /// <summary>
-/// AutoCAD transport bridge for formats whose container is not implemented natively by UCAD.
-/// ACadSharp owns DWG/binary-DXF parsing and writing; UCAD's advanced DXF semantic bridge
-/// remains the boundary into the UCAD document model so all interoperability paths share
-/// one entity, annotation, block and style mapping.
+/// AutoCAD transport bridge for formats whose binary containers are not implemented natively by UCAD.
+/// ACadSharp owns DWG transport, while IxMilia.Dxf owns text/binary DXF container normalization.
+/// UCAD's advanced DXF semantic bridge remains the single boundary into the UCAD document model so
+/// drawing, annotation, block and style mappings do not diverge between container implementations.
 /// </summary>
 public static class CadAcadInteropCodec
 {
@@ -50,10 +51,11 @@ public static class CadAcadInteropCodec
         var warnings = new List<string>();
 
         using var input = new MemoryStream(content.ToArray(), writable: false);
-        using var reader = CreateDxfReaderWithDefaults(input, warnings, "DXF read");
-        var acadDocument = reader.Read();
+        var dxfFile = IxDxfFile.Load(input);
+        using var normalized = new MemoryStream();
+        dxfFile.Save(normalized, asText: true);
+        var bridgeText = Utf8NoBom.GetString(normalized.ToArray());
 
-        var bridgeText = WriteAsciiDxfBridge(acadDocument, warnings);
         var imported = CadDxfAdvancedInteropCodec.Import(bridgeText);
         AppendWarnings(warnings, "UCAD DXF bridge", imported.Warnings);
         imported.Document.ResetHistory();
@@ -62,7 +64,7 @@ public static class CadAcadInteropCodec
             imported.Document,
             warnings,
             NormalizeExtension(sourceExtension),
-            acadDocument.Header.Version.ToString());
+            dxfFile.Header.Version.ToString());
     }
 
     public static CadAcadBinaryExportResult ExportDwg(UcadDocument document, string targetExtension = ".dwg")
@@ -74,6 +76,7 @@ public static class CadAcadInteropCodec
 
         var warnings = new List<string>();
         var acadDocument = BuildAcadDocument(document, warnings);
+        NormalizeAcadSharpSequencesForDwgWriter(acadDocument);
 
         using var output = new MemoryStream();
         using (var writer = new DwgWriter(output, acadDocument))
@@ -93,20 +96,19 @@ public static class CadAcadInteropCodec
     {
         ArgumentNullException.ThrowIfNull(document);
         var warnings = new List<string>();
-        var acadDocument = BuildAcadDocument(document, warnings);
+        var dxf = CadDxfAdvancedInteropCodec.Export(document);
+        AppendWarnings(warnings, "UCAD DXF export", dxf.Warnings);
 
+        using var textInput = new MemoryStream(Utf8NoBom.GetBytes(dxf.Content), writable: false);
+        var dxfFile = IxDxfFile.Load(textInput, Utf8NoBom);
         using var output = new MemoryStream();
-        using (var writer = new DxfWriter(output, acadDocument, binary: true))
-        {
-            writer.OnNotification += (_, args) => AddNotification(warnings, "binary DXF write", args);
-            writer.Write();
-        }
+        dxfFile.Save(output, asText: false);
 
         return new CadAcadBinaryExportResult(
             output.ToArray(),
             warnings,
             ".dxf",
-            acadDocument.Header.Version.ToString());
+            dxfFile.Header.Version.ToString());
     }
 
     private static AcadDocument BuildAcadDocument(UcadDocument document, List<string> warnings)
@@ -117,6 +119,25 @@ public static class CadAcadInteropCodec
         using var input = new MemoryStream(Utf8NoBom.GetBytes(dxf.Content), writable: false);
         using var reader = CreateDxfReaderWithDefaults(input, warnings, "DXF bridge read");
         return reader.Read();
+    }
+
+    /// <summary>
+    /// ACadSharp's DXF builder can expose sequence terminators as standalone block entities while also
+    /// linking the same logical terminator through INSERT/Polyline child collections. The DWG writer
+    /// writes child SEQEND records through those owning collections and does not implement standalone
+    /// SEQEND dispatch. Removing only the standalone block-list entries is therefore a transport-shape
+    /// normalization, not a semantic downgrade.
+    /// </summary>
+    private static void NormalizeAcadSharpSequencesForDwgWriter(AcadDocument document)
+    {
+        foreach (var block in document.BlockRecords)
+        {
+            var standaloneSequenceEnds = block.Entities
+                .OfType<ACadSharp.Entities.Seqend>()
+                .ToArray();
+            foreach (var sequenceEnd in standaloneSequenceEnds)
+                block.Entities.Remove(sequenceEnd);
+        }
     }
 
     private static DxfReader CreateDxfReaderWithDefaults(Stream input, List<string> warnings, string phase)
