@@ -11,11 +11,13 @@ namespace UCAD.Core.IO;
 /// v1 geometry payload intact and stores advanced Hatch/Block metadata in a namespaced
 /// extension object. The wrapper strips that extension before delegating to the strict
 /// v1 decoder, then reapplies advanced state against stable entity order/block names.
+/// Newer layout-aware payloads are forwarded to the current reader before legacy parsing.
 /// </summary>
 public static class CadNativeDocumentCodecV11
 {
     private const string ExtensionsProperty = "extensions";
     private const string ExtensionName = "ucad.v11";
+    private const string LayoutExtensionName = "ucad.layout";
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -42,6 +44,13 @@ public static class CadNativeDocumentCodecV11
         ArgumentException.ThrowIfNullOrWhiteSpace(json);
         var root = JsonNode.Parse(json)?.AsObject()
             ?? throw new FormatException("UCAD document JSON is empty.");
+
+        // Some older call sites (notably the v0.11 XREF path) still enter through this
+        // compatibility reader. Forward a newer paper-layout payload before stripping
+        // extensions. CadNativeDocumentCodecLayout removes only ucad.layout and delegates
+        // back through Current/V11 as needed, so legacy v11+layout files do not recurse.
+        if (root[ExtensionsProperty] is JsonObject probe && probe[LayoutExtensionName] is not null)
+            return CadNativeDocumentCodecLayout.Deserialize(json);
 
         V11ExtensionDto? extension = null;
         if (root[ExtensionsProperty] is JsonObject extensions && extensions[ExtensionName] is JsonNode node)
