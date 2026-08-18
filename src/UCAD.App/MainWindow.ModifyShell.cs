@@ -1,9 +1,10 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using UCAD.Workspace;
-
 using UCAD.Services;
+using Windows.System;
 
 namespace UCAD;
 
@@ -11,6 +12,7 @@ public sealed partial class MainWindow
 {
     private bool _modifyToolSurfacesActivated;
     private bool _modifySmokeScheduled;
+    private KeyboardAccelerator? _deleteDrawingAccelerator;
 
     private void ActivateModifyToolSurfaces()
     {
@@ -19,6 +21,17 @@ public sealed partial class MainWindow
             return;
         }
         _modifyToolSurfacesActivated = true;
+
+        // A routed KeyDown is not guaranteed when the CAD surface itself does not hold
+        // keyboard focus. Register Delete as a root KeyboardAccelerator so the physical
+        // key remains available anywhere in the drawing window while text editors keep
+        // their normal Delete behavior.
+        _deleteDrawingAccelerator = new KeyboardAccelerator
+        {
+            Key = VirtualKey.Delete
+        };
+        _deleteDrawingAccelerator.Invoked += DeleteDrawingAccelerator_Invoked;
+        RootLayout.KeyboardAccelerators.Add(_deleteDrawingAccelerator);
 
         // The v0.3 shell intentionally shipped the first four Modify buttons as inert
         // placeholders. v0.5 promotes those exact surfaces to real commands. ERASE is inserted
@@ -54,6 +67,40 @@ public sealed partial class MainWindow
 
         ScheduleV05ModifySmokeIfRequested();
     }
+
+    private void DeleteDrawingAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        if (TryExecuteDeleteShortcut())
+        {
+            args.Handled = true;
+        }
+    }
+
+    private bool TryExecuteDeleteShortcut()
+    {
+        if (ActiveSession is not CadWorkspaceSession session || session.CommandSession.IsActive)
+        {
+            return false;
+        }
+
+        var focused = RootLayout.XamlRoot is null
+            ? null
+            : FocusManager.GetFocusedElement(RootLayout.XamlRoot);
+        if (IsTextEditingFocus(focused))
+        {
+            return false;
+        }
+
+        StartToolbarCommand("ERASE");
+        return true;
+    }
+
+    private static bool IsTextEditingFocus(object? focused) => focused is
+        TextBox or
+        RichEditBox or
+        PasswordBox or
+        AutoSuggestBox or
+        NumberBox;
 
     private void ConfigureModifyButton(Button button, string command)
     {
