@@ -83,7 +83,7 @@ public sealed class ArcEntity : ICadEntity
         return new ArcEntity(center, radius, startAngleRadians, sweepAngleRadians, id);
     }
 
-    internal static ArcEntity Create(
+    public static ArcEntity Create(
         CadPoint center,
         double radius,
         double startAngleRadians,
