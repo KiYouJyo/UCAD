@@ -14,7 +14,7 @@ $xaml = Get-Content src/UCAD.App/MainWindow.xaml -Raw
 if ($xaml -match '<TitleBar\b|TitleBar\.Content') { throw 'Shell must keep the explicit browser-style title strip.' }
 Assert-Contains $xaml @('TitleDragRegion','DocumentTabs','PageOverlay','SettingsButton') 'Shell'
 
-$allXaml = (Get-ChildItem src/UCAD.App -Recurse -Filter '*.xaml' | ForEach-Object { Get-Content $_.FullName -Raw }) -join "`n"
+$allXaml = (Get-ChildItem src/UCAD.App -Recurse -File -Filter '*.xaml' | ForEach-Object { Get-Content $_.FullName -Raw }) -join "`n"
 foreach ($fake in @('╱','⌁','▭','○','◜','↖','✥','⧉','▧','⬚','↗','＋','⇆','⌇','⌗','⌖','◇','◎','◫')) {
   if ($allXaml.Contains($fake)) { throw "Unicode placeholder icon remains in production XAML: $fake" }
 }
