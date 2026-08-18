@@ -2,6 +2,7 @@ using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using System.Numerics;
 using UCAD.Core.Entities;
+using UCAD.Core.Geometry;
 using UCAD.Core.Interaction;
 using Windows.UI;
 
@@ -85,10 +86,10 @@ public sealed partial class CadViewport
         const float size = 4f;
         ds.DrawLine(screen.X - size, screen.Y, screen.X + size, screen.Y, color, strokeWidth);
         ds.DrawLine(screen.X, screen.Y - size, screen.X, screen.Y + size, color, strokeWidth);
-        ds.DrawCircle(screen, 2.2f, color, Math.Max(1, strokeWidth));
+        ds.DrawCircle(screen, 2.2f, color, MathF.Max(1f, strokeWidth));
     }
 
-    private void DrawExtendedChain(CanvasDrawingSession ds, IReadOnlyList<Core.Geometry.CadPoint> points, bool closed, Color color, float strokeWidth)
+    private void DrawExtendedChain(CanvasDrawingSession ds, IReadOnlyList<CadPoint> points, bool closed, Color color, float strokeWidth)
     {
         if (points.Count < 2) return;
         for (var i = 1; i < points.Count; i++)
@@ -99,8 +100,8 @@ public sealed partial class CadViewport
 
     private void DrawInfiniteEntity(
         CanvasDrawingSession ds,
-        Core.Geometry.CadPoint anchor,
-        Core.Geometry.CadVector direction,
+        CadPoint anchor,
+        CadVector direction,
         bool rayOnly,
         Color color,
         float strokeWidth,
