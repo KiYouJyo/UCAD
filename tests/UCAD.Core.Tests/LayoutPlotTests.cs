@@ -84,7 +84,7 @@ public sealed class LayoutPlotTests
     }
 
     [Fact]
-    public void PdfExporterReportsUnicodeFontFallbackAndPatternHatchLimitation()
+    public void PdfExporterReportsUnicodeFallbackWhileAnsi31RemainsNative()
     {
         var document = new CadDocument();
         document.Add(new TextEntity(new CadPoint(0, 0), "规划", 250));
@@ -101,7 +101,7 @@ public sealed class LayoutPlotTests
 
         Assert.True(result.HasWarnings);
         Assert.Contains(result.Warnings, warning => warning.Contains("non-ASCII", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(result.Warnings, warning => warning.Contains("boundary only", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(result.Warnings, warning => warning.Contains("boundary only", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
