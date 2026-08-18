@@ -48,6 +48,7 @@
             <uap:SupportedFileTypes>
               <uap:FileType>.dwg</uap:FileType>
               <uap:FileType>.dxf</uap:FileType>
+              <uap:FileType>.dxb</uap:FileType>
               <uap:FileType>.dwt</uap:FileType>
               <uap:FileType>.dws</uap:FileType>
               <uap:FileType>.sv$</uap:FileType>
