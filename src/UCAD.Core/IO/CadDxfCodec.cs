@@ -34,7 +34,7 @@ public static class CadDxfCodec
     {
         ArgumentNullException.ThrowIfNull(document);
         var warnings = new List<string>();
-        var sb = new StringBuilder(capacity: Math.Max(4096, document.Entities.Count * 180));
+        var sb = new StringBuilder(capacity: Math.Max(4096, document.Entities.Count * 220));
 
         WritePair(sb, 0, "SECTION");
         WritePair(sb, 2, "HEADER");
@@ -55,7 +55,7 @@ public static class CadDxfCodec
         foreach (var entity in document.Entities)
         {
             var properties = document.GetEntityProperties(entity.Id);
-            if (!TryWriteEntity(sb, entity, properties))
+            if (!TryWriteEntity(sb, entity, properties, warnings))
             {
                 warnings.Add($"DXF export skipped unsupported entity {entity.GetType().Name} ({entity.Id}).");
             }
@@ -158,6 +158,8 @@ public static class CadDxfCodec
                     "RAY" => ParseRay(record),
                     "XLINE" => ParseXLine(record),
                     "TEXT" => ParseText(record),
+                    "MTEXT" => ParseMText(record),
+                    "HATCH" => ParseHatch(record),
                     _ => null
                 };
 
@@ -166,6 +168,9 @@ public static class CadDxfCodec
                     warnings.Add($"DXF entity '{type}' is not supported by the exchange foundation and was skipped.");
                     continue;
                 }
+
+                if (entity is HatchEntity && GetInt(record, 71, 0) != 0)
+                    warnings.Add("DXF HATCH association handles cannot yet be mapped to UCAD entity ids; the hatch was imported as non-associative.");
 
                 var properties = ParseEntityProperties(record, document);
                 document.Add(entity, properties);
@@ -281,7 +286,101 @@ public static class CadDxfCodec
         var text = GetString(record, 1, string.Empty);
         var height = GetDouble(record, 40, 2.5);
         var rotation = DegreesToRadians(GetDouble(record, 50, 0));
-        return new TextEntity(position, text, height, rotation);
+        var style = GetString(record, 7, "Standard");
+        return new TextEntity(position, text, height, rotation, style);
+    }
+
+    private static ICadEntity ParseMText(IReadOnlyList<DxfPair> record)
+    {
+        var position = new CadPoint(RequiredDouble(record, 10), RequiredDouble(record, 20));
+        var chunks = record.Where(pair => pair.Code is 1 or 3).Select(pair => pair.Value).ToArray();
+        if (chunks.Length == 0) throw new FormatException("MTEXT requires text content in group 1/3.");
+        var text = DecodeMText(string.Concat(chunks));
+        var height = GetDouble(record, 40, 2.5);
+        var width = Math.Max(GetDouble(record, 41, 40), 1e-9);
+        var rotation = DegreesToRadians(GetDouble(record, 50, 0));
+        var style = GetString(record, 7, "Standard");
+        return new MTextEntity(position, text, height, width, rotation, style);
+    }
+
+    private static ICadEntity ParseHatch(IReadOnlyList<DxfPair> record)
+    {
+        var loops = ReadHatchPolylineLoops(record);
+        if (loops.Count == 0) throw new FormatException("HATCH does not contain a supported closed polyline boundary path.");
+
+        var pattern = GetString(record, 2, "SOLID");
+        var scale = Math.Max(GetDouble(record, 41, 1), 1e-9);
+        var angle = DegreesToRadians(GetDouble(record, 52, 0));
+        var islandDetection = GetInt(record, 75, 0) switch
+        {
+            1 => HatchIslandDetection.Outer,
+            2 => HatchIslandDetection.Ignore,
+            _ => HatchIslandDetection.Normal
+        };
+
+        return new HatchEntity(
+            loops[0],
+            pattern,
+            scale,
+            angle,
+            loops.Skip(1),
+            associative: false,
+            sourceEntityIds: null,
+            islandDetection);
+    }
+
+    private static List<IReadOnlyList<CadPoint>> ReadHatchPolylineLoops(IReadOnlyList<DxfPair> record)
+    {
+        var loops = new List<IReadOnlyList<CadPoint>>();
+        for (var i = 0; i < record.Count; i++)
+        {
+            if (record[i].Code != 92) continue;
+            var flags = ParseInt(record[i].Value, 92);
+            if ((flags & 2) == 0)
+                throw new FormatException("HATCH edge-based boundary paths are not yet supported by the UCAD DXF bridge.");
+
+            var cursor = i + 1;
+            var hasBulge = false;
+            var closed = true;
+            while (cursor < record.Count && record[cursor].Code != 93 && record[cursor].Code != 92)
+            {
+                if (record[cursor].Code == 72) hasBulge = ParseInt(record[cursor].Value, 72) != 0;
+                else if (record[cursor].Code == 73) closed = ParseInt(record[cursor].Value, 73) != 0;
+                cursor++;
+            }
+            if (cursor >= record.Count || record[cursor].Code != 93)
+                throw new FormatException("HATCH polyline boundary is missing vertex count group 93.");
+            if (!closed) throw new FormatException("HATCH polyline boundary is not closed.");
+
+            var vertexCount = ParseInt(record[cursor].Value, 93);
+            if (vertexCount < 3) throw new FormatException("HATCH polyline boundary requires at least three vertices.");
+            cursor++;
+
+            var points = new List<CadPoint>(vertexCount);
+            for (var vertex = 0; vertex < vertexCount; vertex++)
+            {
+                while (cursor < record.Count && record[cursor].Code != 10 && record[cursor].Code != 92) cursor++;
+                if (cursor >= record.Count || record[cursor].Code != 10)
+                    throw new FormatException("HATCH polyline boundary is missing a vertex X coordinate.");
+                var x = ParseDouble(record[cursor].Value, 10);
+                cursor++;
+
+                while (cursor < record.Count && record[cursor].Code != 20 && record[cursor].Code != 92) cursor++;
+                if (cursor >= record.Count || record[cursor].Code != 20)
+                    throw new FormatException("HATCH polyline boundary is missing a vertex Y coordinate.");
+                var y = ParseDouble(record[cursor].Value, 20);
+                cursor++;
+
+                if (hasBulge && cursor < record.Count && record[cursor].Code == 42 && Math.Abs(ParseDouble(record[cursor].Value, 42)) > 1e-12)
+                    throw new FormatException("HATCH polyline bulge arcs are not yet supported.");
+                if (hasBulge && cursor < record.Count && record[cursor].Code == 42) cursor++;
+                points.Add(new CadPoint(x, y));
+            }
+
+            loops.Add(points.AsReadOnly());
+            i = cursor - 1;
+        }
+        return loops;
     }
 
     private static List<CadPoint> ReadRepeatedPoints(IReadOnlyList<DxfPair> record, int xCode, int yCode)
@@ -337,7 +436,7 @@ public static class CadDxfCodec
         WritePair(sb, 0, "ENDSEC");
     }
 
-    private static bool TryWriteEntity(StringBuilder sb, ICadEntity entity, CadEntityProperties properties)
+    private static bool TryWriteEntity(StringBuilder sb, ICadEntity entity, CadEntityProperties properties, List<string> warnings)
     {
         switch (entity)
         {
@@ -427,12 +526,89 @@ public static class CadDxfCodec
                 WritePoint(sb, 10, 20, text.Position);
                 WritePair(sb, 40, text.Height);
                 WritePair(sb, 1, text.Text);
+                WritePair(sb, 7, text.StyleName);
                 WritePair(sb, 50, NormalizeDegrees(RadiansToDegrees(text.RotationRadians)));
+                return true;
+
+            case MTextEntity mtext:
+                WritePair(sb, 0, "MTEXT");
+                WriteEntityProperties(sb, properties);
+                WritePoint(sb, 10, 20, mtext.Position);
+                WritePair(sb, 40, mtext.TextHeight);
+                WritePair(sb, 41, mtext.Width);
+                WritePair(sb, 71, 1); // top-left attachment
+                WritePair(sb, 7, mtext.StyleName);
+                WritePair(sb, 50, NormalizeDegrees(RadiansToDegrees(mtext.RotationRadians)));
+                WriteMTextContent(sb, mtext.Text);
+                return true;
+
+            case HatchEntity hatch:
+                WritePair(sb, 0, "HATCH");
+                WriteEntityProperties(sb, properties);
+                WritePoint(sb, 10, 20, new CadPoint(0, 0));
+                WritePair(sb, 30, 0);
+                WritePair(sb, 210, 0);
+                WritePair(sb, 220, 0);
+                WritePair(sb, 230, 1);
+                WritePair(sb, 2, hatch.Pattern);
+                var isSolid = string.Equals(hatch.Pattern, "SOLID", StringComparison.OrdinalIgnoreCase);
+                WritePair(sb, 70, isSolid ? 1 : 0);
+                WritePair(sb, 71, 0); // source GUIDs cannot map to DXF handles yet
+                var loops = new List<IReadOnlyList<CadPoint>> { hatch.Boundary };
+                loops.AddRange(hatch.EffectiveIslandLoops);
+                WritePair(sb, 91, loops.Count);
+                foreach (var loop in loops) WriteHatchPolylineLoop(sb, loop);
+                WritePair(sb, 75, hatch.IslandDetection switch
+                {
+                    HatchIslandDetection.Outer => 1,
+                    HatchIslandDetection.Ignore => 2,
+                    _ => 0
+                });
+                WritePair(sb, 76, 1); // predefined pattern type
+                if (!isSolid)
+                {
+                    WritePair(sb, 52, NormalizeDegrees(RadiansToDegrees(hatch.PatternAngleRadians)));
+                    WritePair(sb, 41, hatch.PatternScale);
+                    WritePair(sb, 77, 0);
+                    WritePair(sb, 78, 0);
+                }
+                WritePair(sb, 98, 0);
+                if (hatch.Associative)
+                    warnings.Add($"DXF HATCH {hatch.Id} was exported non-associative because UCAD GUIDs cannot yet be mapped to stable DXF handles.");
                 return true;
 
             default:
                 return false;
         }
+    }
+
+    private static void WriteMTextContent(StringBuilder sb, string text)
+    {
+        var encoded = text
+            .Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace("\r", "\n", StringComparison.Ordinal)
+            .Replace("\n", "\\P", StringComparison.Ordinal);
+        const int chunkSize = 250;
+        var offset = 0;
+        while (encoded.Length - offset > chunkSize)
+        {
+            WritePair(sb, 3, encoded.Substring(offset, chunkSize));
+            offset += chunkSize;
+        }
+        WritePair(sb, 1, encoded[offset..]);
+    }
+
+    private static string DecodeMText(string text) =>
+        text.Replace("\\P", "\n", StringComparison.OrdinalIgnoreCase);
+
+    private static void WriteHatchPolylineLoop(StringBuilder sb, IReadOnlyList<CadPoint> loop)
+    {
+        WritePair(sb, 92, 2); // polyline boundary path
+        WritePair(sb, 72, 0); // no bulges
+        WritePair(sb, 73, 1); // closed
+        WritePair(sb, 93, loop.Count);
+        foreach (var point in loop) WritePoint(sb, 10, 20, point);
+        WritePair(sb, 97, 0); // no source boundary handles
     }
 
     private static void WriteEntityProperties(StringBuilder sb, CadEntityProperties properties)
@@ -486,6 +662,13 @@ public static class CadDxfCodec
         var pair = record.FirstOrDefault(candidate => candidate.Code == code);
         if (pair is null) return fallback;
         return int.TryParse(pair.Value, NumberStyles.Integer, Invariant, out var value) ? value : fallback;
+    }
+
+    private static int ParseInt(string value, int code)
+    {
+        if (!int.TryParse(value, NumberStyles.Integer, Invariant, out var parsed))
+            throw new FormatException($"DXF group {code} has invalid integer value '{value}'.");
+        return parsed;
     }
 
     private static string GetString(IReadOnlyList<DxfPair> record, int code, string fallback) =>
