@@ -12,8 +12,8 @@ public sealed record RecoveryCandidate(
     string DocumentPath);
 
 /// <summary>
-/// Local crash/autosave recovery store. Recovery payloads use the lossless native codec
-/// even when the original drawing came from DXF, so no authoring data is discarded.
+/// Local crash/autosave recovery store. Recovery payloads use the same lossless native
+/// codec as normal .ucad files, including advanced authoring metadata and paper layouts.
 /// </summary>
 public sealed class RecoveryService
 {
@@ -57,7 +57,7 @@ public sealed class RecoveryService
             };
             try
             {
-                await File.WriteAllTextAsync(nativeTemp, CadNativeDocumentCodec.Serialize(document), cancellationToken);
+                await File.WriteAllTextAsync(nativeTemp, CadNativeDocumentCodecLayout.Serialize(document), cancellationToken);
                 await File.WriteAllTextAsync(metadataTemp, JsonSerializer.Serialize(metadata, JsonOptions), cancellationToken);
                 File.Move(nativeTemp, nativePath, overwrite: true);
                 File.Move(metadataTemp, metadataPath, overwrite: true);
@@ -114,7 +114,7 @@ public sealed class RecoveryService
     {
         ArgumentNullException.ThrowIfNull(candidate);
         var json = await File.ReadAllTextAsync(candidate.DocumentPath, cancellationToken);
-        var document = CadNativeDocumentCodec.Deserialize(json);
+        var document = CadNativeDocumentCodecLayout.Deserialize(json);
         document.ResetHistory();
         return document;
     }
