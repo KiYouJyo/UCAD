@@ -46,11 +46,13 @@ public sealed class AutoCadFixtureCorpusTests
         Assert.True(bytes.Length >= 6, $"Fixture {fixture.Id} is too small to contain a DWG signature.");
         Assert.Equal(fixture.AcadVersion, Encoding.ASCII.GetString(bytes.AsSpan(0, 6)));
 
-        var imported = CadAcadInteropCodec.ImportDwg(bytes);
+        var imported = CadAcadPreservingInteropCodec.ImportDwg(bytes);
 
         Assert.Equal(".dwg", imported.SourceExtension);
         Assert.Equal(fixture.AcadVersion, imported.SourceCadVersion);
         Assert.NotEmpty(imported.Document.Entities);
+        Assert.NotNull(imported.Document.AutoCadSourceEnvelope);
+        Assert.DoesNotContain(imported.Warnings, CadAcadInteropDiagnostics.IsOpaqueMetadataNotification);
     }
 
     [Theory]
