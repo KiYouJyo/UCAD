@@ -23,9 +23,16 @@ public sealed class CadPlotFileService
 
         var result = CadPdfExporter.Export(document, plan, title);
         var tempPath = fullPath + ".tmp";
-        await File.WriteAllBytesAsync(tempPath, result.Content, cancellationToken);
-        File.Move(tempPath, fullPath, overwrite: true);
-        return result;
+        try
+        {
+            await File.WriteAllBytesAsync(tempPath, result.Content, cancellationToken);
+            File.Move(tempPath, fullPath, overwrite: true);
+            return result;
+        }
+        finally
+        {
+            if (File.Exists(tempPath)) File.Delete(tempPath);
+        }
     }
 
     public CadPlotPlan CreatePlan(CadDocument document, CadPageSetup pageSetup)
