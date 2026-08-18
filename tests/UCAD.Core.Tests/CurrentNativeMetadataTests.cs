@@ -40,7 +40,7 @@ public sealed class CurrentNativeMetadataTests
     }
 
     [Fact]
-    public void MissingAssociativeSourceCannotBeSerializedSilently()
+    public void MissingAssociativeSourceIsAutoHealedBeforeSerialization()
     {
         var document = new CadDocument();
         var hatch = new HatchEntity(
@@ -53,6 +53,15 @@ public sealed class CurrentNativeMetadataTests
             sourceEntityIds: [Guid.NewGuid()]);
         document.Add(hatch);
 
-        Assert.Throws<InvalidOperationException>(() => CadNativeDocumentCodecCurrent.Serialize(document));
+        var healed = Assert.IsType<HatchEntity>(document.Entities[0]);
+        Assert.False(healed.Associative);
+        Assert.Empty(healed.SourceEntityIds);
+
+        var json = CadNativeDocumentCodecCurrent.Serialize(document);
+        Assert.False(CadNativeDocumentCodecCurrent.HasCurrentExtension(json));
+        var restored = CadNativeDocumentCodecCurrent.Deserialize(json);
+        var restoredHatch = Assert.IsType<HatchEntity>(restored.Entities[0]);
+        Assert.False(restoredHatch.Associative);
+        Assert.Empty(restoredHatch.SourceEntityIds);
     }
 }
