@@ -8,6 +8,7 @@ public sealed class AcadFormatRegistryTests
     [Theory]
     [InlineData("plan.dwg", true, true)]
     [InlineData("plan.DXF", true, true)]
+    [InlineData("legacy.dxb", true, true)]
     [InlineData("template.dwt", true, true)]
     [InlineData("standards.dws", true, false)]
     [InlineData("drawing.bak", true, false)]
@@ -87,6 +88,7 @@ public sealed class AcadFormatRegistryTests
         Assert.Contains(".ucad", extensions);
         Assert.Contains(".dwg", extensions);
         Assert.Contains(".dxf", extensions);
+        Assert.Contains(".dxb", extensions);
         Assert.Contains(".dwt", extensions);
         Assert.Contains(".dws", extensions);
         Assert.Contains(".bak", extensions);
