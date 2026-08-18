@@ -36,7 +36,7 @@ public sealed class CadDocumentFileService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         var bytes = await File.ReadAllBytesAsync(Path.GetFullPath(filePath), cancellationToken);
-        var import = CadAcadInteropCodec.ImportDxf(bytes, ".dxf");
+        var import = CadAcadPreservingInteropCodec.ImportDxf(bytes, ".dxf");
         import.Document.ResetHistory();
         return new DxfImportResult(import.Document, import.Warnings);
     }
@@ -50,7 +50,7 @@ public sealed class CadDocumentFileService
 
         var extension = descriptor.Extension;
         var bytes = await File.ReadAllBytesAsync(Path.GetFullPath(filePath), cancellationToken);
-        if (string.Equals(extension, ".dxf", StringComparison.OrdinalIgnoreCase)) return CadAcadInteropCodec.ImportDxf(bytes, extension);
+        if (string.Equals(extension, ".dxf", StringComparison.OrdinalIgnoreCase)) return CadAcadPreservingInteropCodec.ImportDxf(bytes, extension);
         if (string.Equals(extension, ".dxb", StringComparison.OrdinalIgnoreCase)) return CadDxbCodec.Import(bytes);
         return CadAcadPreservingInteropCodec.ImportDwg(bytes, extension);
     }
@@ -59,9 +59,10 @@ public sealed class CadDocumentFileService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         ArgumentNullException.ThrowIfNull(document);
-        var export = CadDxfFullInteropCodec.Export(document);
-        await WriteAtomicTextAsync(filePath, export.Content, createBackup, cancellationToken);
-        return export;
+        var export = CadAcadPreservingInteropCodec.ExportDxf(document, binary: false);
+        await WriteAtomicBytesAsync(filePath, export.Content, createBackup, cancellationToken);
+        var text = Encoding.UTF8.GetString(export.Content);
+        return new DxfExportResult(text, export.Warnings);
     }
 
     public async Task<CadAcadBinaryExportResult> ExportAutoCadBinaryAsync(string filePath, CadDocument document, bool createBackup, CancellationToken cancellationToken = default)
@@ -73,7 +74,7 @@ public sealed class CadDocumentFileService
             throw new NotSupportedException($"{descriptor.DisplayName} is recognized but cannot be exported by the current UCAD interoperability layer.");
 
         CadAcadBinaryExportResult export;
-        if (string.Equals(descriptor.Extension, ".dxf", StringComparison.OrdinalIgnoreCase)) export = CadAcadInteropCodec.ExportBinaryDxf(document);
+        if (string.Equals(descriptor.Extension, ".dxf", StringComparison.OrdinalIgnoreCase)) export = CadAcadPreservingInteropCodec.ExportDxf(document, binary: true);
         else if (string.Equals(descriptor.Extension, ".dxb", StringComparison.OrdinalIgnoreCase)) export = CadDxbCodec.Export(document);
         else export = CadAcadPreservingInteropCodec.ExportDwg(document, descriptor.Extension);
         await WriteAtomicBytesAsync(filePath, export.Content, createBackup, cancellationToken);
