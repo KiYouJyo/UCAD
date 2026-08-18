@@ -1,4 +1,5 @@
 using UCAD.Core;
+using UCAD.Core.Geometry;
 using UCAD.Core.Layout;
 using UCAD.Core.Plot;
 
