@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using UCAD.Core;
 using UCAD.Core.IO;
+using UCAD.Models;
 using UCAD.Services;
 using UCAD.Workspace;
 using Windows.Storage.Pickers;
@@ -33,138 +34,86 @@ public sealed partial class MainWindow
     {
         RootLayout.Loaded -= FileIO_RootLoaded;
         ConfigureFileMenu();
-        ConfigureStartPageFileAction();
+        StartDeferredFileActivation();
     }
 
     private void FileIO_DocumentTabsSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        ConfigureStartPageFileAction();
-        UpdateFileCommandAvailability();
+        if (DocumentTabs.SelectedItem is not TabViewItem selected || !_sessions.TryGetValue(selected, out var session)) return;
+        UpdateFileMenuState(session);
     }
 
-    private void FileIO_SettingsChanged(object? sender, EventArgs e)
+    private void FileIO_SettingsChanged(object? sender, AppSettings settings)
     {
-        RefreshFileMenuText();
-    }
-
-    private void ConfigureStartPageFileAction()
-    {
-        if (_startPage is not null)
-        {
-            _startPage.OpenDrawingAction = OpenDrawingFromPickerAsync;
-        }
+        foreach (var session in _sessions.Values) session.Viewport.ApplySettings(settings);
     }
 
     private void ConfigureFileMenu()
     {
-        if (FileMenuButton.Flyout is not MenuFlyout menu) return;
-
-        _openDrawingFileItem = CreateFileMenuItem("Open", OpenDrawingFileItem_Click, VirtualKey.O, VirtualKeyModifiers.Control);
-        _saveDrawingFileItem = CreateFileMenuItem("Save", SaveDrawingFileItem_Click, VirtualKey.S, VirtualKeyModifiers.Control);
-        _saveAsDrawingFileItem = CreateFileMenuItem("SaveAs", SaveAsDrawingFileItem_Click, VirtualKey.S, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift);
-        _importDxfFileItem = CreateFileMenuItem("ImportDxf", ImportDxfFileItem_Click);
-        _exportDxfFileItem = CreateFileMenuItem("ExportDxf", ExportDxfFileItem_Click);
-
-        // Rebuild the compact File menu around the existing localized New/Close items.
-        menu.Items.Clear();
-        menu.Items.Add(NewDrawingMenuItem);
-        menu.Items.Add(_openDrawingFileItem);
-        menu.Items.Add(new MenuFlyoutSeparator());
-        menu.Items.Add(_saveDrawingFileItem);
-        menu.Items.Add(_saveAsDrawingFileItem);
-        menu.Items.Add(new MenuFlyoutSeparator());
-        menu.Items.Add(_importDxfFileItem);
-        menu.Items.Add(_exportDxfFileItem);
-        menu.Items.Add(new MenuFlyoutSeparator());
-        menu.Items.Add(CloseDrawingMenuItem);
-
-        RefreshFileMenuText();
-        UpdateFileCommandAvailability();
+        _openDrawingFileItem = CreateFileMenuItem("OpenDrawing", async (_, _) => await OpenDrawingAsync());
+        _saveDrawingFileItem = CreateFileMenuItem("SaveDrawing", async (_, _) => await SaveDrawingAsync());
+        _saveAsDrawingFileItem = CreateFileMenuItem("SaveAsDrawing", async (_, _) => await SaveDrawingAsAsync());
+        _importDxfFileItem = CreateFileMenuItem("ImportDxf", async (_, _) => await ImportDxfAsync());
+        _exportDxfFileItem = CreateFileMenuItem("ExportDxf", async (_, _) => await ExportDxfAsync());
+        FileMenu.Items.Insert(0, _openDrawingFileItem);
+        FileMenu.Items.Insert(1, _saveDrawingFileItem);
+        FileMenu.Items.Insert(2, _saveAsDrawingFileItem);
+        FileMenu.Items.Insert(3, new MenuFlyoutSeparator());
+        FileMenu.Items.Insert(4, _importDxfFileItem);
+        FileMenu.Items.Insert(5, _exportDxfFileItem);
+        FileMenu.Items.Insert(6, new MenuFlyoutSeparator());
+        UpdateFileMenuState(ActiveSession);
     }
 
-    private MenuFlyoutItem CreateFileMenuItem(
-        string textKey,
-        RoutedEventHandler click,
-        VirtualKey? key = null,
-        VirtualKeyModifiers modifiers = VirtualKeyModifiers.None)
+    private MenuFlyoutItem CreateFileMenuItem(string resourceKey, RoutedEventHandler click)
     {
-        var item = new MenuFlyoutItem { Text = FileText(textKey) };
+        var item = new MenuFlyoutItem { Text = FileText(resourceKey) };
         item.Click += click;
-        if (key is VirtualKey acceleratorKey)
-        {
-            item.KeyboardAccelerators.Add(new KeyboardAccelerator
-            {
-                Key = acceleratorKey,
-                Modifiers = modifiers
-            });
-        }
         return item;
     }
 
-    private void RefreshFileMenuText()
+    private void UpdateFileMenuState(CadWorkspaceSession? session)
     {
-        if (_openDrawingFileItem is not null) _openDrawingFileItem.Text = FileText("Open");
-        if (_saveDrawingFileItem is not null) _saveDrawingFileItem.Text = FileText("Save");
-        if (_saveAsDrawingFileItem is not null) _saveAsDrawingFileItem.Text = FileText("SaveAs");
-        if (_importDxfFileItem is not null) _importDxfFileItem.Text = FileText("ImportDxf");
-        if (_exportDxfFileItem is not null) _exportDxfFileItem.Text = FileText("ExportDxf");
+        var enabled = session is not null;
+        if (_saveDrawingFileItem is not null) _saveDrawingFileItem.IsEnabled = enabled;
+        if (_saveAsDrawingFileItem is not null) _saveAsDrawingFileItem.IsEnabled = enabled;
+        if (_exportDxfFileItem is not null) _exportDxfFileItem.IsEnabled = enabled;
     }
 
-    private void UpdateFileCommandAvailability()
-    {
-        var drawingActive = ActiveSession is not null;
-        if (_saveDrawingFileItem is not null) _saveDrawingFileItem.IsEnabled = drawingActive;
-        if (_saveAsDrawingFileItem is not null) _saveAsDrawingFileItem.IsEnabled = drawingActive;
-        if (_exportDxfFileItem is not null) _exportDxfFileItem.IsEnabled = drawingActive;
-    }
-
-    private async void OpenDrawingFileItem_Click(object sender, RoutedEventArgs e) =>
-        await OpenDrawingFromPickerAsync();
-
-    private async void SaveDrawingFileItem_Click(object sender, RoutedEventArgs e)
-    {
-        if (ActiveSession is CadWorkspaceSession session) await SaveSessionAsync(session, saveAs: false);
-    }
-
-    private async void SaveAsDrawingFileItem_Click(object sender, RoutedEventArgs e)
-    {
-        if (ActiveSession is CadWorkspaceSession session) await SaveSessionAsync(session, saveAs: true);
-    }
-
-    private async void ImportDxfFileItem_Click(object sender, RoutedEventArgs e) =>
-        await ImportDxfFromPickerAsync();
-
-    private async void ExportDxfFileItem_Click(object sender, RoutedEventArgs e)
-    {
-        if (ActiveSession is CadWorkspaceSession session) await ExportDxfFromPickerAsync(session);
-    }
-
-    private async Task OpenDrawingFromPickerAsync()
+    private async Task OpenDrawingAsync()
     {
         var picker = new FileOpenPicker
         {
             ViewMode = PickerViewMode.List,
             SuggestedStartLocation = PickerLocationId.DocumentsLibrary
         };
-        picker.FileTypeFilter.Add(CadNativeDocumentCodec.FileExtension);
+        picker.FileTypeFilter.Add(".ucad");
         picker.FileTypeFilter.Add(".dxf");
         InitializePicker(picker);
         var file = await picker.PickSingleFileAsync();
         if (file is null) return;
+        await OpenDrawingPathAsync(file.Path);
+    }
 
+    private async Task OpenDrawingPathAsync(string path)
+    {
         try
         {
-            if (string.Equals(Path.GetExtension(file.Path), ".dxf", StringComparison.OrdinalIgnoreCase))
+            var extension = Path.GetExtension(path);
+            if (string.Equals(extension, ".dxf", StringComparison.OrdinalIgnoreCase))
             {
-                await OpenImportedDxfAsync(file.Path);
+                var imported = await _documentFileService.ImportDxfAsync(path);
+                var session = CreateWorkspaceForFile(imported.Document, Path.GetFileName(path), nativeFilePath: null);
+                SetSessionStatus(session, FileText("DxfImported"));
+                if (imported.HasWarnings) await ShowDxfWarningsAsync(FileText("ImportWarningsTitle"), imported.Warnings);
                 return;
             }
 
-            var document = await _documentFileService.OpenNativeAsync(file.Path);
-            var session = CreateWorkspaceForFile(document, Path.GetFileName(file.Path), file.Path);
-            SetSessionStatus(session, FileText("Opened"));
-            await RecentFilesService.Current.RecordAsync(file.Path, _settingsService.Settings.RecentFileCount);
-            RefreshStartRecentFiles();
+            var document = await _documentFileService.LoadNativeAsync(path);
+            var opened = CreateWorkspaceForFile(document, Path.GetFileName(path), path);
+            _recentFilesService.Record(path);
+            RefreshRecentFiles();
+            SetSessionStatus(opened, FileText("Opened"));
         }
         catch (Exception ex)
         {
@@ -173,7 +122,55 @@ public sealed partial class MainWindow
         }
     }
 
-    private async Task ImportDxfFromPickerAsync()
+    private async Task SaveDrawingAsync()
+    {
+        var session = ActiveSession;
+        if (session is null) return;
+        if (string.IsNullOrWhiteSpace(session.NativeFilePath))
+        {
+            await SaveDrawingAsAsync();
+            return;
+        }
+
+        await SaveSessionToPathAsync(session, session.NativeFilePath);
+    }
+
+    private async Task SaveDrawingAsAsync()
+    {
+        var session = ActiveSession;
+        if (session is null) return;
+        var picker = new FileSavePicker
+        {
+            SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
+            SuggestedFileName = Path.GetFileNameWithoutExtension(session.DisplayName)
+        };
+        picker.FileTypeChoices.Add(FileText("UcadDrawingType"), [".ucad"]);
+        picker.DefaultFileExtension = ".ucad";
+        InitializePicker(picker);
+        var file = await picker.PickSaveFileAsync();
+        if (file is null) return;
+        await SaveSessionToPathAsync(session, file.Path);
+    }
+
+    private async Task SaveSessionToPathAsync(CadWorkspaceSession session, string path)
+    {
+        try
+        {
+            await _documentFileService.SaveNativeAsync(path, session.Document, _settingsService.Settings.BackupOnSave);
+            session.MarkSaved(path);
+            _recentFilesService.Record(path);
+            RefreshRecentFiles();
+            UpdateTabHeaderForSession(session);
+            SetSessionStatus(session, FileText("Saved"));
+        }
+        catch (Exception ex)
+        {
+            App.WriteStartupFailure("SaveDrawing", ex);
+            await ShowFileMessageAsync(FileText("SaveFailedTitle"), ex.Message);
+        }
+    }
+
+    private async Task ImportDxfAsync()
     {
         var picker = new FileOpenPicker
         {
@@ -187,7 +184,10 @@ public sealed partial class MainWindow
 
         try
         {
-            await OpenImportedDxfAsync(file.Path);
+            var imported = await _documentFileService.ImportDxfAsync(file.Path);
+            var session = CreateWorkspaceForFile(imported.Document, Path.GetFileName(file.Path), nativeFilePath: null);
+            SetSessionStatus(session, FileText("DxfImported"));
+            if (imported.HasWarnings) await ShowDxfWarningsAsync(FileText("ImportWarningsTitle"), imported.Warnings);
         }
         catch (Exception ex)
         {
@@ -196,58 +196,10 @@ public sealed partial class MainWindow
         }
     }
 
-    private async Task OpenImportedDxfAsync(string filePath)
+    private async Task ExportDxfAsync()
     {
-        var import = await _documentFileService.OpenDxfAsync(filePath);
-        var session = CreateWorkspaceForFile(import.Document, Path.GetFileName(filePath), nativeFilePath: null);
-        SetSessionStatus(session, FileText("DxfImported"));
-        await RecentFilesService.Current.RecordAsync(filePath, _settingsService.Settings.RecentFileCount);
-        RefreshStartRecentFiles();
-        if (import.HasWarnings) await ShowDxfWarningsAsync(FileText("ImportWarningsTitle"), import.Warnings);
-    }
-
-    private async Task<bool> SaveSessionAsync(CadWorkspaceSession session, bool saveAs)
-    {
-        var targetPath = !saveAs && session.HasFilePath ? session.FilePath : null;
-        if (string.IsNullOrWhiteSpace(targetPath))
-        {
-            var picker = new FileSavePicker
-            {
-                SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
-                SuggestedFileName = Path.GetFileNameWithoutExtension(session.DisplayName)
-            };
-            picker.FileTypeChoices.Add(FileText("NativeDrawingType"), [CadNativeDocumentCodec.FileExtension]);
-            picker.DefaultFileExtension = CadNativeDocumentCodec.FileExtension;
-            InitializePicker(picker);
-            var file = await picker.PickSaveFileAsync();
-            if (file is null) return false;
-            targetPath = file.Path;
-        }
-
-        try
-        {
-            await _documentFileService.SaveNativeAsync(
-                targetPath,
-                session.Document,
-                _settingsService.Settings.BackupOnSave);
-            session.MarkSaved(targetPath);
-            var tab = FindTab(session);
-            if (tab is not null) UpdateTabHeader(tab, session);
-            SetSessionStatus(session, FileText("Saved"));
-            await RecentFilesService.Current.RecordAsync(targetPath, _settingsService.Settings.RecentFileCount);
-            RefreshStartRecentFiles();
-            return true;
-        }
-        catch (Exception ex)
-        {
-            App.WriteStartupFailure("SaveDrawing", ex);
-            await ShowFileMessageAsync(FileText("SaveFailedTitle"), ex.Message);
-            return false;
-        }
-    }
-
-    private async Task ExportDxfFromPickerAsync(CadWorkspaceSession session)
-    {
+        var session = ActiveSession;
+        if (session is null) return;
         var picker = new FileSavePicker
         {
             SuggestedStartLocation = PickerLocationId.DocumentsLibrary,
@@ -328,14 +280,14 @@ public sealed partial class MainWindow
         UpdateTabStripWidth();
         DocumentTabs.SelectedItem = tab;
         ActivateSession(session);
-        EnsureSessionInteractionSubscribed(session);
-        EnsureAuthoringSessionSubscribed(session);
-        UpdateFileCommandAvailability();
         return session;
     }
 
-    private TabViewItem? FindTab(CadWorkspaceSession session) =>
-        _sessions.FirstOrDefault(pair => ReferenceEquals(pair.Value, session)).Key;
+    private void UpdateTabHeaderForSession(CadWorkspaceSession session)
+    {
+        var pair = _sessions.FirstOrDefault(item => ReferenceEquals(item.Value, session));
+        if (pair.Key is not null) UpdateTabHeader(pair.Key, session);
+    }
 
     private void InitializePicker(object picker)
     {
@@ -345,52 +297,42 @@ public sealed partial class MainWindow
 
     private async Task ShowDxfWarningsAsync(string title, IReadOnlyList<string> warnings)
     {
-        var visible = warnings.Take(8).ToArray();
-        var content = string.Join(Environment.NewLine, visible.Select(warning => "• " + warning));
-        if (warnings.Count > visible.Length)
-            content += Environment.NewLine + string.Format(FileText("MoreWarningsFormat"), warnings.Count - visible.Length);
-        await ShowFileMessageAsync(title, content);
+        if (warnings.Count == 0) return;
+        await ShowFileMessageAsync(title, string.Join(Environment.NewLine, warnings));
     }
 
-    private async Task ShowFileMessageAsync(string title, string content)
+    private async Task ShowFileMessageAsync(string title, string message)
     {
         var dialog = new ContentDialog
         {
             XamlRoot = RootLayout.XamlRoot,
             Title = title,
-            Content = content,
+            Content = message,
             CloseButtonText = FileText("Close")
         };
         await dialog.ShowAsync();
     }
 
-    private string FileText(string key)
+    private static string FileText(string key) => key switch
     {
-        var language = LocalizationService.Current.CurrentLanguageTag;
-        var ja = language.StartsWith("ja", StringComparison.OrdinalIgnoreCase);
-        var en = language.StartsWith("en", StringComparison.OrdinalIgnoreCase);
-        return key switch
-        {
-            "Open" => ja ? "開く…" : en ? "Open…" : "打开…",
-            "Save" => ja ? "保存" : en ? "Save" : "保存",
-            "SaveAs" => ja ? "名前を付けて保存…" : en ? "Save As…" : "另存为…",
-            "ImportDxf" => ja ? "DXF を読み込み…" : en ? "Import DXF…" : "导入 DXF…",
-            "ExportDxf" => ja ? "DXF を書き出し…" : en ? "Export DXF…" : "导出 DXF…",
-            "NativeDrawingType" => ja ? "UCAD 図面" : en ? "UCAD Drawing" : "UCAD 图纸",
-            "DxfDrawingType" => ja ? "DXF 図面" : en ? "DXF Drawing" : "DXF 图纸",
-            "Opened" => ja ? "図面を開きました。" : en ? "Drawing opened." : "图纸已打开。",
-            "Saved" => ja ? "図面を保存しました。" : en ? "Drawing saved." : "图纸已保存。",
-            "DxfImported" => ja ? "DXF を読み込みました。編集内容を保持するには UCAD 形式で保存してください。" : en ? "DXF imported. Save as UCAD to preserve the full authoring model." : "DXF 已导入。请另存为 UCAD 格式以完整保留编辑模型。",
-            "DxfExported" => ja ? "DXF を書き出しました。" : en ? "DXF exported." : "DXF 已导出。",
-            "OpenFailedTitle" => ja ? "図面を開けません" : en ? "Couldn’t open drawing" : "无法打开图纸",
-            "SaveFailedTitle" => ja ? "図面を保存できません" : en ? "Couldn’t save drawing" : "无法保存图纸",
-            "ImportFailedTitle" => ja ? "DXF を読み込めません" : en ? "Couldn’t import DXF" : "无法导入 DXF",
-            "ExportFailedTitle" => ja ? "DXF を書き出せません" : en ? "Couldn’t export DXF" : "无法导出 DXF",
-            "ImportWarningsTitle" => ja ? "DXF 読み込みの警告" : en ? "DXF import warnings" : "DXF 导入警告",
-            "ExportWarningsTitle" => ja ? "DXF 書き出しの警告" : en ? "DXF export warnings" : "DXF 导出警告",
-            "MoreWarningsFormat" => ja ? "ほか {0} 件" : en ? "…and {0} more" : "另有 {0} 条警告",
-            "Close" => ja ? "閉じる" : en ? "Close" : "关闭",
-            _ => key
-        };
-    }
+        "OpenDrawing" => "Open drawing…",
+        "SaveDrawing" => "Save",
+        "SaveAsDrawing" => "Save as…",
+        "ImportDxf" => "Import DXF…",
+        "ExportDxf" => "Export DXF…",
+        "UcadDrawingType" => "UCAD drawing",
+        "DxfDrawingType" => "DXF drawing",
+        "DxfImported" => "DXF imported",
+        "DxfExported" => "DXF exported",
+        "Opened" => "Drawing opened",
+        "Saved" => "Drawing saved",
+        "ImportWarningsTitle" => "DXF import warnings",
+        "ExportWarningsTitle" => "DXF export warnings",
+        "OpenFailedTitle" => "Open failed",
+        "SaveFailedTitle" => "Save failed",
+        "ImportFailedTitle" => "DXF import failed",
+        "ExportFailedTitle" => "DXF export failed",
+        "Close" => "Close",
+        _ => key
+    };
 }
