@@ -39,11 +39,10 @@ public sealed class CadDocumentFileService
     public async Task<DxfImportResult> OpenDxfAsync(string filePath, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
-        var fullPath = Path.GetFullPath(filePath);
-        var text = await File.ReadAllTextAsync(fullPath, Utf8NoBom, cancellationToken);
-        var import = CadDxfAdvancedInteropCodec.Import(text);
+        var bytes = await File.ReadAllBytesAsync(Path.GetFullPath(filePath), cancellationToken);
+        var import = CadAcadInteropCodec.ImportDxf(bytes, ".dxf");
         import.Document.ResetHistory();
-        return import;
+        return new DxfImportResult(import.Document, import.Warnings);
     }
 
     public async Task<CadAcadImportResult> OpenAutoCadAsync(
