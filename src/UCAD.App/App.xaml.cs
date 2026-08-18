@@ -39,6 +39,7 @@ public partial class App : Application
             mainWindow.EnsureAdvancedAuthoringUiInitialized();
             mainWindow.EnsureAdvancedAuthoringToolbarBridgeInitialized();
             mainWindow.EnsureLayoutPlotUiInitialized();
+            mainWindow.EnsureLayoutPersistenceBridgeInitialized();
             mainWindow.EnsureFileUiInitialized();
             mainWindow.EnsureRecentFilesInitialized();
             mainWindow.EnsureFileCloseIntegration();
