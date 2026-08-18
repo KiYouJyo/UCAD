@@ -41,6 +41,23 @@ public sealed class HatchEntity : ICadEntity
     public HatchEntity(
         IEnumerable<CadPoint> boundary,
         string pattern,
+        IEnumerable<IEnumerable<CadPoint>>? islands)
+        : this(
+            boundary,
+            pattern,
+            patternScale: 1,
+            patternAngleRadians: 0,
+            islands,
+            associative: false,
+            sourceEntityIds: null,
+            islandDetection: HatchIslandDetection.Normal,
+            Guid.NewGuid())
+    {
+    }
+
+    public HatchEntity(
+        IEnumerable<CadPoint> boundary,
+        string pattern,
         double patternScale,
         double patternAngleRadians,
         IEnumerable<IEnumerable<CadPoint>>? islands,
