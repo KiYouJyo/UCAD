@@ -328,6 +328,17 @@ public sealed class CadDocument
         return true;
     }
 
+    /// <summary>
+    /// Establishes the current document state as a persistence/load baseline without
+    /// changing geometry or revision. Opening/importing a file must not let the user
+    /// undo through the codec's construction mutations back into an empty document.
+    /// </summary>
+    public void ResetHistory()
+    {
+        _undo.Clear();
+        _redo.Clear();
+    }
+
     private void RecordMutation()
     {
         _undo.Push(Capture());
