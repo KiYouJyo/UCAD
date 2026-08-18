@@ -3,6 +3,10 @@ using System.Text;
 using ACadSharp;
 using ACadSharp.IO;
 using AcadDocument = ACadSharp.CadDocument;
+using AcadDimension = ACadSharp.Entities.Dimension;
+using AcadDimensionAligned = ACadSharp.Entities.DimensionAligned;
+using AcadDimensionAngular3Pt = ACadSharp.Entities.DimensionAngular3Pt;
+using AcadDimensionStyle = ACadSharp.Tables.DimensionStyle;
 using IxDxfFile = IxMilia.Dxf.DxfFile;
 using UcadDocument = UCAD.Core.CadDocument;
 
@@ -77,6 +81,7 @@ public static class CadAcadInteropCodec
 
         var warnings = new List<string>();
         var acadDocument = BuildAcadDocument(document, warnings);
+        InjectNativeDimensions(document, acadDocument);
         PrepareAcadSharpDimensionsForDwgWriter(acadDocument, warnings);
         NormalizeAcadSharpSequencesForDwgWriter(acadDocument);
 
@@ -124,6 +129,58 @@ public static class CadAcadInteropCodec
     }
 
     /// <summary>
+    /// ACadSharp's DXF document builder currently drops UCAD-authored DIMENSION records that do not
+    /// already reference a generated anonymous dimension block. DWG export therefore injects native
+    /// dimension objects from the authoritative UCAD model before writing. Other entities continue to
+    /// flow through the shared DXF bridge.
+    /// </summary>
+    private static void InjectNativeDimensions(UcadDocument source, AcadDocument target)
+    {
+        foreach (var existing in target.Entities.OfType<AcadDimension>().ToArray())
+            target.Entities.Remove(existing);
+
+        foreach (var entity in source.Entities)
+        {
+            AcadDimension? dimension = entity switch
+            {
+                UCAD.Core.Entities.LinearDimensionEntity linear => new AcadDimensionAligned
+                {
+                    FirstPoint = ToAcadPoint(linear.FirstExtensionPoint),
+                    SecondPoint = ToAcadPoint(linear.SecondExtensionPoint),
+                    DefinitionPoint = ToAcadPoint(linear.DimensionLinePoint),
+                    Text = linear.TextOverride,
+                    Style = ResolveAcadDimensionStyle(target, linear.StyleName)
+                },
+                UCAD.Core.Entities.AngularDimensionEntity angular => new AcadDimensionAngular3Pt
+                {
+                    AngleVertex = ToAcadPoint(angular.Vertex),
+                    FirstPoint = ToAcadPoint(angular.FirstRayPoint),
+                    SecondPoint = ToAcadPoint(angular.SecondRayPoint),
+                    DefinitionPoint = ToAcadPoint(angular.ArcPoint),
+                    Text = angular.TextOverride,
+                    Style = ResolveAcadDimensionStyle(target, angular.StyleName)
+                },
+                _ => null
+            };
+
+            if (dimension is null) continue;
+            var properties = source.GetEntityProperties(entity.Id);
+            if (target.Layers.FirstOrDefault(layer => string.Equals(layer.Name, properties.LayerName, StringComparison.OrdinalIgnoreCase)) is { } layer)
+                dimension.Layer = layer;
+            target.Entities.Add(dimension);
+        }
+    }
+
+    private static AcadDimensionStyle ResolveAcadDimensionStyle(AcadDocument document, string styleName)
+    {
+        var normalized = string.IsNullOrWhiteSpace(styleName) ? AcadDimensionStyle.DefaultName : styleName.Trim();
+        return document.DimensionStyles.FirstOrDefault(style => string.Equals(style.Name, normalized, StringComparison.OrdinalIgnoreCase))
+            ?? new AcadDimensionStyle(normalized);
+    }
+
+    private static CSMath.XYZ ToAcadPoint(UCAD.Core.Geometry.CadPoint point) => new(point.X, point.Y, 0.0);
+
+    /// <summary>
     /// A DWG DIMENSION references an anonymous *D block containing its rendered picture. The DXF
     /// bridge carries the semantic dimension fields even when group 2 is absent, but ACadSharp's DWG
     /// writer expects the anonymous block reference to exist. UpdateBlock creates/registers that block;
@@ -131,7 +188,7 @@ public static class CadAcadInteropCodec
     /// </summary>
     private static void PrepareAcadSharpDimensionsForDwgWriter(AcadDocument document, List<string> warnings)
     {
-        foreach (var dimension in document.Entities.OfType<ACadSharp.Entities.Dimension>())
+        foreach (var dimension in document.Entities.OfType<AcadDimension>())
         {
             try
             {
