@@ -18,6 +18,14 @@ public sealed partial class StartPage : UserControl
     public event EventHandler? OpenDrawingRequested;
     public event EventHandler<string>? LearnRequested;
 
+    /// <summary>
+    /// Optional v0.8 file action supplied by the shell. When present the Start page
+    /// executes the real DXF picker instead of raising the legacy unavailable event.
+    /// Keeping the event fallback preserves the v0.3.9 shell contract for tests and
+    /// older call sites while allowing file I/O to live in its own MainWindow partial.
+    /// </summary>
+    public Func<Task>? OpenDrawingAction { get; set; }
+
     public void RefreshLocalization()
     {
         StartTitleText.Text = Get("Start_Title.Text");
@@ -61,8 +69,16 @@ public sealed partial class StartPage : UserControl
     private void NewDrawingButton_Click(object sender, RoutedEventArgs e) =>
         NewDrawingRequested?.Invoke(this, EventArgs.Empty);
 
-    private void OpenDrawingButton_Click(object sender, RoutedEventArgs e) =>
+    private async void OpenDrawingButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (OpenDrawingAction is not null)
+        {
+            await OpenDrawingAction();
+            return;
+        }
+
         OpenDrawingRequested?.Invoke(this, EventArgs.Empty);
+    }
 
     private void LearnButton_Click(object sender, RoutedEventArgs e)
     {
