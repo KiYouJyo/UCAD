@@ -5,12 +5,33 @@ using UCAD.Core.IO;
 namespace UCAD.Services;
 
 /// <summary>
-/// File-system boundary for the v0.8 DXF-first document lifecycle.
-/// WinUI pickers stay in the shell; encoding, backup and Core codec calls live here.
+/// File-system boundary for the v0.8 document lifecycle. Native .ucad files preserve
+/// the complete authoring model; DXF remains the interoperable exchange format.
+/// WinUI pickers stay in the shell while encoding, backup and atomic replacement live here.
 /// </summary>
 public sealed class CadDocumentFileService
 {
     private static readonly UTF8Encoding Utf8NoBom = new(encoderShouldEmitUTF8Identifier: false);
+
+    public async Task<CadDocument> OpenNativeAsync(string filePath, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+        var fullPath = Path.GetFullPath(filePath);
+        var text = await File.ReadAllTextAsync(fullPath, Utf8NoBom, cancellationToken);
+        return CadNativeDocumentCodec.Deserialize(text);
+    }
+
+    public async Task SaveNativeAsync(
+        string filePath,
+        CadDocument document,
+        bool createBackup,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+        ArgumentNullException.ThrowIfNull(document);
+        var content = CadNativeDocumentCodec.Serialize(document);
+        await WriteAtomicAsync(filePath, content, createBackup, cancellationToken);
+    }
 
     public async Task<DxfImportResult> OpenDxfAsync(string filePath, CancellationToken cancellationToken = default)
     {
@@ -20,7 +41,7 @@ public sealed class CadDocumentFileService
         return CadDxfCodec.Import(text);
     }
 
-    public async Task<DxfExportResult> SaveDxfAsync(
+    public async Task<DxfExportResult> ExportDxfAsync(
         string filePath,
         CadDocument document,
         bool createBackup,
@@ -28,20 +49,8 @@ public sealed class CadDocumentFileService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
         ArgumentNullException.ThrowIfNull(document);
-
-        var fullPath = Path.GetFullPath(filePath);
-        var directory = Path.GetDirectoryName(fullPath);
-        if (!string.IsNullOrWhiteSpace(directory)) Directory.CreateDirectory(directory);
-
         var export = CadDxfCodec.Export(document);
-        if (createBackup && File.Exists(fullPath))
-        {
-            File.Copy(fullPath, fullPath + ".bak", overwrite: true);
-        }
-
-        var tempPath = fullPath + ".tmp";
-        await File.WriteAllTextAsync(tempPath, export.Content, Utf8NoBom, cancellationToken);
-        File.Move(tempPath, fullPath, overwrite: true);
+        await WriteAtomicAsync(filePath, export.Content, createBackup, cancellationToken);
         return export;
     }
 
@@ -49,6 +58,33 @@ public sealed class CadDocumentFileService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sourcePath);
         var fullPath = Path.GetFullPath(sourcePath);
-        return fullPath + ".autosave.dxf";
+        return fullPath + ".autosave" + CadNativeDocumentCodec.FileExtension;
+    }
+
+    private static async Task WriteAtomicAsync(
+        string filePath,
+        string content,
+        bool createBackup,
+        CancellationToken cancellationToken)
+    {
+        var fullPath = Path.GetFullPath(filePath);
+        var directory = Path.GetDirectoryName(fullPath);
+        if (!string.IsNullOrWhiteSpace(directory)) Directory.CreateDirectory(directory);
+
+        if (createBackup && File.Exists(fullPath))
+        {
+            File.Copy(fullPath, fullPath + ".bak", overwrite: true);
+        }
+
+        var tempPath = fullPath + ".tmp";
+        try
+        {
+            await File.WriteAllTextAsync(tempPath, content, Utf8NoBom, cancellationToken);
+            File.Move(tempPath, fullPath, overwrite: true);
+        }
+        finally
+        {
+            if (File.Exists(tempPath)) File.Delete(tempPath);
+        }
     }
 }
