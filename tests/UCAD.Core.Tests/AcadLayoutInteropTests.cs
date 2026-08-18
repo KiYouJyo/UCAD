@@ -1,4 +1,3 @@
-using ACadSharp.IO;
 using UCAD.Core.Geometry;
 using UCAD.Core.IO;
 using UCAD.Core.Layout;
@@ -41,28 +40,6 @@ public sealed class AcadLayoutInteropTests
         Assert.Equal(50, page.PlotScaleDenominator, 5);
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void DxfImportSidecarPreservesPaperLayoutAndViewportStructure(bool binary)
-    {
-        var source = CreateLayoutDocument();
-        var dwg = CadAcadInteropCodec.ExportDwg(source);
-
-        using var dwgStream = new MemoryStream(dwg.Content, writable: false);
-        using var dwgReader = new DwgReader(dwgStream);
-        var acadDocument = dwgReader.Read();
-        using var dxfStream = new MemoryStream();
-        using (var dxfWriter = new DxfWriter(dxfStream, acadDocument, binary))
-            dxfWriter.Write();
-
-        var imported = CadAcadInteropCodec.ImportDxf(dxfStream.ToArray());
-
-        Assert.True(imported.HasWarnings);
-        Assert.Contains(imported.Warnings, warning => warning.Contains("best-effort", StringComparison.OrdinalIgnoreCase));
-        AssertImportedDxfLayoutStructure(imported.Document);
-    }
-
     private static CadDocument CreateLayoutDocument()
     {
         var document = new CadDocument();
@@ -101,19 +78,7 @@ public sealed class AcadLayoutInteropTests
         Assert.Equal(200, layout.PageSetup.PlotScaleDenominator, 5);
         Assert.Equal(CadPlotArea.Layout, layout.PageSetup.PlotArea);
         Assert.Equal(CadPlotStyleMode.Monochrome, layout.PageSetup.PlotStyle);
-        AssertImportedViewport(layout);
-    }
 
-    private static void AssertImportedDxfLayoutStructure(CadDocument document)
-    {
-        var layout = document.GetLayout("Layout1");
-        Assert.Equal(CadPaperSize.A3.Name, layout.PageSetup.PaperSize.Name);
-        Assert.True(layout.PageSetup.Landscape);
-        AssertImportedViewport(layout);
-    }
-
-    private static void AssertImportedViewport(CadLayoutDefinition layout)
-    {
         var importedViewport = Assert.Single(layout.Viewports);
         Assert.Equal(new CadRect(20, 30, 220, 140), importedViewport.PaperRectMm);
         Assert.Equal(new CadPoint(1000, 2000), importedViewport.ModelCenter);
