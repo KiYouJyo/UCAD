@@ -1,10 +1,12 @@
 using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.Geometry;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Controls;
 using System.Numerics;
 using UCAD.Core.Entities;
 using UCAD.Core.Geometry;
+using UCAD.Core.Hatching;
 using UCAD.Core.Plot;
 using Windows.Foundation;
 using Windows.UI;
@@ -170,13 +172,59 @@ public sealed class CadPlotPreviewControl : UserControl
                 DrawChain(ds, leader.Points, false, page, plan, color, strokeWidth);
                 break;
             case HatchEntity hatch:
-                DrawChain(ds, hatch.Boundary, true, page, plan, color, strokeWidth);
-                foreach (var island in hatch.EffectiveIslandLoops) DrawChain(ds, island, true, page, plan, color, strokeWidth);
+                DrawHatch(ds, hatch, page, plan, color, strokeWidth);
                 break;
             case BlockReferenceEntity block:
                 foreach (var child in block.Contents) DrawEntity(ds, child, page, plan, color, strokeWidth);
                 break;
         }
+    }
+
+    private static void DrawHatch(
+        CanvasDrawingSession ds,
+        HatchEntity hatch,
+        PageTransform page,
+        CadPlotPlan plan,
+        Color color,
+        float strokeWidth)
+    {
+        if (string.Equals(hatch.Pattern, "ANSI31", StringComparison.OrdinalIgnoreCase))
+        {
+            var pattern = CadHatchPatternGenerator.Generate(hatch);
+            foreach (var segment in pattern.Segments)
+                DrawChain(ds, [segment.Start, segment.End], false, page, plan, color, strokeWidth);
+            return;
+        }
+
+        if (!string.Equals(hatch.Pattern, "Solid", StringComparison.OrdinalIgnoreCase))
+        {
+            DrawChain(ds, hatch.Boundary, true, page, plan, color, strokeWidth);
+            foreach (var island in hatch.EffectiveIslandLoops)
+                DrawChain(ds, island, true, page, plan, color, strokeWidth);
+            return;
+        }
+
+        using var builder = new CanvasPathBuilder(ds.Device);
+        builder.SetFilledRegionDetermination(CanvasFilledRegionDetermination.Alternate);
+        AddHatchLoop(builder, hatch.Boundary, page, plan);
+        foreach (var island in hatch.EffectiveIslandLoops) AddHatchLoop(builder, island, page, plan);
+        using var geometry = CanvasGeometry.CreatePath(builder);
+        var fill = Color.FromArgb(45, color.R, color.G, color.B);
+        ds.FillGeometry(geometry, fill);
+        ds.DrawGeometry(geometry, color, strokeWidth);
+    }
+
+    private static void AddHatchLoop(
+        CanvasPathBuilder builder,
+        IReadOnlyList<CadPoint> loop,
+        PageTransform page,
+        CadPlotPlan plan)
+    {
+        if (loop.Count < 3) return;
+        builder.BeginFigure(ModelToScreen(loop[0], page, plan));
+        for (var index = 1; index < loop.Count; index++)
+            builder.AddLine(ModelToScreen(loop[index], page, plan));
+        builder.EndFigure(CanvasFigureLoop.Closed);
     }
 
     private static void DrawChain(
