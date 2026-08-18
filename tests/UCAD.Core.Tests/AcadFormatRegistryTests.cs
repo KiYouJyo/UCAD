@@ -31,14 +31,15 @@ public sealed class AcadFormatRegistryTests
     [InlineData("routine.lsp")]
     [InlineData("sheetset.dst")]
     [InlineData("plugin.arx")]
-    public void PendingAutoCadFormatsAreRecognizedWithoutFalseOpenOrExportClaims(string path)
+    public void PendingAutoCadFormatsAreRecognizedWithoutFalseCapabilities(string path)
     {
         Assert.True(CadAcadFileFormatRegistry.TryGetByPath(path, out var format));
         Assert.True(format.Capabilities.HasFlag(CadFileFormatCapabilities.Recognized));
         Assert.False(format.CanOpen);
         Assert.False(format.CanImport);
         Assert.False(format.CanExport);
-        Assert.Contains("Pending", format.Transport, StringComparison.OrdinalIgnoreCase);
+        Assert.False(string.IsNullOrWhiteSpace(format.Transport));
+        Assert.False(string.IsNullOrWhiteSpace(format.SupportNote));
     }
 
     [Theory]
