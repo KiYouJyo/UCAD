@@ -43,6 +43,17 @@
             </uap:SupportedFileTypes>
           </uap:FileTypeAssociation>
         </uap:Extension>
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="ucad.autocad.drawing">
+            <uap:SupportedFileTypes>
+              <uap:FileType>.dwg</uap:FileType>
+              <uap:FileType>.dxf</uap:FileType>
+              <uap:FileType>.dwt</uap:FileType>
+              <uap:FileType>.dws</uap:FileType>
+              <uap:FileType>.sv$</uap:FileType>
+            </uap:SupportedFileTypes>
+          </uap:FileTypeAssociation>
+        </uap:Extension>
       </Extensions>
     </Application>
   </Applications>
