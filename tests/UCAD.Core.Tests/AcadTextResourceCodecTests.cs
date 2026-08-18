@@ -24,8 +24,19 @@ public sealed class AcadTextResourceCodecTests
         Assert.Equal(5, pattern.Lines[0].DashLengths[0], 8);
         Assert.Equal(-2.5, pattern.Lines[0].DashLengths[1], 8);
 
-        var reparsed = CadAcadTextResourceCodec.ParsePat(CadAcadTextResourceCodec.WritePat(parsed));
-        Assert.Equal(pattern, Assert.Single(reparsed));
+        var reparsed = Assert.Single(CadAcadTextResourceCodec.ParsePat(CadAcadTextResourceCodec.WritePat(parsed)));
+        Assert.Equal(pattern.Name, reparsed.Name);
+        Assert.Equal(pattern.Description, reparsed.Description);
+        Assert.Equal(pattern.Lines.Count, reparsed.Lines.Count);
+        for (var i = 0; i < pattern.Lines.Count; i++)
+        {
+            Assert.Equal(pattern.Lines[i].AngleDegrees, reparsed.Lines[i].AngleDegrees, 8);
+            Assert.Equal(pattern.Lines[i].BaseX, reparsed.Lines[i].BaseX, 8);
+            Assert.Equal(pattern.Lines[i].BaseY, reparsed.Lines[i].BaseY, 8);
+            Assert.Equal(pattern.Lines[i].OffsetX, reparsed.Lines[i].OffsetX, 8);
+            Assert.Equal(pattern.Lines[i].OffsetY, reparsed.Lines[i].OffsetY, 8);
+            Assert.Equal(pattern.Lines[i].DashLengths, reparsed.Lines[i].DashLengths);
+        }
     }
 
     [Fact]
