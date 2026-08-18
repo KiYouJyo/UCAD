@@ -15,6 +15,7 @@ public enum CadDocumentChangeKind
     EntityProperties,
     BlockTable,
     StyleTable,
+    LayoutTable,
     Undo,
     Redo
 }
