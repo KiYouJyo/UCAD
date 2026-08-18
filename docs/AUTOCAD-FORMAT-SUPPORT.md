@@ -106,6 +106,10 @@ This split keeps interoperability truthful and minimizes cross-format regression
 
 UCAD semantic DWG export currently targets the AC1032-era bridge. Untouched DWG/DWT imports can be exported byte-for-byte from their original source envelope, preserving the original container generation. Reader coverage is continuously exercised by the pinned AC1014-through-AC1032 fixture matrix described above.
 
+## Acceptance package versioning
+
+The v0.9 interoperability acceptance build uses application version **0.9.0** and MSIX package version **0.9.0.0** while retaining the existing UCAD package identity and publisher. This makes the signed acceptance package a normal in-place upgrade from the v0.8.1 acceptance build rather than a same-version replacement.
+
 ## Validation gate
 
 A capability is not considered accepted solely because an extension appears in this table. Core round-trip tests, the dedicated pinned-fixture/stress interoperability workflow, the Release WinUI build, startup smoke, package validation/signing, and runtime Authoring/Interaction/Modify/Localization smoke tests must pass before handoff.
