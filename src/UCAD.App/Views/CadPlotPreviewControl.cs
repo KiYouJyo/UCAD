@@ -35,11 +35,7 @@ public sealed class CadPlotPreviewControl : UserControl
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(fallbackPlan);
-        var layout = document.ActiveLayout;
-        var plans = layout.Viewports.Count > 0
-            ? layout.Viewports.Select(viewport => CadPlotPlan.FromViewport(layout.PageSetup, viewport)).ToArray()
-            : [fallbackPlan];
-        SetPlots(document, plans);
+        SetPlots(document, CadPlotPlanner.ResolvePagePlans(document, fallbackPlan));
     }
 
     public void SetPlots(CadDocument document, IReadOnlyList<CadPlotPlan> plans)
