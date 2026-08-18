@@ -104,7 +104,7 @@ public sealed partial class MainWindow
         var extended = RequireLine(session, extendTarget.Id);
         AssertModifyClose(new CadPoint(10, 20), extended.End, "EXTEND end");
 
-        App.WriteStartupEvent("Modify smoke: visible ERASE + MOVE + COPY + ROTATE + SCALE + MIRROR + OFFSET + TRIM + EXTEND initialized");
+        App.WriteStartupEvent("Modify smoke: MOVE + COPY + ROTATE + SCALE + MIRROR + OFFSET + TRIM + EXTEND initialized; visible ERASE control verified");
     }
 
     private void StartModifySmokeCommand(CadWorkspaceSession session, string token)
