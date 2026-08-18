@@ -75,33 +75,47 @@ public static class CadDxbCodec
         var layerName = EnsureLayer(document, source.Layer);
         var properties = new CadEntityProperties(layerName);
 
-        switch (source)
+        switch (source.EntityType)
         {
-            case DxfLine line:
+            case DxfEntityType.Line:
+            {
+                var line = (DxfLine)source;
                 WarnIf3D(line.P1.Z, line.P2.Z, "LINE", warnings);
                 document.Add(new LineEntity(ToCadPoint(line.P1), ToCadPoint(line.P2)), properties);
                 return;
+            }
 
-            case DxfModelPoint point:
+            case DxfEntityType.Point:
+            {
+                var point = (DxfModelPoint)source;
                 WarnIf3D(point.Location.Z, "POINT", warnings);
                 document.Add(new PointEntity(ToCadPoint(point.Location)), properties);
                 return;
+            }
 
-            case DxfCircle circle:
+            case DxfEntityType.Circle:
+            {
+                var circle = (DxfCircle)source;
                 WarnIf3D(circle.Center.Z, "CIRCLE", warnings);
                 document.Add(new CircleEntity(ToCadPoint(circle.Center), circle.Radius), properties);
                 return;
+            }
 
-            case DxfArc arc:
+            case DxfEntityType.Arc:
+            {
+                var arc = (DxfArc)source;
                 WarnIf3D(arc.Center.Z, "ARC", warnings);
                 document.Add(CreateCadArc(arc), properties);
                 return;
+            }
 
-            case DxfPolyline polyline:
-                ImportPolyline(polyline, document, properties, warnings);
+            case DxfEntityType.Polyline:
+                ImportPolyline((DxfPolyline)source, document, properties, warnings);
                 return;
 
-            case DxfTrace trace:
+            case DxfEntityType.Trace:
+            {
+                var trace = (DxfTrace)source;
                 document.Add(new PolylineEntity(
                     [
                         ToCadPoint(trace.FirstCorner),
@@ -112,8 +126,11 @@ public static class CadDxbCodec
                     closed: true), properties);
                 warnings.Add("DXB TRACE was imported as a closed UCAD polyline.");
                 return;
+            }
 
-            case DxfSolid solid:
+            case DxfEntityType.Solid:
+            {
+                var solid = (DxfSolid)source;
                 document.Add(new PolylineEntity(
                     [
                         ToCadPoint(solid.FirstCorner),
@@ -124,8 +141,11 @@ public static class CadDxbCodec
                     closed: true), properties);
                 warnings.Add("DXB SOLID was imported as its closed 2D boundary; fill semantics were not preserved.");
                 return;
+            }
 
-            case Dxf3DFace face:
+            case DxfEntityType.Face:
+            {
+                var face = (Dxf3DFace)source;
                 if (!IsPlanar2D(face.FirstCorner, face.SecondCorner, face.ThirdCorner, face.FourthCorner))
                 {
                     warnings.Add("DXB 3DFACE with non-zero Z coordinates was skipped because UCAD 1.x is 2D-first.");
@@ -141,6 +161,7 @@ public static class CadDxbCodec
                     closed: true), properties);
                 warnings.Add("DXB planar 3DFACE was imported as a closed UCAD polyline.");
                 return;
+            }
 
             default:
                 warnings.Add($"DXB entity '{source.EntityType}' is not supported by the UCAD 2D DXB bridge and was skipped.");
@@ -181,13 +202,16 @@ public static class CadDxbCodec
         CadEntityProperties properties,
         List<string> warnings)
     {
-        switch (source)
+        switch (source.EntityType)
         {
-            case DxfLine line:
+            case DxfEntityType.Line:
+            {
+                var line = (DxfLine)source;
                 document.Add(new LineEntity(ToCadPoint(line.P1), ToCadPoint(line.P2)), properties);
                 break;
-            case DxfArc arc:
-                document.Add(CreateCadArc(arc), properties);
+            }
+            case DxfEntityType.Arc:
+                document.Add(CreateCadArc((DxfArc)source), properties);
                 break;
             default:
                 warnings.Add($"Expanded DXB polyline segment '{source.EntityType}' could not be mapped and was skipped.");
