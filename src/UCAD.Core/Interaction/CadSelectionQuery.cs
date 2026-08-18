@@ -20,7 +20,9 @@ public static class CadSelectionQuery
         var bestDistance = tolerance;
         foreach (var entity in entities.Reverse())
         {
-            var distance = CadEntityGeometry.DistanceTo(entity, point);
+            var distance = CadExtendedEntityGeometry.Supports(entity)
+                ? CadExtendedEntityGeometry.DistanceTo(entity, point)
+                : CadEntityGeometry.DistanceTo(entity, point);
             if (distance <= bestDistance)
             {
                 best = entity;
@@ -37,9 +39,13 @@ public static class CadSelectionQuery
     {
         ArgumentNullException.ThrowIfNull(entities);
         return entities
-            .Where(entity => crossing
-                ? CadEntityGeometry.IntersectsRectangle(entity, rectangle)
-                : CadEntityGeometry.IsContainedBy(entity, rectangle))
+            .Where(entity => CadExtendedEntityGeometry.Supports(entity)
+                ? crossing
+                    ? CadExtendedEntityGeometry.IntersectsRectangle(entity, rectangle)
+                    : CadExtendedEntityGeometry.IsContainedBy(entity, rectangle)
+                : crossing
+                    ? CadEntityGeometry.IntersectsRectangle(entity, rectangle)
+                    : CadEntityGeometry.IsContainedBy(entity, rectangle))
             .Select(entity => entity.Id)
             .ToArray();
     }
