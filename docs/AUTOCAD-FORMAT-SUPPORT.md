@@ -1,20 +1,20 @@
 # AutoCAD Format Support Matrix
 
-UCAD distinguishes **container transport**, **resource parsing**, and **semantic round-trip fidelity**. A file extension is not advertised as open/import/export capable until a real adapter exists, and successful container parsing does not imply that every AutoCAD object type is editable by UCAD.
+UCAD distinguishes **container transport**, **resource parsing**, **editable semantic round-trip fidelity**, and **opaque source recovery**. A file extension is not advertised as open/import/export capable until a real adapter exists, and successful container parsing does not imply that every AutoCAD object type is editable by UCAD.
 
 ## Drawing containers
 
 | Format | Open / Import | Export | Current transport | Current fidelity boundary |
 | --- | --- | --- | --- | --- |
-| `.dwg` | Yes | Yes | ACadSharp DWG + UCAD semantic repair | High-value 2D entities, annotation, blocks and paper layouts; unsupported/custom objects are reported rather than claimed as preserved |
+| `.dwg` | Yes | Yes | ACadSharp DWG + UCAD semantic repair + opaque source envelope | High-value 2D entities, annotation, blocks and paper layouts are editable; the exact original container is retained for source-only/custom data recovery |
 | `.dxf` | Yes | Yes | IxMilia text/binary DXF + UCAD advanced DXF bridge | High-value entity/annotation/block semantics; paper-layout metadata is not claimed in the current DXF path |
 | `.dxb` | Yes | Yes | IxMilia DXB 1.0 geometry codec | Legacy 2D geometry only; unsupported/3D/property downgrades are explicit warnings |
-| `.dwt` | Yes | Yes | DWG-compatible template container | Uses the DWG semantic/layout transport; template-only/custom metadata may still be reduced |
-| `.dws` | Yes | No | DWG-compatible standards container | Geometry/tables can be imported; standards rules are not authored |
-| `.bak` | Yes | No | DWG-compatible recovery source | Recovery import only |
-| `.sv$` | Yes | No | DWG-compatible recovery source | Recovery import only |
+| `.dwt` | Yes | Yes | DWG-compatible template container + opaque source envelope | Uses the DWG semantic/layout transport; exact untouched source can be passed through, while edited template-only/custom metadata may still be reduced |
+| `.dws` | Yes | No | DWG-compatible standards container + opaque source envelope | Geometry/tables can be imported; standards rules are not authored, but the original source remains recoverable |
+| `.bak` | Yes | No | DWG-compatible recovery source + opaque source envelope | Recovery import only; original recovery container is retained |
+| `.sv$` | Yes | No | DWG-compatible recovery source + opaque source envelope | Recovery import only; original recovery container is retained |
 
-Imported AutoCAD files are intentionally opened without a native UCAD save path. Normal **Save** therefore asks for a `.ucad` destination instead of silently overwriting a source file that may contain unsupported objects.
+Imported AutoCAD files are intentionally opened without a native UCAD save path. Normal **Save** therefore asks for a `.ucad` destination instead of silently overwriting a source file that may contain unsupported objects. Native `.ucad` persistence stores both the editable UCAD model and, for DWG-compatible imports, the original AutoCAD container in a namespaced recovery extension.
 
 DXB is intentionally treated differently from DWG/DXF. UCAD supports the legacy DXB 1.0 geometry stream for line, point, circle, arc, polyline and planar boundary data. Bulged polylines are expanded to exact LINE/ARC geometry, non-zero Z values are flattened only with warnings, and modern annotation/property data that DXB cannot carry is reported instead of silently dropped.
 
@@ -52,6 +52,34 @@ The shared semantic bridge preserves UCAD's foundational 2D geometry plus the fo
 - `BLOCK` / `INSERT` / `ATTDEF` / `ATTRIB`, including block base point, positive uniform scale, rotation and attribute values. Mirrored/non-uniform INSERT transforms are rejected with a warning instead of silently distorting geometry.
 - DWG/DWT paper layouts, page setup and rectangular paper-space viewports: paper size/orientation, printable margins, plot area, plot scale, basic CTB style classification, viewport paper rectangle, model target, scale, twist and lock state.
 
+## Opaque ObjectARX / proxy source preservation
+
+ACadSharp's DWG writer does not implement every custom/proxy entity family, so UCAD does **not** claim that unknown ObjectARX objects become editable native UCAD objects. Instead, the application uses a source-envelope boundary:
+
+1. Every DWG-compatible import retains an immutable copy of the exact original container alongside the editable UCAD semantic model.
+2. If the document has not changed and is exported back to the same DWG/DWT format, UCAD reuses the original bytes directly rather than rewriting them through a lossy object model.
+3. If the user edits the drawing, UCAD writes the supported semantic model and emits an explicit warning that source-only ObjectARX/proxy/custom data cannot yet be merged into the rebuilt DWG/DWT.
+4. The untouched original remains recoverable after edits through the source envelope and is persisted inside native `.ucad` files with a SHA-256 integrity check.
+
+This is **opaque source preservation**, not editable proxy-object support. Reinjection/merge of unknown objects into an edited DWG remains pending.
+
+## Multi-version real-world regression corpus
+
+The dedicated `AutoCAD Interoperability` workflow downloads a pinned, MIT-licensed ACadSharp fixture corpus from commit `d7dc111023477d8a9fffc2153139459c95b4f345`. Files are not trusted by URL alone: the fixture manifest locks both byte length and Git blob SHA-1, and CI verifies them before import.
+
+Current pinned coverage:
+
+- DWG: AC1014 (R14), AC1015 (2000/2002), AC1018 (2004-2006), AC1021 (2007-2009), AC1024 (2010-2012), AC1027 (2013-2017), AC1032 (2018+).
+- DXF: AC1009 R12 ASCII, AC1015 binary, AC1032 binary.
+
+The corpus is intentionally a compatibility gate, not a claim that every historical AutoCAD object in every producer-specific drawing is semantically editable.
+
+## Large-drawing regression
+
+A deterministic planning-drawing stress fixture generates **12,000 semantic entities** in one document: 4,000 lines, 3,500 parcel polylines, 2,000 text labels, 1,000 circles, 400 dimensions, 250 leaders, 600 attributed block references and 250 hatches, plus layers, dimension style and A1 paper layout/viewport metadata. The regression performs a full UCAD → DWG → UCAD round-trip and verifies that the major semantic populations, attributed block definition, dimension style and paper layout survive without collapse.
+
+The test intentionally uses structural thresholds rather than wall-clock timing so CI remains stable across runner hardware. Larger performance-only benchmarks can be added separately without weakening the semantic gate.
+
 ### Explicit fidelity boundaries
 
 Still pending for stronger AutoCAD compatibility:
@@ -60,15 +88,15 @@ Still pending for stronger AutoCAD compatibility:
 2. Dynamic/custom block metadata and mirrored/non-uniform block references.
 3. Edge-based/bulged hatch boundaries and full hatch/style tables.
 4. DXF paper-layout/PageSetup/viewport import-export, non-rectangular viewport clipping and advanced page setup dictionaries.
-5. Explicit opaque proxy/raw-payload preservation for unsupported/custom ObjectARX objects.
-6. Multi-version real-world DWG/DXF fixture corpus and large-drawing regression.
+5. Reinjection/merge of opaque ObjectARX/proxy/custom payloads into an **edited** DWG/DWT; the exact original source is already retained and recoverable.
+6. A broader independently sourced customer/production fixture corpus beyond the pinned upstream regression set, plus optional 100k+ entity performance benchmarks.
 7. DWF/DWFx, plot-style/configuration, sheet-set and customization adapters listed above.
 
 ## Container architecture
 
 UCAD does not force every AutoCAD format through one third-party object model:
 
-- **DWG/DWT/DWS/recovery containers:** ACadSharp provides DWG transport. UCAD supplements it with native-object semantic repair for known serializer gaps and a native paper-layout adapter.
+- **DWG/DWT/DWS/recovery containers:** ACadSharp provides DWG transport. UCAD supplements it with native-object semantic repair for known serializer gaps, a native paper-layout adapter, and an opaque original-source envelope for data outside the editable model.
 - **Text/binary DXF:** IxMilia.Dxf provides container normalization so DIMENSION/BLOCK group codes are not lost by an unnecessary object-model conversion; UCAD's advanced DXF codec remains authoritative for entities. An ACadSharp layout-sidecar experiment was explicitly rejected because it did not reliably reconstruct DXF paper-layout OBJECTS.
 - **DXB:** IxMilia.Dxf handles the bounded DXB 1.0 geometry stream directly.
 
@@ -76,10 +104,10 @@ This split keeps interoperability truthful and minimizes cross-format regression
 
 ## DWG/DXF version transport
 
-UCAD exports the current DWG/DXF generation through the AC1032-era bridge. Reader/writer version coverage is constrained by the upstream transport libraries and UCAD's own semantic mapping. Version-specific real-world regression fixtures remain an acceptance item before claiming broad historical-version fidelity.
+UCAD semantic DWG export currently targets the AC1032-era bridge. Untouched DWG/DWT imports can be exported byte-for-byte from their original source envelope, preserving the original container generation. Reader coverage is continuously exercised by the pinned AC1014-through-AC1032 fixture matrix described above.
 
 ## Validation gate
 
-A capability is not considered accepted solely because an extension appears in this table. Core round-trip tests, the Release WinUI build, startup smoke, package validation/signing, and runtime Authoring/Interaction/Modify/Localization smoke tests must pass before handoff.
+A capability is not considered accepted solely because an extension appears in this table. Core round-trip tests, the dedicated pinned-fixture/stress interoperability workflow, the Release WinUI build, startup smoke, package validation/signing, and runtime Authoring/Interaction/Modify/Localization smoke tests must pass before handoff.
 
 `CadAcadFileFormatRegistry` is the source of truth for capability routing. A recognized format can remain intentionally non-openable/non-exportable when safe or faithful compatibility does not exist.
