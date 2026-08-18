@@ -80,23 +80,26 @@ public sealed partial class MainWindow
 
         try
         {
-            if (string.Equals(Path.GetExtension(path), ".dxf", StringComparison.OrdinalIgnoreCase))
+            var extension = Path.GetExtension(path);
+            if (string.Equals(extension, CadNativeDocumentCodec.FileExtension, StringComparison.OrdinalIgnoreCase))
             {
-                await OpenImportedDxfAsync(path);
+                var document = await _documentFileService.OpenNativeAsync(path);
+                var session = CreateWorkspaceForFile(document, Path.GetFileName(path), path);
+                SetSessionStatus(session, FileText("Opened"));
+                await RecentFilesService.Current.RecordAsync(path, _settingsService.Settings.RecentFileCount);
+                RefreshStartRecentFiles();
                 return;
             }
 
-            if (!string.Equals(Path.GetExtension(path), CadNativeDocumentCodec.FileExtension, StringComparison.OrdinalIgnoreCase))
+            if (CadAcadFileFormatRegistry.TryGetByPath(path, out var format) &&
+                format.Family == CadFileFormatFamily.AutoCadDrawing &&
+                format.CanOpen)
             {
-                await ShowFileMessageAsync(FileText("OpenFailedTitle"), FileText("UnsupportedRecentType"));
+                await OpenImportedAutoCadAsync(path);
                 return;
             }
 
-            var document = await _documentFileService.OpenNativeAsync(path);
-            var session = CreateWorkspaceForFile(document, Path.GetFileName(path), path);
-            SetSessionStatus(session, FileText("Opened"));
-            await RecentFilesService.Current.RecordAsync(path, _settingsService.Settings.RecentFileCount);
-            RefreshStartRecentFiles();
+            await ShowFileMessageAsync(FileText("OpenFailedTitle"), FileText("UnsupportedRecentType"));
         }
         catch (Exception ex)
         {
