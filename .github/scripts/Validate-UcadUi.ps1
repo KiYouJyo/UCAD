@@ -30,12 +30,11 @@ foreach ($pair in @(
   if (-not $tokens.Contains($needle)) { throw "Frozen Figma token mismatch: $($pair[0])" }
 }
 
-# CAD icon system: professional tool surfaces must use centralized filled Geometry resources.
-$cadIcons = Get-Content src/UCAD.App/Styles/UcadCadIcons.xaml -Raw
-Assert-Contains $cadIcons @('UcadIconLine','UcadIconPolyline','UcadIconCircle','UcadIconArc','UcadIconHatch','UcadIconMove','UcadIconTrim','UcadIconEllipse','UcadIconSpline','UcadIconFillet','UcadIconArray') 'CAD icon resources'
+# CAD icon system: static tools use closed inline vectors; dynamic tools use the centralized data registry and fresh Geometry instances.
 $iconService = Get-Content src/UCAD.App/Services/CadToolIconService.cs -Raw
-Assert-Contains $iconService @('CadToolIconService','UcadIconLine','UcadIconDimension','UcadIconBlock','UcadIconStretch') 'CAD icon service'
-if ($xaml -match 'Data="M2,14 L14,2"|Data="M2,13 L6,7 L10,11 L14,3"|Glyph="&#xE7C2;"|Glyph="&#xE8C8;"|Glyph="&#xE78A;"') { throw 'Legacy/broken CAD toolbar icon markup remains.' }
+Assert-Contains $iconService @('CadToolIconService','PathData','CommandKeys','UcadIconLine','UcadIconDimension','UcadIconBlock','UcadIconStretch','new PathGeometry','new PathFigure','new LineSegment','new BezierSegment') 'CAD icon registry'
+Assert-Contains $xaml @('Data="M1,13 L2.5,14.5 L15,2 L13.5,0.5 Z"','Data="M2,3 L3,2 L8,7 L13,2 L14,3 L9,8 L14,13 L13,14 L8,9 L3,14 L2,13 L7,8 Z"') 'Static CAD vector icons'
+if ($xaml -match '\{StaticResource UcadIcon|Data="M2,14 L14,2"|Data="M2,13 L6,7 L10,11 L14,3"|Glyph="&#xE7C2;"|Glyph="&#xE8C8;"|Glyph="&#xE78A;"') { throw 'Legacy/shared CAD toolbar icon markup remains.' }
 
 # Version SSOT.
 $version = (Get-Content VERSION -Raw).Trim()
