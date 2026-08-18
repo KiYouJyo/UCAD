@@ -1,3 +1,4 @@
+using UCAD.Core.Entities;
 using UCAD.Core.Geometry;
 using UCAD.Core.IO;
 using UCAD.Core.Layout;
@@ -78,6 +79,35 @@ public sealed class LayoutPersistenceTests
         Assert.Equal(1000, restoredViewport.ScaleDenominator);
         Assert.Equal(Math.PI / 12, restoredViewport.TwistAngleRadians, 10);
         Assert.True(restoredViewport.Locked);
+    }
+
+    [Fact]
+    public void LayoutCodecPreservesCurrentAssociativeMetadata()
+    {
+        var document = new CadDocument();
+        var boundary = new PolylineEntity([
+            new CadPoint(0, 0),
+            new CadPoint(100, 0),
+            new CadPoint(100, 80),
+            new CadPoint(0, 80)
+        ], closed: true);
+        document.Add(boundary);
+        document.Add(CadHatchFactory.CreateFromClosedPolyline(boundary, associative: true));
+        var setup = new CadPageSetup(CadPaperSize.A3, plotScaleDenominator: 200);
+        document.SetLayoutTable([new CadLayoutDefinition("Plan", setup)], "Plan");
+
+        var json = CadNativeDocumentCodecLayout.Serialize(document);
+        var restored = CadNativeDocumentCodecLayout.Deserialize(json);
+
+        Assert.True(CadNativeDocumentCodecCurrent.HasCurrentExtension(json));
+        Assert.True(CadNativeDocumentCodecLayout.HasLayoutExtension(json));
+        var restoredBoundary = Assert.IsType<PolylineEntity>(restored.Entities[0]);
+        var restoredHatch = Assert.IsType<HatchEntity>(restored.Entities[1]);
+        Assert.True(restoredHatch.Associative);
+        Assert.Single(restoredHatch.SourceEntityIds);
+        Assert.Equal(restoredBoundary.Id, restoredHatch.SourceEntityIds[0]);
+        Assert.Equal("Plan", restored.ActiveLayoutName);
+        Assert.Equal(200, restored.ActivePageSetup.PlotScaleDenominator);
     }
 
     [Fact]
