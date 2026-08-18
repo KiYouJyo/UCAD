@@ -5,8 +5,8 @@ namespace UCAD.Core.Modify;
 
 /// <summary>
 /// Shared immutable geometry transforms used by Modify commands, annotation entities,
-/// hatches and block references. Edit commands preserve entity identity; copy/insert
-/// paths request fresh identities.
+/// hatches, blocks and extended drawing entities. Edit commands preserve entity identity;
+/// copy/insert paths request fresh identities.
 /// </summary>
 public static class CadEntityTransform
 {
@@ -21,6 +21,11 @@ public static class CadEntityTransform
             PolylineEntity polyline => new PolylineEntity(polyline.Points.Select(point => TranslatePoint(point, displacement)), polyline.Closed, Identity(polyline.Id, preserveIdentity)),
             CircleEntity circle => new CircleEntity(TranslatePoint(circle.Center, displacement), circle.Radius, Identity(circle.Id, preserveIdentity)),
             ArcEntity arc => ArcEntity.Create(TranslatePoint(arc.Center, displacement), arc.Radius, arc.StartAngleRadians, arc.SweepAngleRadians, Identity(arc.Id, preserveIdentity)),
+            PointEntity point => new PointEntity(TranslatePoint(point.Position, displacement), Identity(point.Id, preserveIdentity)),
+            EllipseEntity ellipse => new EllipseEntity(TranslatePoint(ellipse.Center, displacement), ellipse.MajorAxis, ellipse.Ratio, ellipse.StartParameter, ellipse.EndParameter, Identity(ellipse.Id, preserveIdentity)),
+            SplineEntity spline => new SplineEntity(spline.FitPoints.Select(point => TranslatePoint(point, displacement)), spline.Closed, Identity(spline.Id, preserveIdentity)),
+            RayEntity ray => new RayEntity(TranslatePoint(ray.Origin, displacement), ray.Direction, Identity(ray.Id, preserveIdentity)),
+            XLineEntity xline => new XLineEntity(TranslatePoint(xline.Point, displacement), xline.Direction, Identity(xline.Id, preserveIdentity)),
             TextEntity text => new TextEntity(TranslatePoint(text.Position, displacement), text.Text, text.Height, text.RotationRadians, Identity(text.Id, preserveIdentity)),
             LinearDimensionEntity dimension => new LinearDimensionEntity(
                 TranslatePoint(dimension.FirstExtensionPoint, displacement),
@@ -56,6 +61,17 @@ public static class CadEntityTransform
             PolylineEntity polyline => new PolylineEntity(polyline.Points.Select(point => RotatePoint(point, basePoint, angleRadians)), polyline.Closed, Identity(polyline.Id, preserveIdentity)),
             CircleEntity circle => new CircleEntity(RotatePoint(circle.Center, basePoint, angleRadians), circle.Radius, Identity(circle.Id, preserveIdentity)),
             ArcEntity arc => ArcEntity.Create(RotatePoint(arc.Center, basePoint, angleRadians), arc.Radius, arc.StartAngleRadians + angleRadians, arc.SweepAngleRadians, Identity(arc.Id, preserveIdentity)),
+            PointEntity point => new PointEntity(RotatePoint(point.Position, basePoint, angleRadians), Identity(point.Id, preserveIdentity)),
+            EllipseEntity ellipse => new EllipseEntity(
+                RotatePoint(ellipse.Center, basePoint, angleRadians),
+                RotateVector(ellipse.MajorAxis, angleRadians),
+                ellipse.Ratio,
+                ellipse.StartParameter,
+                ellipse.EndParameter,
+                Identity(ellipse.Id, preserveIdentity)),
+            SplineEntity spline => new SplineEntity(spline.FitPoints.Select(point => RotatePoint(point, basePoint, angleRadians)), spline.Closed, Identity(spline.Id, preserveIdentity)),
+            RayEntity ray => new RayEntity(RotatePoint(ray.Origin, basePoint, angleRadians), RotateVector(ray.Direction, angleRadians), Identity(ray.Id, preserveIdentity)),
+            XLineEntity xline => new XLineEntity(RotatePoint(xline.Point, basePoint, angleRadians), RotateVector(xline.Direction, angleRadians), Identity(xline.Id, preserveIdentity)),
             TextEntity text => new TextEntity(RotatePoint(text.Position, basePoint, angleRadians), text.Text, text.Height, text.RotationRadians + angleRadians, Identity(text.Id, preserveIdentity)),
             LinearDimensionEntity dimension => new LinearDimensionEntity(
                 RotatePoint(dimension.FirstExtensionPoint, basePoint, angleRadians),
@@ -92,6 +108,17 @@ public static class CadEntityTransform
             PolylineEntity polyline => new PolylineEntity(polyline.Points.Select(point => ScalePoint(point, basePoint, factor)), polyline.Closed, Identity(polyline.Id, preserveIdentity)),
             CircleEntity circle => new CircleEntity(ScalePoint(circle.Center, basePoint, factor), circle.Radius * factor, Identity(circle.Id, preserveIdentity)),
             ArcEntity arc => ArcEntity.Create(ScalePoint(arc.Center, basePoint, factor), arc.Radius * factor, arc.StartAngleRadians, arc.SweepAngleRadians, Identity(arc.Id, preserveIdentity)),
+            PointEntity point => new PointEntity(ScalePoint(point.Position, basePoint, factor), Identity(point.Id, preserveIdentity)),
+            EllipseEntity ellipse => new EllipseEntity(
+                ScalePoint(ellipse.Center, basePoint, factor),
+                new CadVector(ellipse.MajorAxis.X * factor, ellipse.MajorAxis.Y * factor),
+                ellipse.Ratio,
+                ellipse.StartParameter,
+                ellipse.EndParameter,
+                Identity(ellipse.Id, preserveIdentity)),
+            SplineEntity spline => new SplineEntity(spline.FitPoints.Select(point => ScalePoint(point, basePoint, factor)), spline.Closed, Identity(spline.Id, preserveIdentity)),
+            RayEntity ray => new RayEntity(ScalePoint(ray.Origin, basePoint, factor), ray.Direction, Identity(ray.Id, preserveIdentity)),
+            XLineEntity xline => new XLineEntity(ScalePoint(xline.Point, basePoint, factor), xline.Direction, Identity(xline.Id, preserveIdentity)),
             TextEntity text => new TextEntity(ScalePoint(text.Position, basePoint, factor), text.Text, text.Height * factor, text.RotationRadians, Identity(text.Id, preserveIdentity)),
             LinearDimensionEntity dimension => new LinearDimensionEntity(
                 ScalePoint(dimension.FirstExtensionPoint, basePoint, factor),
@@ -128,6 +155,17 @@ public static class CadEntityTransform
             PolylineEntity polyline => new PolylineEntity(polyline.Points.Select(point => MirrorPoint(point, firstAxisPoint, secondAxisPoint)), polyline.Closed, Identity(polyline.Id, preserveIdentity)),
             CircleEntity circle => new CircleEntity(MirrorPoint(circle.Center, firstAxisPoint, secondAxisPoint), circle.Radius, Identity(circle.Id, preserveIdentity)),
             ArcEntity arc => MirrorArc(arc, firstAxisPoint, secondAxisPoint, preserveIdentity),
+            PointEntity point => new PointEntity(MirrorPoint(point.Position, firstAxisPoint, secondAxisPoint), Identity(point.Id, preserveIdentity)),
+            EllipseEntity ellipse => new EllipseEntity(
+                MirrorPoint(ellipse.Center, firstAxisPoint, secondAxisPoint),
+                MirrorVector(ellipse.MajorAxis, firstAxisPoint, secondAxisPoint),
+                ellipse.Ratio,
+                ellipse.StartParameter,
+                ellipse.EndParameter,
+                Identity(ellipse.Id, preserveIdentity)),
+            SplineEntity spline => new SplineEntity(spline.FitPoints.Select(point => MirrorPoint(point, firstAxisPoint, secondAxisPoint)), spline.Closed, Identity(spline.Id, preserveIdentity)),
+            RayEntity ray => new RayEntity(MirrorPoint(ray.Origin, firstAxisPoint, secondAxisPoint), MirrorVector(ray.Direction, firstAxisPoint, secondAxisPoint), Identity(ray.Id, preserveIdentity)),
+            XLineEntity xline => new XLineEntity(MirrorPoint(xline.Point, firstAxisPoint, secondAxisPoint), MirrorVector(xline.Direction, firstAxisPoint, secondAxisPoint), Identity(xline.Id, preserveIdentity)),
             TextEntity text => new TextEntity(
                 MirrorPoint(text.Position, firstAxisPoint, secondAxisPoint),
                 text.Text,
@@ -178,6 +216,22 @@ public static class CadEntityTransform
         var projection = ((fromAxis.X * axis.X) + (fromAxis.Y * axis.Y)) / denominator;
         var projected = new CadPoint(firstAxisPoint.X + (axis.X * projection), firstAxisPoint.Y + (axis.Y * projection));
         return new CadPoint((2 * projected.X) - point.X, (2 * projected.Y) - point.Y);
+    }
+
+    private static CadVector RotateVector(CadVector vector, double angleRadians)
+    {
+        var cosine = Math.Cos(angleRadians);
+        var sine = Math.Sin(angleRadians);
+        return new CadVector((vector.X * cosine) - (vector.Y * sine), (vector.X * sine) + (vector.Y * cosine));
+    }
+
+    private static CadVector MirrorVector(CadVector vector, CadPoint firstAxisPoint, CadPoint secondAxisPoint)
+    {
+        var origin = new CadPoint(0, 0);
+        var tip = new CadPoint(vector.X, vector.Y);
+        var mirroredOrigin = MirrorPoint(origin, firstAxisPoint, secondAxisPoint);
+        var mirroredTip = MirrorPoint(tip, firstAxisPoint, secondAxisPoint);
+        return mirroredTip - mirroredOrigin;
     }
 
     private static double MirrorAngle(double angleRadians, CadPoint firstAxisPoint, CadPoint secondAxisPoint)
