@@ -37,11 +37,19 @@ public static class CadEntityTransform
             LeaderEntity leader => new LeaderEntity(
                 leader.Points.Select(point => TranslatePoint(point, displacement)), leader.Text, leader.TextHeight, leader.StyleName,
                 Identity(leader.Id, preserveIdentity)),
-            HatchEntity hatch => new HatchEntity(hatch.Boundary.Select(point => TranslatePoint(point, displacement)), hatch.Pattern, hatch.PatternScale, hatch.PatternAngleRadians, Identity(hatch.Id, preserveIdentity)),
-            BlockReferenceEntity block => new BlockReferenceEntity(
-                block.DefinitionName, TranslatePoint(block.InsertionPoint, displacement),
-                block.Contents.Select(child => Translate(child, displacement, preserveIdentity)), block.Scale, block.RotationRadians,
-                Identity(block.Id, preserveIdentity)),
+            HatchEntity hatch => TransformHatch(
+                hatch,
+                point => TranslatePoint(point, displacement),
+                hatch.PatternScale,
+                hatch.PatternAngleRadians,
+                preserveIdentity),
+            BlockReferenceEntity block => TransformBlockReference(
+                block,
+                TranslatePoint(block.InsertionPoint, displacement),
+                block.Contents.Select(child => Translate(child, displacement, preserveIdentity)),
+                block.Scale,
+                block.RotationRadians,
+                preserveIdentity),
             _ => throw Unsupported(entity)
         };
     }
@@ -77,11 +85,19 @@ public static class CadEntityTransform
             LeaderEntity leader => new LeaderEntity(
                 leader.Points.Select(point => RotatePoint(point, basePoint, angleRadians)), leader.Text, leader.TextHeight, leader.StyleName,
                 Identity(leader.Id, preserveIdentity)),
-            HatchEntity hatch => new HatchEntity(hatch.Boundary.Select(point => RotatePoint(point, basePoint, angleRadians)), hatch.Pattern, hatch.PatternScale, hatch.PatternAngleRadians + angleRadians, Identity(hatch.Id, preserveIdentity)),
-            BlockReferenceEntity block => new BlockReferenceEntity(
-                block.DefinitionName, RotatePoint(block.InsertionPoint, basePoint, angleRadians),
-                block.Contents.Select(child => Rotate(child, basePoint, angleRadians, preserveIdentity)), block.Scale, block.RotationRadians + angleRadians,
-                Identity(block.Id, preserveIdentity)),
+            HatchEntity hatch => TransformHatch(
+                hatch,
+                point => RotatePoint(point, basePoint, angleRadians),
+                hatch.PatternScale,
+                hatch.PatternAngleRadians + angleRadians,
+                preserveIdentity),
+            BlockReferenceEntity block => TransformBlockReference(
+                block,
+                RotatePoint(block.InsertionPoint, basePoint, angleRadians),
+                block.Contents.Select(child => Rotate(child, basePoint, angleRadians, preserveIdentity)),
+                block.Scale,
+                block.RotationRadians + angleRadians,
+                preserveIdentity),
             _ => throw Unsupported(entity)
         };
     }
@@ -117,11 +133,19 @@ public static class CadEntityTransform
             LeaderEntity leader => new LeaderEntity(
                 leader.Points.Select(point => ScalePoint(point, basePoint, factor)), leader.Text, leader.TextHeight * factor, leader.StyleName,
                 Identity(leader.Id, preserveIdentity)),
-            HatchEntity hatch => new HatchEntity(hatch.Boundary.Select(point => ScalePoint(point, basePoint, factor)), hatch.Pattern, hatch.PatternScale * factor, hatch.PatternAngleRadians, Identity(hatch.Id, preserveIdentity)),
-            BlockReferenceEntity block => new BlockReferenceEntity(
-                block.DefinitionName, ScalePoint(block.InsertionPoint, basePoint, factor),
-                block.Contents.Select(child => Scale(child, basePoint, factor, preserveIdentity)), block.Scale * factor, block.RotationRadians,
-                Identity(block.Id, preserveIdentity)),
+            HatchEntity hatch => TransformHatch(
+                hatch,
+                point => ScalePoint(point, basePoint, factor),
+                hatch.PatternScale * factor,
+                hatch.PatternAngleRadians,
+                preserveIdentity),
+            BlockReferenceEntity block => TransformBlockReference(
+                block,
+                ScalePoint(block.InsertionPoint, basePoint, factor),
+                block.Contents.Select(child => Scale(child, basePoint, factor, preserveIdentity)),
+                block.Scale * factor,
+                block.RotationRadians,
+                preserveIdentity),
             _ => throw Unsupported(entity)
         };
     }
@@ -158,11 +182,19 @@ public static class CadEntityTransform
             LeaderEntity leader => new LeaderEntity(
                 leader.Points.Select(point => MirrorPoint(point, firstAxisPoint, secondAxisPoint)), leader.Text, leader.TextHeight, leader.StyleName,
                 Identity(leader.Id, preserveIdentity)),
-            HatchEntity hatch => new HatchEntity(hatch.Boundary.Select(point => MirrorPoint(point, firstAxisPoint, secondAxisPoint)), hatch.Pattern, hatch.PatternScale, MirrorAngle(hatch.PatternAngleRadians, firstAxisPoint, secondAxisPoint), Identity(hatch.Id, preserveIdentity)),
-            BlockReferenceEntity block => new BlockReferenceEntity(
-                block.DefinitionName, MirrorPoint(block.InsertionPoint, firstAxisPoint, secondAxisPoint),
-                block.Contents.Select(child => Mirror(child, firstAxisPoint, secondAxisPoint, preserveIdentity)), block.Scale,
-                MirrorAngle(block.RotationRadians, firstAxisPoint, secondAxisPoint), Identity(block.Id, preserveIdentity)),
+            HatchEntity hatch => TransformHatch(
+                hatch,
+                point => MirrorPoint(point, firstAxisPoint, secondAxisPoint),
+                hatch.PatternScale,
+                MirrorAngle(hatch.PatternAngleRadians, firstAxisPoint, secondAxisPoint),
+                preserveIdentity),
+            BlockReferenceEntity block => TransformBlockReference(
+                block,
+                MirrorPoint(block.InsertionPoint, firstAxisPoint, secondAxisPoint),
+                block.Contents.Select(child => Mirror(child, firstAxisPoint, secondAxisPoint, preserveIdentity)),
+                block.Scale,
+                MirrorAngle(block.RotationRadians, firstAxisPoint, secondAxisPoint),
+                preserveIdentity),
             _ => throw Unsupported(entity)
         };
     }
@@ -189,6 +221,42 @@ public static class CadEntityTransform
         var projected = new CadPoint(firstAxisPoint.X + (axis.X * projection), firstAxisPoint.Y + (axis.Y * projection));
         return new CadPoint((2 * projected.X) - point.X, (2 * projected.Y) - point.Y);
     }
+
+    private static HatchEntity TransformHatch(
+        HatchEntity hatch,
+        Func<CadPoint, CadPoint> pointTransform,
+        double patternScale,
+        double patternAngleRadians,
+        bool preserveIdentity)
+    {
+        var associative = preserveIdentity && hatch.Associative;
+        return new HatchEntity(
+            hatch.Boundary.Select(pointTransform),
+            hatch.Pattern,
+            patternScale,
+            patternAngleRadians,
+            hatch.Islands.Select(loop => loop.Select(pointTransform)),
+            associative,
+            associative ? hatch.SourceEntityIds : [],
+            hatch.IslandDetection,
+            Identity(hatch.Id, preserveIdentity));
+    }
+
+    private static BlockReferenceEntity TransformBlockReference(
+        BlockReferenceEntity block,
+        CadPoint insertionPoint,
+        IEnumerable<ICadEntity> contents,
+        double scale,
+        double rotationRadians,
+        bool preserveIdentity) =>
+        new(
+            block.DefinitionName,
+            insertionPoint,
+            contents,
+            scale,
+            rotationRadians,
+            block.AttributeValues,
+            Identity(block.Id, preserveIdentity));
 
     private static CadVector RotateVector(CadVector vector, double angleRadians)
     {
