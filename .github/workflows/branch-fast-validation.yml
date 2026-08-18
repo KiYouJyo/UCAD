@@ -18,6 +18,9 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.302'
+      - name: Fetch pinned AutoCAD fixtures
+        shell: pwsh
+        run: ./.github/scripts/Get-AutoCadFixtures.ps1
       - name: Core tests
         shell: pwsh
         run: |
