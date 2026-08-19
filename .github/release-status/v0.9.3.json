@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "version": "0.9.3",
+  "packageVersion": "0.9.3.0",
+  "tag": "v0.9.3",
+  "releaseUrl": "https://github.com/KiYouJyo/UCAD/releases/tag/v0.9.3",
+  "releaseId": 372753347,
+  "publishedAt": "08/19/2026 01:50:23",
+  "sourceSha": "48f890bb3920574f25613f90481e48c30edd61b2",
+  "workflowRunId": "32206799983",
+  "verified": true,
+  "assets": [
+    {
+      "name": "UCAD_0.9.3.0_x64.msixbundle",
+      "sha256": "185f190b68f6afc2b599cc8ce2fd00759b994836eb001a175dfd0289922e424a"
+    },
+    {
+      "name": "UCAD-v0.9.3-x64-one-click.zip",
+      "sha256": "7853191785f73d854992d57f44e63a7b673e348f35f1ca9b594bb3d3010a5221"
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "sha256": "72badd21d591817529ed24bb6c27cd8f905e740ac1b9a898cb3089a3e2abd73d"
+    }
+  ]
+}
