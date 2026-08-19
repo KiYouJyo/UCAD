@@ -97,4 +97,65 @@
   <data name="ModifyMirrorComplete" xml:space="preserve"><value>镜像完成。</value></data>
   <data name="ModifyOffsetInvalid" xml:space="preserve"><value>无法在该侧创建有效偏移。</value></data>
   <data name="ModifyOffsetComplete" xml:space="preserve"><value>偏移完成。</value></data>
+
+  <data name="CommandLabel_LINE" xml:space="preserve"><value>直线</value></data>
+  <data name="CommandLabel_PLINE" xml:space="preserve"><value>多段线</value></data>
+  <data name="CommandLabel_RECTANGLE" xml:space="preserve"><value>矩形</value></data>
+  <data name="CommandLabel_CIRCLE" xml:space="preserve"><value>圆</value></data>
+  <data name="CommandLabel_ARC" xml:space="preserve"><value>圆弧</value></data>
+  <data name="CommandLabel_HATCH" xml:space="preserve"><value>填充</value></data>
+  <data name="CommandLabel_HATCHADV" xml:space="preserve"><value>高级填充</value></data>
+  <data name="CommandLabel_HATCHEDIT" xml:space="preserve"><value>编辑填充</value></data>
+  <data name="CommandLabel_BOUNDARY" xml:space="preserve"><value>边界</value></data>
+  <data name="CommandLabel_RAY" xml:space="preserve"><value>射线</value></data>
+  <data name="CommandLabel_XLINE" xml:space="preserve"><value>构造线</value></data>
+  <data name="CommandLabel_ELLIPSE" xml:space="preserve"><value>椭圆</value></data>
+  <data name="CommandLabel_POLYGON" xml:space="preserve"><value>多边形</value></data>
+  <data name="CommandLabel_SPLINE" xml:space="preserve"><value>样条曲线</value></data>
+  <data name="CommandLabel_POINT" xml:space="preserve"><value>点</value></data>
+  <data name="CommandLabel_MOVE" xml:space="preserve"><value>移动</value></data>
+  <data name="CommandLabel_COPY" xml:space="preserve"><value>复制</value></data>
+  <data name="CommandLabel_ERASE" xml:space="preserve"><value>删除</value></data>
+  <data name="CommandLabel_OFFSET" xml:space="preserve"><value>偏移</value></data>
+  <data name="CommandLabel_TRIM" xml:space="preserve"><value>修剪</value></data>
+  <data name="CommandLabel_ROTATE" xml:space="preserve"><value>旋转</value></data>
+  <data name="CommandLabel_SCALE" xml:space="preserve"><value>缩放</value></data>
+  <data name="CommandLabel_MIRROR" xml:space="preserve"><value>镜像</value></data>
+  <data name="CommandLabel_EXTEND" xml:space="preserve"><value>延伸</value></data>
+  <data name="CommandLabel_EXPLODE" xml:space="preserve"><value>分解</value></data>
+  <data name="CommandLabel_STRETCH" xml:space="preserve"><value>拉伸</value></data>
+  <data name="CommandLabel_FILLET" xml:space="preserve"><value>圆角</value></data>
+  <data name="CommandLabel_CHAMFER" xml:space="preserve"><value>倒角</value></data>
+  <data name="CommandLabel_ARRAY" xml:space="preserve"><value>阵列</value></data>
+  <data name="CommandLabel_BREAK" xml:space="preserve"><value>打断</value></data>
+  <data name="CommandLabel_JOIN" xml:space="preserve"><value>合并</value></data>
+  <data name="CommandLabel_PEDIT" xml:space="preserve"><value>多段线编辑</value></data>
+  <data name="CommandLabel_TEXT" xml:space="preserve"><value>单行文字</value></data>
+  <data name="CommandLabel_MTEXT" xml:space="preserve"><value>多行文字</value></data>
+  <data name="CommandLabel_DIM" xml:space="preserve"><value>线性标注</value></data>
+  <data name="CommandLabel_DIMALIGNED" xml:space="preserve"><value>对齐标注</value></data>
+  <data name="CommandLabel_DIMANGULAR" xml:space="preserve"><value>角度标注</value></data>
+  <data name="CommandLabel_DIMRADIUS" xml:space="preserve"><value>半径标注</value></data>
+  <data name="CommandLabel_DIMDIAMETER" xml:space="preserve"><value>直径标注</value></data>
+  <data name="CommandLabel_LEADER" xml:space="preserve"><value>引线</value></data>
+  <data name="CommandLabel_TEXTSTYLE" xml:space="preserve"><value>文字样式</value></data>
+  <data name="CommandLabel_DIMSTYLE" xml:space="preserve"><value>标注样式</value></data>
+  <data name="CommandLabel_LAYER" xml:space="preserve"><value>图层</value></data>
+  <data name="CommandLabel_CHPROP" xml:space="preserve"><value>对象属性</value></data>
+  <data name="CommandLabel_BLOCK" xml:space="preserve"><value>创建图块</value></data>
+  <data name="CommandLabel_INSERT" xml:space="preserve"><value>插入图块</value></data>
+  <data name="CommandLabel_BLOCKMANAGER" xml:space="preserve"><value>图块管理</value></data>
+  <data name="CommandLabel_ATTDEF" xml:space="preserve"><value>定义属性</value></data>
+  <data name="CommandLabel_ATTEDIT" xml:space="preserve"><value>编辑属性</value></data>
+  <data name="CommandLabel_BLOCKREDEFINE" xml:space="preserve"><value>重定义图块</value></data>
+  <data name="CommandLabel_XREF" xml:space="preserve"><value>外部参照</value></data>
+  <data name="CommandLabel_PAGESETUP" xml:space="preserve"><value>页面设置</value></data>
+  <data name="CommandLabel_LAYOUT" xml:space="preserve"><value>布局</value></data>
+  <data name="CommandLabel_VIEWPORT" xml:space="preserve"><value>视口</value></data>
+  <data name="CommandLabel_VIEWPORTS" xml:space="preserve"><value>视口管理</value></data>
+  <data name="CommandLabel_PREVIEW" xml:space="preserve"><value>打印预览</value></data>
+  <data name="CommandLabel_PLOT" xml:space="preserve"><value>打印</value></data>
+  <data name="CommandLabel_PDF" xml:space="preserve"><value>导出 PDF</value></data>
+  <data name="CommandLabel_PRINT" xml:space="preserve"><value>系统打印</value></data>
+  <data name="CommandLabel_RESETVIEW" xml:space="preserve"><value>重置视图</value></data>
 </root>
