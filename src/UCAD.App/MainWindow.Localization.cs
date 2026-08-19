@@ -171,9 +171,6 @@ public sealed partial class MainWindow
         OsnapStatusButton.Content = ShellString("StatusOsnap");
         OtrackStatusButton.Content = ShellString("StatusOtrack");
 
-        // Every v0.5-v0.9 command surface created in code is discovered by its command
-        // Tag and receives the same language pass as XAML-created controls. Aliases stay
-        // language-neutral while the visible primary label is localized.
         RefreshCommandSurfaceLabels();
 
         if (_startTab is not null)
@@ -214,10 +211,6 @@ public sealed partial class MainWindow
     private IEnumerable<Button> CommandSurfaceButtons()
     {
         var seen = new HashSet<Button>();
-
-        // These panels own generated controls even while Collapsed. Relying only on
-        // RootLayout's visual tree misses never-materialized shelves and was the reason
-        // hidden Modify/Annotate/Block tools remained English until first shown.
         foreach (var panel in new Panel[] { DrawToolShelf, ModifyToolShelf, UnavailableToolShelf, ViewToolShelf })
         {
             foreach (var button in panel.Children.OfType<Button>())
@@ -229,7 +222,6 @@ public sealed partial class MainWindow
         foreach (var button in _extendedShelfButtons)
             if (seen.Add(button)) yield return button;
 
-        // Keep visible rail/menu command buttons in the same pass as well.
         foreach (var button in Descendants<Button>(RootLayout))
             if (seen.Add(button)) yield return button;
     }
@@ -256,12 +248,29 @@ public sealed partial class MainWindow
         return command.Length > 0;
     }
 
+    private static TextBlock? CommandLabelTextBlock(Button button)
+    {
+        // The generated shelves own their StackPanel Content even while the button has
+        // never entered the visual tree. Query that logical content first; otherwise a
+        // Collapsed tool category reports no visual TextBlock and misses localization.
+        if (button.Content is Panel contentPanel)
+        {
+            var direct = contentPanel.Children
+                .OfType<TextBlock>()
+                .FirstOrDefault(text => text.FontSize >= 9 && text.FontSize <= 12);
+            if (direct is not null) return direct;
+
+            return Descendants<TextBlock>(contentPanel)
+                .FirstOrDefault(text => text.FontSize >= 9 && text.FontSize <= 12);
+        }
+
+        return Descendants<TextBlock>(button)
+            .FirstOrDefault(text => text.FontSize >= 9 && text.FontSize <= 12);
+    }
+
     private void ApplyLocalizedCommandLabel(Button button, string command)
     {
-        // Shelf command labels are 10px; their alias rows are 8px. Selecting the first
-        // >=9px TextBlock avoids translating aliases such as L, CO, DAL, VPM, etc.
-        var label = Descendants<TextBlock>(button)
-            .FirstOrDefault(text => text.FontSize >= 9 && text.FontSize <= 12);
+        var label = CommandLabelTextBlock(button);
         if (label is not null) label.Text = CommandDisplayName(command);
     }
 
@@ -274,8 +283,7 @@ public sealed partial class MainWindow
             {
                 continue;
             }
-            var label = Descendants<TextBlock>(button)
-                .FirstOrDefault(text => text.FontSize >= 9 && text.FontSize <= 12);
+            var label = CommandLabelTextBlock(button);
             if (label is not null) return label.Text;
         }
         return null;
