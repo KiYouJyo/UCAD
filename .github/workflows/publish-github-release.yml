@@ -230,3 +230,56 @@ jobs:
           $expected = @('${{ steps.release.outputs.bundle_name }}','${{ steps.release.outputs.one_click_name }}','SHA256SUMS.txt') | Sort-Object
           if (($names -join '|') -ne ($expected -join '|')) { throw "Unexpected final Release assets: $($names -join ', ')" }
           Write-Output "Final Release assets: $($names -join ', ')"
+
+      - name: Record verified Release publication
+        if: github.ref_type == 'branch'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = '${{ steps.release.outputs.version }}'
+          $targetBranch = '${{ github.ref_name }}'
+          if ($targetBranch -ne "release/v$version") { Write-Output 'Verified publication marker is only written for a release/vX.Y.Z branch run.'; exit 0 }
+          $tag = '${{ steps.release.outputs.tag }}'
+          $release = gh api "repos/${{ github.repository }}/releases/tags/$tag" | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0) { throw 'Could not reload the just-published GitHub Release.' }
+          $bundleName = '${{ steps.release.outputs.bundle_name }}'
+          $oneClickName = '${{ steps.release.outputs.one_click_name }}'
+          $bundleHash = (Get-FileHash -LiteralPath (Join-Path $env:ASSETS_PATH $bundleName) -Algorithm SHA256).Hash.ToLowerInvariant()
+          $oneClickHash = (Get-FileHash -LiteralPath (Join-Path $env:ASSETS_PATH $oneClickName) -Algorithm SHA256).Hash.ToLowerInvariant()
+          $status = [ordered]@{
+            schemaVersion = 1
+            version = $version
+            packageVersion = '${{ steps.release.outputs.package_version }}'
+            tag = $tag
+            releaseUrl = [string]$release.html_url
+            releaseId = [long]$release.id
+            publishedAt = [string]$release.published_at
+            sourceSha = '${{ github.sha }}'
+            workflowRunId = '${{ github.run_id }}'
+            verified = $true
+            assets = @(
+              [ordered]@{ name = $bundleName; sha256 = $bundleHash },
+              [ordered]@{ name = $oneClickName; sha256 = $oneClickHash },
+              [ordered]@{ name = 'SHA256SUMS.txt'; sha256 = (Get-FileHash -LiteralPath (Join-Path $env:ASSETS_PATH 'SHA256SUMS.txt') -Algorithm SHA256).Hash.ToLowerInvariant() }
+            )
+          }
+          $json = $status | ConvertTo-Json -Depth 6
+          $path = ".github/release-status/v$version.json"
+          $encoded = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($json + "`n"))
+          $existingSha = $null
+          $PSNativeCommandUseErrorActionPreference = $false
+          $existingJson = gh api "repos/${{ github.repository }}/contents/$path?ref=$targetBranch" 2>$null
+          if ($LASTEXITCODE -eq 0 -and $existingJson) { $existingSha = ($existingJson | ConvertFrom-Json).sha }
+          $global:LASTEXITCODE = 0
+          $payload = [ordered]@{
+            message = "release: record verified UCAD v$version publication"
+            content = $encoded
+            branch = $targetBranch
+          }
+          if ($existingSha) { $payload.sha = $existingSha }
+          $payloadPath = Join-Path $env:RUNNER_TEMP 'release-status-payload.json'
+          $payload | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $payloadPath -Encoding UTF8
+          gh api --method PUT "repos/${{ github.repository }}/contents/$path" --input $payloadPath | Out-Null
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to record verified Release publication metadata.' }
+          Write-Output "Verified publication marker written: $path"
