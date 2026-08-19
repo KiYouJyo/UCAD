@@ -97,4 +97,65 @@
   <data name="ModifyMirrorComplete" xml:space="preserve"><value>Mirror completed.</value></data>
   <data name="ModifyOffsetInvalid" xml:space="preserve"><value>Offset could not be created on that side.</value></data>
   <data name="ModifyOffsetComplete" xml:space="preserve"><value>Offset completed.</value></data>
+
+  <data name="CommandLabel_LINE" xml:space="preserve"><value>Line</value></data>
+  <data name="CommandLabel_PLINE" xml:space="preserve"><value>Polyline</value></data>
+  <data name="CommandLabel_RECTANGLE" xml:space="preserve"><value>Rectangle</value></data>
+  <data name="CommandLabel_CIRCLE" xml:space="preserve"><value>Circle</value></data>
+  <data name="CommandLabel_ARC" xml:space="preserve"><value>Arc</value></data>
+  <data name="CommandLabel_HATCH" xml:space="preserve"><value>Hatch</value></data>
+  <data name="CommandLabel_HATCHADV" xml:space="preserve"><value>Advanced hatch</value></data>
+  <data name="CommandLabel_HATCHEDIT" xml:space="preserve"><value>Edit hatch</value></data>
+  <data name="CommandLabel_BOUNDARY" xml:space="preserve"><value>Boundary</value></data>
+  <data name="CommandLabel_RAY" xml:space="preserve"><value>Ray</value></data>
+  <data name="CommandLabel_XLINE" xml:space="preserve"><value>XLine</value></data>
+  <data name="CommandLabel_ELLIPSE" xml:space="preserve"><value>Ellipse</value></data>
+  <data name="CommandLabel_POLYGON" xml:space="preserve"><value>Polygon</value></data>
+  <data name="CommandLabel_SPLINE" xml:space="preserve"><value>Spline</value></data>
+  <data name="CommandLabel_POINT" xml:space="preserve"><value>Point</value></data>
+  <data name="CommandLabel_MOVE" xml:space="preserve"><value>Move</value></data>
+  <data name="CommandLabel_COPY" xml:space="preserve"><value>Copy</value></data>
+  <data name="CommandLabel_ERASE" xml:space="preserve"><value>Erase</value></data>
+  <data name="CommandLabel_OFFSET" xml:space="preserve"><value>Offset</value></data>
+  <data name="CommandLabel_TRIM" xml:space="preserve"><value>Trim</value></data>
+  <data name="CommandLabel_ROTATE" xml:space="preserve"><value>Rotate</value></data>
+  <data name="CommandLabel_SCALE" xml:space="preserve"><value>Scale</value></data>
+  <data name="CommandLabel_MIRROR" xml:space="preserve"><value>Mirror</value></data>
+  <data name="CommandLabel_EXTEND" xml:space="preserve"><value>Extend</value></data>
+  <data name="CommandLabel_EXPLODE" xml:space="preserve"><value>Explode</value></data>
+  <data name="CommandLabel_STRETCH" xml:space="preserve"><value>Stretch</value></data>
+  <data name="CommandLabel_FILLET" xml:space="preserve"><value>Fillet</value></data>
+  <data name="CommandLabel_CHAMFER" xml:space="preserve"><value>Chamfer</value></data>
+  <data name="CommandLabel_ARRAY" xml:space="preserve"><value>Array</value></data>
+  <data name="CommandLabel_BREAK" xml:space="preserve"><value>Break</value></data>
+  <data name="CommandLabel_JOIN" xml:space="preserve"><value>Join</value></data>
+  <data name="CommandLabel_PEDIT" xml:space="preserve"><value>Polyline edit</value></data>
+  <data name="CommandLabel_TEXT" xml:space="preserve"><value>Text</value></data>
+  <data name="CommandLabel_MTEXT" xml:space="preserve"><value>MText</value></data>
+  <data name="CommandLabel_DIM" xml:space="preserve"><value>Linear dimension</value></data>
+  <data name="CommandLabel_DIMALIGNED" xml:space="preserve"><value>Aligned dimension</value></data>
+  <data name="CommandLabel_DIMANGULAR" xml:space="preserve"><value>Angular dimension</value></data>
+  <data name="CommandLabel_DIMRADIUS" xml:space="preserve"><value>Radius dimension</value></data>
+  <data name="CommandLabel_DIMDIAMETER" xml:space="preserve"><value>Diameter dimension</value></data>
+  <data name="CommandLabel_LEADER" xml:space="preserve"><value>Leader</value></data>
+  <data name="CommandLabel_TEXTSTYLE" xml:space="preserve"><value>Text style</value></data>
+  <data name="CommandLabel_DIMSTYLE" xml:space="preserve"><value>Dimension style</value></data>
+  <data name="CommandLabel_LAYER" xml:space="preserve"><value>Layer</value></data>
+  <data name="CommandLabel_CHPROP" xml:space="preserve"><value>Properties</value></data>
+  <data name="CommandLabel_BLOCK" xml:space="preserve"><value>Create block</value></data>
+  <data name="CommandLabel_INSERT" xml:space="preserve"><value>Insert block</value></data>
+  <data name="CommandLabel_BLOCKMANAGER" xml:space="preserve"><value>Block manager</value></data>
+  <data name="CommandLabel_ATTDEF" xml:space="preserve"><value>Attribute definition</value></data>
+  <data name="CommandLabel_ATTEDIT" xml:space="preserve"><value>Edit attributes</value></data>
+  <data name="CommandLabel_BLOCKREDEFINE" xml:space="preserve"><value>Redefine block</value></data>
+  <data name="CommandLabel_XREF" xml:space="preserve"><value>Xref</value></data>
+  <data name="CommandLabel_PAGESETUP" xml:space="preserve"><value>Page setup</value></data>
+  <data name="CommandLabel_LAYOUT" xml:space="preserve"><value>Layout</value></data>
+  <data name="CommandLabel_VIEWPORT" xml:space="preserve"><value>Viewport</value></data>
+  <data name="CommandLabel_VIEWPORTS" xml:space="preserve"><value>Viewports</value></data>
+  <data name="CommandLabel_PREVIEW" xml:space="preserve"><value>Plot preview</value></data>
+  <data name="CommandLabel_PLOT" xml:space="preserve"><value>Plot</value></data>
+  <data name="CommandLabel_PDF" xml:space="preserve"><value>Export PDF</value></data>
+  <data name="CommandLabel_PRINT" xml:space="preserve"><value>System print</value></data>
+  <data name="CommandLabel_RESETVIEW" xml:space="preserve"><value>Reset view</value></data>
 </root>
