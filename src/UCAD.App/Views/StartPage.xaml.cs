@@ -31,33 +31,53 @@ public sealed partial class StartPage : UserControl
 
     public void RefreshLocalization()
     {
-        StartTitleText.Text = Get("Start_Title.Text");
-        StartSubtitleText.Text = Get("Start_Subtitle.Text");
-        NewDrawingTitleText.Text = Get("Start_NewDrawing_Title.Text");
-        NewDrawingDescriptionText.Text = Get("Start_NewDrawing_Description.Text");
-        OpenDrawingTitleText.Text = Get("Start_OpenDrawing_Title.Text");
-        OpenDrawingDescriptionText.Text = Get("Start_OpenDrawing_Description.Text");
-        RecentTitleText.Text = Get("Start_Recent_Title.Text");
-        RecentShowAllButton.Content = Get("Start_Recent_ShowAll.Content");
-        RecentEmptyTitleText.Text = Get("Start_Recent_EmptyTitle.Text");
-        RecentEmptyDescriptionText.Text = Get("Start_Recent_EmptyDescription.Text");
-        TemplatesTitleText.Text = Get("Start_Templates_Title.Text");
-        BlankTitleText.Text = Get("Start_Template_Blank_Title.Text");
-        BlankDescriptionText.Text = Get("Start_Template_Blank_Description.Text");
-        ArchitectureTitleText.Text = Get("Start_Template_Architecture_Title.Text");
-        ArchitectureDescriptionText.Text = Get("Start_Template_Architecture_Description.Text");
-        ArchitectureComingSoonText.Text = Get("Common_ComingSoon.Text");
-        UrbanTitleText.Text = Get("Start_Template_Urban_Title.Text");
-        UrbanDescriptionText.Text = Get("Start_Template_Urban_Description.Text");
-        UrbanComingSoonText.Text = Get("Common_ComingSoon.Text");
-        LearnTitleText.Text = Get("Start_Learn_Title.Text");
-        ShortcutsText.Text = Get("Start_Learn_Shortcuts.Text");
-        BasicDrawingText.Text = Get("Start_Learn_BasicDrawing.Text");
-        CommandsText.Text = Get("Start_Learn_Commands.Text");
-        DocsText.Text = Get("Start_Learn_Docs.Text");
+        // StartLive uses plain resource IDs deliberately. Property-style *.Text keys
+        // belong to XAML x:Uid loading and proved unreliable as imperative runtime
+        // lookups when switching language in an already-created StartPage.
+        StartTitleText.Text = GetStart("Title");
+        StartSubtitleText.Text = GetStart("Subtitle");
+        NewDrawingTitleText.Text = GetStart("NewDrawingTitle");
+        NewDrawingDescriptionText.Text = GetStart("NewDrawingDescription");
+        OpenDrawingTitleText.Text = GetStart("OpenDrawingTitle");
+        OpenDrawingDescriptionText.Text = GetStart("OpenDrawingDescription");
+        RecentTitleText.Text = GetStart("RecentTitle");
+        RecentShowAllButton.Content = GetStart("RecentShowAll");
+        RecentEmptyTitleText.Text = GetStart("RecentEmptyTitle");
+        RecentEmptyDescriptionText.Text = GetStart("RecentEmptyDescription");
+        TemplatesTitleText.Text = GetStart("TemplatesTitle");
+        BlankTitleText.Text = GetStart("BlankTitle");
+        BlankDescriptionText.Text = GetStart("BlankDescription");
+        ArchitectureTitleText.Text = GetStart("ArchitectureTitle");
+        ArchitectureDescriptionText.Text = GetStart("ArchitectureDescription");
+        ArchitectureComingSoonText.Text = GetStart("ComingSoon");
+        UrbanTitleText.Text = GetStart("UrbanTitle");
+        UrbanDescriptionText.Text = GetStart("UrbanDescription");
+        UrbanComingSoonText.Text = GetStart("ComingSoon");
+        LearnTitleText.Text = GetStart("LearnTitle");
+        ShortcutsText.Text = GetStart("Shortcuts");
+        BasicDrawingText.Text = GetStart("BasicDrawing");
+        CommandsText.Text = GetStart("Commands");
+        DocsText.Text = GetStart("Docs");
 
         var language = _localization.CurrentLanguageTag;
         if (!string.IsNullOrWhiteSpace(language)) Language = language;
+    }
+
+    internal bool ValidateLocalization(string language)
+    {
+        var expected = language switch
+        {
+            "zh-CN" => ("开始使用 UCAD", "新建图纸", "打开图纸", "模板", "学习 UCAD"),
+            "ja-JP" => ("UCAD を開始", "新しい図面", "図面を開く", "テンプレート", "UCAD を学ぶ"),
+            "en-US" => ("Start with UCAD", "New drawing", "Open drawing", "Templates", "Learn UCAD"),
+            _ => (string.Empty, string.Empty, string.Empty, string.Empty, string.Empty)
+        };
+        if (string.IsNullOrEmpty(expected.Item1)) return true;
+        return StartTitleText.Text == expected.Item1 &&
+               NewDrawingTitleText.Text == expected.Item2 &&
+               OpenDrawingTitleText.Text == expected.Item3 &&
+               TemplatesTitleText.Text == expected.Item4 &&
+               LearnTitleText.Text == expected.Item5;
     }
 
     public void SetRecentFiles(IReadOnlyList<RecentFileEntry> files)
@@ -128,9 +148,9 @@ public sealed partial class StartPage : UserControl
         _recentEmptyContent = _recentHost?.Child;
     }
 
-    private string Get(string key)
+    private string GetStart(string key)
     {
-        var value = _localization.GetV039String(key);
+        var value = _localization.GetStartString(key);
         return string.IsNullOrWhiteSpace(value) ? key : value;
     }
 
