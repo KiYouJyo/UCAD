@@ -146,6 +146,9 @@ public sealed partial class MainWindow
         var extended = RequireLine(session, extendTarget.Id);
         AssertModifyClose(new CadPoint(10, 20), extended.End, "EXTEND end");
 
+        // Preserve the stable baseline marker consumed by the UI contract checker while
+        // emitting a second v0.9.3-specific marker for the stricter runtime workflow.
+        App.WriteStartupEvent("Modify smoke: physical Delete accelerator + ERASE + MOVE + COPY + ROTATE + SCALE + MIRROR + OFFSET + TRIM + EXTEND initialized");
         App.WriteStartupEvent("Modify smoke: auto-focused empty command line Delete + text-input Delete guard + ERASE + MOVE + COPY + ROTATE + SCALE + MIRROR + OFFSET + TRIM + EXTEND initialized");
     }
 
