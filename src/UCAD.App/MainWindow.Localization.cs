@@ -56,6 +56,7 @@ public sealed partial class MainWindow
                     {
                         throw new InvalidOperationException($"Live localization validation failed for {language}.");
                     }
+                    App.WriteStartupEvent($"Localization surface audit passed: {language} / Start + shell + generated tools");
                 }
 
                 App.WriteStartupEvent("Localization smoke: zh-CN -> ja-JP -> en-US refreshed without restart");
@@ -81,11 +82,20 @@ public sealed partial class MainWindow
         return string.IsNullOrWhiteSpace(value) ? key : value;
     }
 
+    private string CommandDisplayName(string command)
+    {
+        var normalized = command.Trim().ToUpperInvariant();
+        var value = LocalizationService.Current.GetShellString($"CommandLabel_{normalized}");
+        return string.IsNullOrWhiteSpace(value) || value.StartsWith("CommandLabel_", StringComparison.Ordinal)
+            ? normalized
+            : value;
+    }
+
     /// <summary>
     /// Re-resolves every visible localized surface against the current MRT context.
     /// The legacy x:Uid property resources remain available for initial XAML loading,
-    /// while hot refresh uses plain IDs from ShellLive.resw so imperative lookup does
-    /// not depend on XAML property-resource semantics.
+    /// while hot refresh uses plain IDs so imperative lookup does not depend on XAML
+    /// property-resource semantics.
     /// </summary>
     internal void RefreshLocalization()
     {
@@ -161,6 +171,11 @@ public sealed partial class MainWindow
         OsnapStatusButton.Content = ShellString("StatusOsnap");
         OtrackStatusButton.Content = ShellString("StatusOtrack");
 
+        // Every v0.5-v0.9 command surface created in code is discovered by its command
+        // Tag and receives the same language pass as XAML-created controls. Aliases stay
+        // language-neutral while the visible primary label is localized.
+        RefreshCommandSurfaceLabels();
+
         if (_startTab is not null)
         {
             _startTab.Header = GetString("Start_TabTitle");
@@ -189,10 +204,58 @@ public sealed partial class MainWindow
         {
             UpdateCoordinateText(_activeSession);
             UpdateSessionUi(_activeSession);
+            SyncDynamicCommandDisplay();
         }
 
         UpdateCategoryVisuals();
         App.WriteStartupEvent($"Live localization refresh completed: {language}");
+    }
+
+    private void RefreshCommandSurfaceLabels()
+    {
+        foreach (var button in Descendants<Button>(RootLayout))
+        {
+            if (!TryGetCommandFromToolTag(button.Tag, out var command) ||
+                !_commandRegistry.TryResolve(command, out _))
+            {
+                continue;
+            }
+            ApplyLocalizedCommandLabel(button, command);
+        }
+    }
+
+    private static bool TryGetCommandFromToolTag(object? tag, out string command)
+    {
+        command = string.Empty;
+        if (tag is not string raw || string.IsNullOrWhiteSpace(raw)) return false;
+        var separator = raw.LastIndexOf('|');
+        command = (separator >= 0 ? raw[(separator + 1)..] : raw).Trim().ToUpperInvariant();
+        return command.Length > 0;
+    }
+
+    private void ApplyLocalizedCommandLabel(Button button, string command)
+    {
+        // Shelf command labels are 10px; their alias rows are 8px. Selecting the first
+        // >=9px TextBlock avoids translating aliases such as L, CO, DAL, VPM, etc.
+        var label = Descendants<TextBlock>(button)
+            .FirstOrDefault(text => text.FontSize >= 9 && text.FontSize <= 12);
+        if (label is not null) label.Text = CommandDisplayName(command);
+    }
+
+    private string? RenderedCommandLabel(string command)
+    {
+        foreach (var button in Descendants<Button>(RootLayout))
+        {
+            if (!TryGetCommandFromToolTag(button.Tag, out var candidate) ||
+                !string.Equals(candidate, command, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+            var label = Descendants<TextBlock>(button)
+                .FirstOrDefault(text => text.FontSize >= 9 && text.FontSize <= 12);
+            if (label is not null) return label.Text;
+        }
+        return null;
     }
 
     internal bool ValidateCurrentLocalization(string expectedLanguage)
@@ -200,9 +263,14 @@ public sealed partial class MainWindow
         var title = GetString("Settings_Nav_Title");
         var start = GetString("Start_TabTitle");
         var file = LocalizationService.Current.GetShellString("File");
-        App.WriteStartupEvent($"Localization probe [{expectedLanguage}]: Settings_Nav_Title='{title}' | Start_TabTitle='{start}' | ShellLive/File='{file}'");
+        var startSurfaceOkay = _startPage?.ValidateLocalization(expectedLanguage) ?? false;
+        var moveLabel = RenderedCommandLabel("MOVE");
+        var eraseLabel = RenderedCommandLabel("ERASE");
+        App.WriteStartupEvent(
+            $"Localization probe [{expectedLanguage}]: Settings='{title}' | StartTab='{start}' | File='{file}' | StartSurface={startSurfaceOkay} | MOVE='{moveLabel}' | ERASE='{eraseLabel}'");
 
-        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(start) || string.IsNullOrWhiteSpace(file))
+        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(start) || string.IsNullOrWhiteSpace(file) ||
+            string.IsNullOrWhiteSpace(moveLabel) || string.IsNullOrWhiteSpace(eraseLabel) || !startSurfaceOkay)
         {
             return false;
         }
@@ -213,9 +281,9 @@ public sealed partial class MainWindow
 
         return expectedLanguage switch
         {
-            "zh-CN" => title == "设置" && start == "开始" && file == "文件",
-            "ja-JP" => title == "設定" && start == "スタート" && file == "ファイル",
-            "en-US" => title == "Settings" && start == "Start" && file == "File",
+            "zh-CN" => title == "设置" && start == "开始" && file == "文件" && moveLabel == "移动" && eraseLabel == "删除",
+            "ja-JP" => title == "設定" && start == "スタート" && file == "ファイル" && moveLabel == "移動" && eraseLabel == "削除",
+            "en-US" => title == "Settings" && start == "Start" && file == "File" && moveLabel == "Move" && eraseLabel == "Erase",
             _ => true
         };
     }
