@@ -50,9 +50,13 @@ jobs:
           if ($process.HasExited) {
             throw "UCAD exited during Modify smoke with code $($process.ExitCode)."
           }
-          if ($startupLog -notmatch 'Modify smoke: auto-focused empty command line Delete \+ text-input Delete guard \+ ERASE \+ MOVE \+ COPY \+ ROTATE \+ SCALE \+ MIRROR \+ OFFSET \+ TRIM \+ EXTEND initialized') {
+          if ($startupLog -notmatch 'Modify smoke: restored command focus \+ typed command-line Delete ERASE \+ unrelated text-editor guard initialized') {
             Stop-Process -Id $process.Id -Force
-            throw 'The auto-focused command-line Delete + Modify smoke marker was not written.'
+            throw 'The PR19 command-focus + typed command-line Delete smoke marker was not written.'
+          }
+          if ($startupLog -notmatch 'Modify smoke: physical Delete accelerator \+ ERASE \+ MOVE \+ COPY \+ ROTATE \+ SCALE \+ MIRROR \+ OFFSET \+ TRIM \+ EXTEND initialized') {
+            Stop-Process -Id $process.Id -Force
+            throw 'The baseline Modify runtime marker was not written.'
           }
           if ($startupLog -match 'ModifySmoke|UnhandledException|MissingResource:') {
             Stop-Process -Id $process.Id -Force
