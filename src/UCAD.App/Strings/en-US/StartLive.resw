@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="Title" xml:space="preserve"><value>Start with UCAD</value></data>
+  <data name="Subtitle" xml:space="preserve"><value>Create or open a drawing, continue recent work, or start from a template.</value></data>
+  <data name="NewDrawingTitle" xml:space="preserve"><value>New drawing</value></data>
+  <data name="NewDrawingDescription" xml:space="preserve"><value>Create a blank 2D CAD drawing</value></data>
+  <data name="OpenDrawingTitle" xml:space="preserve"><value>Open drawing</value></data>
+  <data name="OpenDrawingDescription" xml:space="preserve"><value>Open an existing drawing from a file</value></data>
+  <data name="RecentTitle" xml:space="preserve"><value>Recent</value></data>
+  <data name="RecentShowAll" xml:space="preserve"><value>Show all</value></data>
+  <data name="RecentEmptyTitle" xml:space="preserve"><value>No recent drawings yet</value></data>
+  <data name="RecentEmptyDescription" xml:space="preserve"><value>Drawings appear here after you open or save them.</value></data>
+  <data name="TemplatesTitle" xml:space="preserve"><value>Templates</value></data>
+  <data name="BlankTitle" xml:space="preserve"><value>Blank</value></data>
+  <data name="BlankDescription" xml:space="preserve"><value>Standard blank drawing</value></data>
+  <data name="ArchitectureTitle" xml:space="preserve"><value>Architecture</value></data>
+  <data name="ArchitectureDescription" xml:space="preserve"><value>Architectural drafting preset</value></data>
+  <data name="UrbanTitle" xml:space="preserve"><value>Urban planning</value></data>
+  <data name="UrbanDescription" xml:space="preserve"><value>Planning drafting preset</value></data>
+  <data name="ComingSoon" xml:space="preserve"><value>Coming soon</value></data>
+  <data name="LearnTitle" xml:space="preserve"><value>Learn UCAD</value></data>
+  <data name="Shortcuts" xml:space="preserve"><value>Shortcuts</value></data>
+  <data name="BasicDrawing" xml:space="preserve"><value>Basic drawing</value></data>
+  <data name="Commands" xml:space="preserve"><value>Commands and aliases</value></data>
+  <data name="Docs" xml:space="preserve"><value>View documentation</value></data>
+</root>
