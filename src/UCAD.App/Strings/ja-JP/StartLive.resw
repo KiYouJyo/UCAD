@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="Title" xml:space="preserve"><value>UCAD を開始</value></data>
+  <data name="Subtitle" xml:space="preserve"><value>図面を新規作成または開き、最近の作業を続けるか、テンプレートから開始します。</value></data>
+  <data name="NewDrawingTitle" xml:space="preserve"><value>新しい図面</value></data>
+  <data name="NewDrawingDescription" xml:space="preserve"><value>空白の 2D CAD 図面を作成します</value></data>
+  <data name="OpenDrawingTitle" xml:space="preserve"><value>図面を開く</value></data>
+  <data name="OpenDrawingDescription" xml:space="preserve"><value>ファイルから既存の図面を開きます</value></data>
+  <data name="RecentTitle" xml:space="preserve"><value>最近使用した項目</value></data>
+  <data name="RecentShowAll" xml:space="preserve"><value>すべて表示</value></data>
+  <data name="RecentEmptyTitle" xml:space="preserve"><value>最近使用した図面はありません</value></data>
+  <data name="RecentEmptyDescription" xml:space="preserve"><value>図面を開くか保存すると、ここに表示されます。</value></data>
+  <data name="TemplatesTitle" xml:space="preserve"><value>テンプレート</value></data>
+  <data name="BlankTitle" xml:space="preserve"><value>空白</value></data>
+  <data name="BlankDescription" xml:space="preserve"><value>標準の空白図面</value></data>
+  <data name="ArchitectureTitle" xml:space="preserve"><value>建築設計</value></data>
+  <data name="ArchitectureDescription" xml:space="preserve"><value>建築作図プリセット</value></data>
+  <data name="UrbanTitle" xml:space="preserve"><value>都市計画</value></data>
+  <data name="UrbanDescription" xml:space="preserve"><value>計画作図プリセット</value></data>
+  <data name="ComingSoon" xml:space="preserve"><value>近日対応</value></data>
+  <data name="LearnTitle" xml:space="preserve"><value>UCAD を学ぶ</value></data>
+  <data name="Shortcuts" xml:space="preserve"><value>ショートカット</value></data>
+  <data name="BasicDrawing" xml:space="preserve"><value>基本作図</value></data>
+  <data name="Commands" xml:space="preserve"><value>コマンドとエイリアス</value></data>
+  <data name="Docs" xml:space="preserve"><value>ドキュメントを見る</value></data>
+</root>
