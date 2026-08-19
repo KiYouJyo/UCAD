@@ -24,8 +24,8 @@ public sealed partial class MainWindow
 
         // A routed KeyDown is not guaranteed when the CAD surface itself does not hold
         // keyboard focus. Register Delete as a root KeyboardAccelerator so the physical
-        // key remains available anywhere in the drawing window while text editors keep
-        // their normal Delete behavior.
+        // key remains available anywhere in the drawing window while unrelated text
+        // editors keep their normal Delete behavior.
         _deleteDrawingAccelerator = new KeyboardAccelerator
         {
             Key = VirtualKey.Delete
@@ -88,18 +88,11 @@ public sealed partial class MainWindow
             ? null
             : FocusManager.GetFocusedElement(RootLayout.XamlRoot);
 
-        // v0.9.3 intentionally gives the bottom command line initial keyboard focus.
-        // An empty command line must therefore still behave like AutoCAD: Delete erases
-        // the selected drawing objects. Once the user has actually typed text (or selected
-        // text) the same key belongs to text editing and must not start ERASE.
-        if (ReferenceEquals(focused, CommandInput))
-        {
-            if (CommandInput.Text.Length > 0 || CommandInput.SelectionLength > 0)
-            {
-                return false;
-            }
-        }
-        else if (IsTextEditingFocus(focused))
+        // PR #19 acceptance rule: CommandInput is the CAD command owner, not a generic
+        // text editor for the Delete key. Even when command text is present or selected,
+        // physical Delete must execute ERASE and must not mutate that text. Other text
+        // editors (settings, search, dialogs, etc.) retain ordinary text-editing Delete.
+        if (!ReferenceEquals(focused, CommandInput) && IsTextEditingFocus(focused))
         {
             return false;
         }
