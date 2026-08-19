@@ -188,6 +188,20 @@ public sealed partial class MainWindow
 
     private static IEnumerable<T> Descendants<T>(DependencyObject root) where T : DependencyObject
     {
+        // VisualTreeHelper reports zero children for some Collapsed panels before they
+        // have ever been materialized. Those are exactly the shelves that used to miss
+        // the startup localization pass. Panels own a stable logical Children collection,
+        // so traverse that collection directly and fall back to the visual tree elsewhere.
+        if (root is Panel panel)
+        {
+            foreach (var child in panel.Children)
+            {
+                if (child is T match) yield return match;
+                foreach (var descendant in Descendants<T>(child)) yield return descendant;
+            }
+            yield break;
+        }
+
         var count = VisualTreeHelper.GetChildrenCount(root);
         for (var i = 0; i < count; i++)
         {
