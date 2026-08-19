@@ -211,9 +211,32 @@ public sealed partial class MainWindow
         App.WriteStartupEvent($"Live localization refresh completed: {language}");
     }
 
+    private IEnumerable<Button> CommandSurfaceButtons()
+    {
+        var seen = new HashSet<Button>();
+
+        // These panels own generated controls even while Collapsed. Relying only on
+        // RootLayout's visual tree misses never-materialized shelves and was the reason
+        // hidden Modify/Annotate/Block tools remained English until first shown.
+        foreach (var panel in new Panel[] { DrawToolShelf, ModifyToolShelf, UnavailableToolShelf, ViewToolShelf })
+        {
+            foreach (var button in panel.Children.OfType<Button>())
+                if (seen.Add(button)) yield return button;
+            foreach (var button in Descendants<Button>(panel))
+                if (seen.Add(button)) yield return button;
+        }
+
+        foreach (var button in _extendedShelfButtons)
+            if (seen.Add(button)) yield return button;
+
+        // Keep visible rail/menu command buttons in the same pass as well.
+        foreach (var button in Descendants<Button>(RootLayout))
+            if (seen.Add(button)) yield return button;
+    }
+
     private void RefreshCommandSurfaceLabels()
     {
-        foreach (var button in Descendants<Button>(RootLayout))
+        foreach (var button in CommandSurfaceButtons())
         {
             if (!TryGetCommandFromToolTag(button.Tag, out var command) ||
                 !_commandRegistry.TryResolve(command, out _))
@@ -244,7 +267,7 @@ public sealed partial class MainWindow
 
     private string? RenderedCommandLabel(string command)
     {
-        foreach (var button in Descendants<Button>(RootLayout))
+        foreach (var button in CommandSurfaceButtons())
         {
             if (!TryGetCommandFromToolTag(button.Tag, out var candidate) ||
                 !string.Equals(candidate, command, StringComparison.OrdinalIgnoreCase))
