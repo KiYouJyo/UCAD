@@ -27,7 +27,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Restore failed: $LASTEXITCODE" }
           dotnet build src/UCAD.App/UCAD.App.csproj -c Release --no-restore -p:Platform=x64 -r win-x64
           if ($LASTEXITCODE -ne 0) { throw "Build failed: $LASTEXITCODE" }
-      - name: Switch zh-CN ja-JP en-US in one running process
+      - name: Switch and audit zh-CN ja-JP en-US in one running process
         shell: pwsh
         run: |
           $log = Join-Path $env:LOCALAPPDATA 'UCAD\Logs\startup.log'
@@ -53,7 +53,13 @@ jobs:
             Stop-Process -Id $process.Id -Force
             throw 'The one-process trilingual localization marker was not written.'
           }
-          if ($startupLog -match 'LocalizationSmoke|Localization:UcadV039:|UnhandledException') {
+          foreach ($language in @('zh-CN','ja-JP','en-US')) {
+            if ($startupLog -notmatch "Localization surface audit passed: $language / Start \+ shell \+ generated tools") {
+              Stop-Process -Id $process.Id -Force
+              throw "Rendered Start/shell/generated-tool audit did not pass for $language."
+            }
+          }
+          if ($startupLog -match 'LocalizationSmoke|Localization:UcadV039:|Localization:StartLive:|UnhandledException') {
             Stop-Process -Id $process.Id -Force
             throw 'UCAD reported a runtime localization failure.'
           }
