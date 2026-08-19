@@ -27,7 +27,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Restore failed: $LASTEXITCODE" }
           dotnet build src/UCAD.App/UCAD.App.csproj -c Release --no-restore -p:Platform=x64 -r win-x64
           if ($LASTEXITCODE -ne 0) { throw "Build failed: $LASTEXITCODE" }
-      - name: Validate Selection ERASE OSNAP Ortho Inspector and transparent cursor in one process
+      - name: Validate command focus Selection ERASE OSNAP Ortho Inspector cursor and dynamic input
         shell: pwsh
         run: |
           $log = Join-Path $env:LOCALAPPDATA 'UCAD\Logs\startup.log'
@@ -50,6 +50,10 @@ jobs:
           Write-Output $startupLog
           if ($process.HasExited) {
             throw "UCAD exited during interaction smoke with code $($process.ExitCode)."
+          }
+          if ($startupLog -notmatch 'Interaction smoke: initial drawing command input focus acquired') {
+            Stop-Process -Id $process.Id -Force
+            throw 'The drawing command input did not automatically acquire keyboard focus.'
           }
           if ($startupLog -notmatch 'Interaction smoke: Selection \+ ERASE \+ OSNAP \+ ORTHO \+ Inspector \+ transparent CAD cursor initialized') {
             Stop-Process -Id $process.Id -Force
