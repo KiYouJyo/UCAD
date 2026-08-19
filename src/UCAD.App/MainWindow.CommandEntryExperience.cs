@@ -68,9 +68,8 @@ public sealed partial class MainWindow
     {
         var session = ActiveSession;
         if (session is null) return;
-        session.Viewport.SetDynamicCommandDisplay(
-            session.StatusText,
-            CommandInput.Text,
-            session.CommandSession.IsActive);
+        var active = session.CommandSession.IsActive;
+        var prompt = active ? session.StatusText : ShellString("CommandPrompt");
+        session.Viewport.SetDynamicCommandDisplay(prompt, CommandInput.Text, active);
     }
 }
