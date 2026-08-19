@@ -37,19 +37,21 @@ public sealed partial class MainWindow
         session.Document.Add(circle);
         session.Interaction.Selection.Replace(line.Id);
 
-        // v0.9.3 auto-focuses the bottom command line when a drawing becomes active.
-        // Verify that an empty focused command line still lets physical Delete erase the
-        // drawing selection; this is the exact interaction that previously regressed.
-        CommandInput.Text = string.Empty;
-        if (!CommandInput.Focus(FocusState.Programmatic))
+        // CommandInput is the foreground CAD keyboard owner. Verify both initial focus
+        // and the same production helper used by window-reactivation focus recovery.
+        eraseButton.Focus(FocusState.Programmatic);
+        if (!TryFocusActiveCommandInput() || RootLayout.XamlRoot is null ||
+            !ReferenceEquals(FocusManager.GetFocusedElement(RootLayout.XamlRoot), CommandInput))
         {
-            throw new InvalidOperationException("Modify smoke could not focus the command input before Delete validation.");
+            throw new InvalidOperationException("Modify smoke command input focus restoration failed.");
         }
+
+        CommandInput.Text = string.Empty;
         if (!TryExecuteDeleteShortcut() ||
             session.Document.Entities.Count != 1 ||
             session.Document.Entities.Any(entity => entity.Id == line.Id))
         {
-            throw new InvalidOperationException("Modify smoke physical Delete failed while the empty auto-focused command line owned focus.");
+            throw new InvalidOperationException("Modify smoke physical Delete failed while the auto-focused command line owned focus.");
         }
         if (!session.Document.Undo() || session.Document.Entities.Count != 2)
         {
@@ -57,18 +59,37 @@ public sealed partial class MainWindow
         }
         session.Interaction.Selection.Replace(line.Id);
 
-        // Once command text exists, Delete belongs to the text editor and must not erase
-        // selected CAD geometry. This protects IME/editing semantics while keeping the
-        // empty command line compatible with AutoCAD-style Delete behavior.
+        // PR #19 acceptance rule: even a non-empty/selected command line reserves Delete
+        // for CAD ERASE. The typed command text itself must remain untouched.
         CommandInput.Text = "ER";
-        CommandInput.SelectionStart = CommandInput.Text.Length;
-        CommandInput.SelectionLength = 0;
+        CommandInput.SelectionStart = 0;
+        CommandInput.SelectionLength = CommandInput.Text.Length;
         CommandInput.Focus(FocusState.Programmatic);
+        var typedText = CommandInput.Text;
+        if (!TryExecuteDeleteShortcut() ||
+            session.Document.Entities.Count != 1 ||
+            session.Document.Entities.Any(entity => entity.Id == line.Id) ||
+            !string.Equals(CommandInput.Text, typedText, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("Modify smoke typed command-line Delete did not execute ERASE without mutating command text.");
+        }
+        if (!session.Document.Undo() || session.Document.Entities.Count != 2)
+        {
+            throw new InvalidOperationException("Modify smoke typed command-line Delete Undo failed.");
+        }
+        session.Interaction.Selection.Replace(line.Id);
+        CommandInput.Text = string.Empty;
+
+        // Unrelated text editors keep normal Delete semantics; the global accelerator must
+        // not steal Delete from search/settings/dialog text entry.
+        CommandSearch.Text = "MOVE";
+        CommandSearch.Focus(FocusState.Programmatic);
         if (TryExecuteDeleteShortcut() || session.Document.Entities.Count != 2)
         {
-            throw new InvalidOperationException("Modify smoke Delete stole input from a non-empty command line.");
+            throw new InvalidOperationException("Modify smoke Delete stole input from a non-CAD text editor.");
         }
-        CommandInput.Text = string.Empty;
+        CommandSearch.Text = string.Empty;
+        TryFocusActiveCommandInput();
 
         StartModifySmokeCommand(session, "MOVE");
         OnModifyPointAccepted(session, new CadPoint(0, 0));
@@ -146,10 +167,8 @@ public sealed partial class MainWindow
         var extended = RequireLine(session, extendTarget.Id);
         AssertModifyClose(new CadPoint(10, 20), extended.End, "EXTEND end");
 
-        // Preserve the stable baseline marker consumed by the UI contract checker while
-        // emitting a second v0.9.3-specific marker for the stricter runtime workflow.
         App.WriteStartupEvent("Modify smoke: physical Delete accelerator + ERASE + MOVE + COPY + ROTATE + SCALE + MIRROR + OFFSET + TRIM + EXTEND initialized");
-        App.WriteStartupEvent("Modify smoke: auto-focused empty command line Delete + text-input Delete guard + ERASE + MOVE + COPY + ROTATE + SCALE + MIRROR + OFFSET + TRIM + EXTEND initialized");
+        App.WriteStartupEvent("Modify smoke: restored command focus + typed command-line Delete ERASE + unrelated text-editor guard initialized");
     }
 
     private void StartModifySmokeCommand(CadWorkspaceSession session, string token)
