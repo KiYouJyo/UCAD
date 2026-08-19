@@ -5,7 +5,7 @@
     xmlns:canvas="using:Microsoft.Graphics.Canvas.UI.Xaml"
     Loaded="CadViewport_Loaded">
 
-    <Grid Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+    <Grid x:Name="ViewportRoot" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
         <canvas:CanvasControl
             x:Name="Canvas"
             Draw="Canvas_Draw"
@@ -15,5 +15,39 @@
             PointerCaptureLost="Canvas_PointerCaptureLost"
             PointerExited="Canvas_PointerExited"
             PointerWheelChanged="Canvas_PointerWheelChanged" />
+
+        <!-- AutoCAD-style dynamic command prompt. This is intentionally display-only:
+             the bottom command line remains the single IME/text input owner while the
+             prompt follows the pickbox/crosshair and mirrors command text live. -->
+        <Canvas x:Name="DynamicInputLayer" IsHitTestVisible="False">
+            <Border
+                x:Name="DynamicInputBorder"
+                Visibility="Collapsed"
+                MinWidth="96"
+                MaxWidth="340"
+                Padding="8,4"
+                Background="{StaticResource UcadControlFillStrongBrush}"
+                BorderBrush="{StaticResource UcadControlBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="4">
+                <StackPanel Orientation="Horizontal" Spacing="7">
+                    <TextBlock
+                        x:Name="DynamicPromptText"
+                        MaxWidth="250"
+                        VerticalAlignment="Center"
+                        FontSize="10"
+                        Foreground="{StaticResource UcadTextSecondaryBrush}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        x:Name="DynamicInputText"
+                        Visibility="Collapsed"
+                        VerticalAlignment="Center"
+                        FontSize="10"
+                        FontWeight="SemiBold"
+                        Foreground="{StaticResource UcadTextPrimaryBrush}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </Border>
+        </Canvas>
     </Grid>
 </UserControl>
