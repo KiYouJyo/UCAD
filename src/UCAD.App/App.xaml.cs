@@ -45,6 +45,13 @@ public partial class App : Application
             mainWindow.EnsureRecentFilesInitialized();
             mainWindow.EnsureFileCloseIntegration();
             mainWindow.EnsureAutoSaveInitialized();
+            mainWindow.EnsureCommandEntryExperienceInitialized();
+
+            // Several v0.5-v0.9 tool surfaces are created in code after InitializeComponent.
+            // Run one final localization pass only after every surface exists so a non-English
+            // startup never exposes the English construction-time command labels.
+            mainWindow.RefreshLocalization();
+
             mainWindow.HandleInitialFileActivation();
             mainWindow.ScheduleLocalizationSmoke();
             mainWindow.ScheduleInteractionSmoke();
