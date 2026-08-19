@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="CheckTitle" xml:space="preserve"><value>检查更新</value></data>
+  <data name="Checking" xml:space="preserve"><value>正在检查最新 GitHub Release…</value></data>
+  <data name="UpToDateTitle" xml:space="preserve"><value>UCAD 已是最新版本</value></data>
+  <data name="UpToDateMessage" xml:space="preserve"><value>当前正在运行 UCAD v{0}，暂无更新的稳定版 GitHub Release。</value></data>
+  <data name="AvailableTitle" xml:space="preserve"><value>UCAD v{0} 可用</value></data>
+  <data name="AvailableMessage" xml:space="preserve"><value>检测到新的稳定版本。UCAD 将下载已签名的 x64 MSIX 安装包，使用 SHA256SUMS.txt 校验后，再打开 Windows 应用安装程序。</value></data>
+  <data name="DownloadInstall" xml:space="preserve"><value>下载并安装</value></data>
+  <data name="ViewRelease" xml:space="preserve"><value>查看 Release</value></data>
+  <data name="Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="Close" xml:space="preserve"><value>关闭</value></data>
+  <data name="DownloadingTitle" xml:space="preserve"><value>正在下载 UCAD v{0}</value></data>
+  <data name="Downloading" xml:space="preserve"><value>正在下载已签名更新…</value></data>
+  <data name="DownloadingPercent" xml:space="preserve"><value>{0:0.0}% · {1:0.0} MB / {2:0.0} MB</value></data>
+  <data name="DownloadingBytes" xml:space="preserve"><value>已下载 {0:0.0} MB</value></data>
+  <data name="Verifying" xml:space="preserve"><value>正在校验 SHA-256…</value></data>
+  <data name="Launching" xml:space="preserve"><value>正在打开 Windows 应用安装程序…</value></data>
+  <data name="InstallerLaunchFailed" xml:space="preserve"><value>Windows 无法为已下载的安装包打开应用安装程序。你可以前往 GitHub Release 手动安装。</value></data>
+  <data name="ErrorTitle" xml:space="preserve"><value>更新失败</value></data>
+  <data name="ErrorMessage" xml:space="preserve"><value>UCAD 未能完成更新检查或下载，当前已安装文件没有被修改。</value></data>
+  <data name="ErrorDetails" xml:space="preserve"><value>详细信息：{0}</value></data>
+</root>
