@@ -6,7 +6,7 @@ namespace UCAD.Core.Tests;
 public sealed class LocalizationResourceParityTests
 {
     private static readonly string[] Languages = ["zh-CN", "ja-JP", "en-US"];
-    private static readonly string[] ResourceMaps = ["Resources.resw", "UcadV039.resw", "ShellLive.resw", "AuthoringLive.resw", "StartLive.resw"];
+    private static readonly string[] ResourceMaps = ["Resources.resw", "UcadV039.resw", "ShellLive.resw", "AuthoringLive.resw", "StartLive.resw", "UpdateLive.resw"];
 
     [Fact]
     public void EveryUserInterfaceResourceMapHasExactTriLanguageKeyParity()
@@ -29,23 +29,25 @@ public sealed class LocalizationResourceParityTests
     }
 
     [Fact]
-    public void StartAndGeneratedToolCriticalStringsAreActuallyTranslated()
+    public void StartGeneratedToolsAndUpdateCriticalStringsAreActuallyTranslated()
     {
         var stringsRoot = LocateStringsRoot();
-        var expected = new Dictionary<string, (string Start, string Move, string Erase)>(StringComparer.Ordinal)
+        var expected = new Dictionary<string, (string Start, string Move, string Erase, string Download)>(StringComparer.Ordinal)
         {
-            ["zh-CN"] = ("开始使用 UCAD", "移动", "删除"),
-            ["ja-JP"] = ("UCAD を開始", "移動", "削除"),
-            ["en-US"] = ("Start with UCAD", "Move", "Erase")
+            ["zh-CN"] = ("开始使用 UCAD", "移动", "删除", "下载并安装"),
+            ["ja-JP"] = ("UCAD を開始", "移動", "削除", "ダウンロードしてインストール"),
+            ["en-US"] = ("Start with UCAD", "Move", "Erase", "Download & install")
         };
 
         foreach (var language in Languages)
         {
             var start = ReadValues(Path.Combine(stringsRoot, language, "StartLive.resw"));
             var shell = ReadValues(Path.Combine(stringsRoot, language, "ShellLive.resw"));
+            var update = ReadValues(Path.Combine(stringsRoot, language, "UpdateLive.resw"));
             Assert.Equal(expected[language].Start, start["Title"]);
             Assert.Equal(expected[language].Move, shell["CommandLabel_MOVE"]);
             Assert.Equal(expected[language].Erase, shell["CommandLabel_ERASE"]);
+            Assert.Equal(expected[language].Download, update["DownloadInstall"]);
         }
     }
 
