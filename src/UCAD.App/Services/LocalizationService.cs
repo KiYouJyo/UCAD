@@ -14,6 +14,7 @@ public sealed class LocalizationService
     private const string V039MapName = "UcadV039";
     private const string ShellLiveMapName = "ShellLive";
     private const string AuthoringLiveMapName = "AuthoringLive";
+    private const string StartLiveMapName = "StartLive";
     private const string LiveReloadNoteKey = "Settings_Language_ReloadNote";
     private const string DraftingInteractionNoteKey = "Settings_Drafting_PendingNote";
     private const string CoreSnapOptionKey = "Settings_Option_SnapCore";
@@ -109,6 +110,8 @@ public sealed class LocalizationService
         // shell map remains stable while still sharing the same live ResourceContext.
         return string.IsNullOrWhiteSpace(shell) ? GetStringFromMap(key, AuthoringLiveMapName) : shell;
     }
+
+    public string GetStartString(string key) => GetStringFromMap(key, StartLiveMapName);
 
     public string GetV039String(string key)
     {
