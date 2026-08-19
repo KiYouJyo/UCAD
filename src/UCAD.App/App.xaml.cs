@@ -46,6 +46,7 @@ public partial class App : Application
             mainWindow.EnsureFileCloseIntegration();
             mainWindow.EnsureAutoSaveInitialized();
             mainWindow.EnsureCommandEntryExperienceInitialized();
+            mainWindow.EnsurePr19AcceptanceUiInitialized();
 
             // Several v0.5-v0.9 tool surfaces are created in code after InitializeComponent.
             // Run one final localization pass only after every surface exists so a non-English
