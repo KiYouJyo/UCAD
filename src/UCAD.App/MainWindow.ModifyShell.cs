@@ -87,7 +87,19 @@ public sealed partial class MainWindow
         var focused = RootLayout.XamlRoot is null
             ? null
             : FocusManager.GetFocusedElement(RootLayout.XamlRoot);
-        if (IsTextEditingFocus(focused))
+
+        // v0.9.3 intentionally gives the bottom command line initial keyboard focus.
+        // An empty command line must therefore still behave like AutoCAD: Delete erases
+        // the selected drawing objects. Once the user has actually typed text (or selected
+        // text) the same key belongs to text editing and must not start ERASE.
+        if (ReferenceEquals(focused, CommandInput))
+        {
+            if (CommandInput.Text.Length > 0 || CommandInput.SelectionLength > 0)
+            {
+                return false;
+            }
+        }
+        else if (IsTextEditingFocus(focused))
         {
             return false;
         }
