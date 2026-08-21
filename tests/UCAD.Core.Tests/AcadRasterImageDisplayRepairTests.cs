@@ -16,6 +16,7 @@ public sealed class AcadRasterImageDisplayRepairTests
     {
         var definition = new ImageDefinition
         {
+            Name = "site-image",
             FileName = @"images\site.png",
             Size = new XY(20, 10)
         };
