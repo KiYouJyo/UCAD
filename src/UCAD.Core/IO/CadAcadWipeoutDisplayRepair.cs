@@ -8,9 +8,10 @@ using UcadDocument = UCAD.Core.CadDocument;
 namespace UCAD.Core.IO;
 
 /// <summary>
-/// Display-first recovery for AutoCAD WIPEOUT. Source-order metadata keeps the recovered
-/// opaque mask at its original ENTITIES position, so later source geometry remains visible
-/// while earlier geometry is correctly obscured.
+/// Display-first recovery for AutoCAD WIPEOUT and the shared image-like visual resource
+/// stage. Source-order metadata keeps recovered opaque masks at their original ENTITIES
+/// position; raster-image placement recovery runs from the same stage because both use
+/// AutoCAD's image basis/clipping model.
 /// </summary>
 internal static class CadAcadWipeoutDisplayRepair
 {
@@ -42,6 +43,8 @@ internal static class CadAcadWipeoutDisplayRepair
                 warnings.Add($"AutoCAD WIPEOUT display recovery failed; the normalized import was retained. {ex.Message}");
             }
         }
+
+        CadAcadRasterImageDisplayRepair.Apply(source, target, warnings);
     }
 
     private static IReadOnlyList<CadPoint> GetWorldBoundary(Wipeout source)
