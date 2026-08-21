@@ -18,40 +18,15 @@ public sealed partial class CadViewport
     {
         if (_annotationCompletionRenderHooksInstalled) return;
         _annotationCompletionRenderHooksInstalled = true;
-        Canvas.Draw += Canvas_AnnotationCompletionRender;
+        // Annotation entities are now drawn from the authoritative document-order pass.
+        // A second overlay pass duplicated text/leader strokes and could draw annotations
+        // above entities that should mask them in the original AutoCAD draw order.
         Canvas.Invalidate();
     }
 
     private void Canvas_AnnotationCompletionRender(CanvasControl sender, CanvasDrawEventArgs args)
     {
-        var ds = args.DrawingSession;
-        foreach (var entity in _document.VisibleEntities.Where(CadAnnotationEntityGeometry.Supports))
-        {
-            Color color;
-            float strokeWidth;
-            if (_interaction.Selection.Contains(entity.Id))
-            {
-                color = _selectedColor;
-                strokeWidth = 2.0f;
-            }
-            else if (_hoverEntityId == entity.Id)
-            {
-                color = _hoverColor;
-                strokeWidth = 1.6f;
-            }
-            else
-            {
-                var properties = _document.GetEntityProperties(entity.Id);
-                var layer = _document.GetLayer(properties.LayerName);
-                color = ResolveEntityColor(properties.ColorHex, layer.ColorHex);
-                strokeWidth = (float)Math.Clamp((properties.LineWeight ?? layer.LineWeight) * 3.0, 0.8, 4.0);
-            }
-            DrawCompletedAnnotation(ds, entity, color, strokeWidth);
-        }
-
-        DrawCompletedAnnotationGrips(ds);
-        DrawCompletedAnnotationPreview(ds);
-        DrawCadCursor(ds, sender.ActualWidth, sender.ActualHeight);
+        // Compatibility stub: intentionally not subscribed after ordered rendering became authoritative.
     }
 
     private void DrawCompletedAnnotation(CanvasDrawingSession ds, ICadEntity entity, Color color, float strokeWidth)
