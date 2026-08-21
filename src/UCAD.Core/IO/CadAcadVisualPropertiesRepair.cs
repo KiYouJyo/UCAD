@@ -8,8 +8,8 @@ namespace UCAD.Core.IO;
 /// Re-applies AutoCAD-native visual state after semantic/display fallback expansion.
 /// SourceOrder is the stable join key: one source entity may expand into multiple UCAD
 /// display entities, and all of them must inherit invisibility/transparency consistently.
-/// SHAPE references and proxy graphics are consumed here only after normal semantic recovery
-/// has had first refusal.
+/// SHX text, SHAPE references and proxy graphics are consumed here only after normal
+/// semantic recovery has had first refusal.
 /// </summary>
 internal static class CadAcadVisualPropertiesRepair
 {
@@ -18,9 +18,10 @@ internal static class CadAcadVisualPropertiesRepair
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(target);
 
-        // At this stage SourceOrder has already been repaired. SHAPE references must be
-        // registered before proxy graphics, otherwise a proxy outline would claim the source
-        // slot and prevent the real SHX resource from being resolved after the drawing path is known.
+        // At this stage SourceOrder has already been repaired. Real external-resource
+        // references must claim their source slot before proxy graphics, otherwise a proxy
+        // outline could suppress later SHX/SHP resolution once the drawing path is known.
+        CadAcadShxTextDisplayRepair.Apply(source, target, []);
         CadAcadShapeDisplayRepair.Apply(source, target, []);
         CadAcadProxyGraphicsDisplayRepair.Apply(source, target, []);
 
