@@ -15,9 +15,10 @@ using UcadDocument = UCAD.Core.CadDocument;
 namespace UCAD.Core.IO;
 
 /// <summary>
-/// AutoCAD transport bridge. ACadSharp owns DWG transport, IxMilia.Dxf owns
-/// text/binary DXF normalization, and UCAD's full semantic bridge owns the
-/// authoritative conversion into the editable document model.
+/// AutoCAD transport bridge. ACadSharp owns DWG transport and provides a native
+/// semantic recovery pass for both DWG and DXF; IxMilia.Dxf owns text/binary DXF
+/// normalization; UCAD's full semantic bridge remains the authoritative conversion
+/// into the editable document model.
 /// </summary>
 public static class CadAcadInteropCodec
 {
@@ -47,6 +48,23 @@ public static class CadAcadInteropCodec
     {
         if (content.IsEmpty) throw new ArgumentException("DXF content cannot be empty.", nameof(content));
         var warnings = new List<string>();
+
+        // Keep a second, native semantic view of the original DXF. IxMilia remains the
+        // normalization transport because it is robust across text/binary DXF, while
+        // ACadSharp can recover richer AutoCAD-native entities such as MLEADER and
+        // dimension contexts that a normalized generic bridge may otherwise downgrade.
+        AcadDocument? acadDocument = null;
+        try
+        {
+            using var semanticInput = new MemoryStream(content.ToArray(), writable: false);
+            using var semanticReader = CreateDxfReaderWithDefaults(semanticInput, warnings, "DXF native read");
+            acadDocument = semanticReader.Read();
+        }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or ArgumentException or InvalidOperationException or NotSupportedException or ACadSharp.Exceptions.DxfException)
+        {
+            warnings.Add($"DXF native semantic recovery was unavailable; normalized UCAD import remains active. {ex.Message}");
+        }
+
         using var input = new MemoryStream(content.ToArray(), writable: false);
         var dxfFile = IxDxfFile.Load(input);
         using var normalized = new MemoryStream();
@@ -54,6 +72,13 @@ public static class CadAcadInteropCodec
         var bridgeText = Utf8NoBom.GetString(normalized.ToArray());
         var imported = CadDxfFullInteropCodec.Import(bridgeText);
         AppendWarnings(warnings, "UCAD DXF bridge", imported.Warnings);
+
+        if (acadDocument is not null)
+        {
+            CadAcadDwgSemanticRepair.Apply(acadDocument, imported.Document, warnings);
+            CadAcadLayoutInterop.Import(acadDocument, imported.Document, warnings);
+        }
+
         imported.Document.ResetHistory();
         return new CadAcadImportResult(imported.Document, warnings, NormalizeExtension(sourceExtension), dxfFile.Header.Version.ToString());
     }
