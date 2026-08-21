@@ -20,7 +20,7 @@ public sealed partial class CadViewport
     /// through this single document-order traversal so block children render exactly like
     /// top-level entities and later helper passes cannot reorder annotation/extended geometry.
     /// Imported AutoCAD entities additionally use retained source order so display-repair
-    /// objects (WIPEOUT, TABLE snapshots, dimensions, etc.) return to their original stack.
+    /// objects (WIPEOUT, IMAGE, TABLE snapshots, dimensions, etc.) return to their original stack.
     /// </summary>
     public void EnsureAuthoringRenderHooks()
     {
@@ -80,6 +80,9 @@ public sealed partial class CadViewport
     {
         switch (entity)
         {
+            case RasterImageEntity raster:
+                DrawRasterImageEntity(ds, raster, color, strokeWidth);
+                break;
             case WipeoutEntity wipeout:
                 DrawWipeoutEntity(ds, wipeout);
                 break;
