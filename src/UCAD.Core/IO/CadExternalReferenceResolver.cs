@@ -48,6 +48,11 @@ public static class CadExternalReferenceResolver
     {
         foreach (var shape in document.Entities.OfType<ShapeReferenceEntity>().ToArray())
         {
+            var markerHandle = CadAcadShapeDisplayRepair.MarkerHandlePrefix + shape.Id.ToString("N");
+            var markerIds = document.Entities
+                .Where(entity => string.Equals(document.GetEntityProperties(entity.Id).SourceHandle, markerHandle, StringComparison.Ordinal))
+                .Select(entity => entity.Id)
+                .ToArray();
             var resolvedAny = false;
             var decodeErrors = new List<string>();
             foreach (var reference in shape.ReferencePaths)
@@ -86,6 +91,7 @@ public static class CadExternalReferenceResolver
                         .ToArray();
                     if (vectors.Length == 0) continue;
                     document.Replace(shape.Id, vectors);
+                    if (markerIds.Length > 0) document.RemoveRange(markerIds);
                     break;
                 }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or ArgumentException or NotSupportedException or FormatException)
@@ -143,8 +149,6 @@ public static class CadExternalReferenceResolver
                 var siblingCandidate = Path.GetFullPath(Path.Combine(sourceDirectory, fileName));
                 if (!candidates.Contains(siblingCandidate, StringComparer.OrdinalIgnoreCase)) candidates.Add(siblingCandidate);
 
-                // Common packaged-drawing convention: support resources are kept beside the
-                // drawing in Fonts or Support subdirectories.
                 foreach (var folder in new[] { "Fonts", "fonts", "Support", "support" })
                 {
                     var supportCandidate = Path.GetFullPath(Path.Combine(sourceDirectory, folder, fileName));
