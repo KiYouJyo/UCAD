@@ -39,6 +39,7 @@ public static class CadAcadInteropCodec
         var imported = CadDxfFullInteropCodec.Import(bridgeText);
         AppendWarnings(warnings, "UCAD DXF bridge", imported.Warnings);
         CadAcadDwgSemanticRepair.Apply(acadDocument, imported.Document, warnings);
+        CadAcadInsertDisplayRepair.Apply(acadDocument, imported.Document, warnings);
         CadAcadLayoutInterop.Import(acadDocument, imported.Document, warnings);
         imported.Document.ResetHistory();
         return new CadAcadImportResult(imported.Document, warnings, NormalizeExtension(sourceExtension), acadDocument.Header.Version.ToString());
@@ -76,6 +77,7 @@ public static class CadAcadInteropCodec
         if (acadDocument is not null)
         {
             CadAcadDwgSemanticRepair.Apply(acadDocument, imported.Document, warnings);
+            CadAcadInsertDisplayRepair.Apply(acadDocument, imported.Document, warnings);
             CadAcadLayoutInterop.Import(acadDocument, imported.Document, warnings);
         }
 
