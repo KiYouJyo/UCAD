@@ -131,7 +131,7 @@ internal static class CadDxfSourceOrderRepair
         foreach (var record in records.Where(record => EqualsToken(record.Type, "SOLID") || EqualsToken(record.Type, "TRACE")))
         {
             var layer = GetString(record.Data, 8, CadLayer.DefaultLayerName);
-            var sourcePoint = TryGetPoint(record.Data, 10, 20, out var point) ? point : (double X, double Y)?null;
+            (double X, double Y)? sourcePoint = TryGetPoint(record.Data, 10, 20, out var point) ? point : null;
             var candidate = document.Entities
                 .OfType<HatchEntity>()
                 .Where(entity => document.GetEntityProperties(entity.Id).SourceOrder is null)
