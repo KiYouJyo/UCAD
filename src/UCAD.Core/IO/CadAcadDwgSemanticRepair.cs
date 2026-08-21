@@ -7,6 +7,7 @@ using AcadDimension = ACadSharp.Entities.Dimension;
 using AcadDocument = ACadSharp.CadDocument;
 using AcadLeader = ACadSharp.Entities.Leader;
 using AcadMText = ACadSharp.Entities.MText;
+using AcadMultiLeader = ACadSharp.Entities.MultiLeader;
 using UcadDocument = UCAD.Core.CadDocument;
 using UcadLeader = UCAD.Core.Entities.LeaderEntity;
 
@@ -23,6 +24,7 @@ internal static class CadAcadDwgSemanticRepair
         ArgumentNullException.ThrowIfNull(warnings);
         RestoreDimensions(source, target, warnings);
         RestoreLeaders(source, target, warnings);
+        RestoreMultiLeaders(source, target, warnings);
     }
 
     private static void RestoreDimensions(AcadDocument source, UcadDocument target, List<string> warnings)
@@ -125,6 +127,63 @@ internal static class CadAcadDwgSemanticRepair
         }
     }
 
+    private static void RestoreMultiLeaders(AcadDocument source, UcadDocument target, List<string> warnings)
+    {
+        var sourceMultiLeaders = source.Entities.OfType<AcadMultiLeader>().ToArray();
+        if (sourceMultiLeaders.Length == 0) return;
+
+        foreach (var sourceMultiLeader in sourceMultiLeaders)
+        {
+            var context = sourceMultiLeader.ContextData;
+            if (context is null) continue;
+
+            var text = NormalizeMText(context.TextLabel);
+            var textHeight = context.TextHeight > GeometryTolerance ? context.TextHeight : 2.5;
+            var properties = ToEntityProperties(sourceMultiLeader, target);
+            var recoveredAny = false;
+            var emittedTextLeader = false;
+
+            foreach (var root in context.LeaderRoots)
+            {
+                foreach (var line in root.Lines)
+                {
+                    var points = new List<CadPoint>();
+                    foreach (var point in line.Points)
+                    {
+                        if (IsFinite(point)) AppendDistinct(points, ToCadPoint(point));
+                    }
+
+                    if (IsFinite(root.ConnectionPoint)) AppendDistinct(points, ToCadPoint(root.ConnectionPoint));
+                    if (!string.IsNullOrWhiteSpace(text) && IsFinite(context.ContentBasePoint))
+                        AppendDistinct(points, ToCadPoint(context.ContentBasePoint));
+
+                    if (points.Count < 2) continue;
+                    if (!emittedTextLeader && !string.IsNullOrWhiteSpace(text))
+                    {
+                        target.Add(new UcadLeader(points, text, textHeight, CadTextStyle.DefaultName), properties);
+                        emittedTextLeader = true;
+                    }
+                    else
+                    {
+                        target.Add(new PolylineEntity(points, closed: false), properties);
+                    }
+                    recoveredAny = true;
+                }
+            }
+
+            if (!recoveredAny) continue;
+
+            // The ASCII bridge does not understand MLEADER today. Once native DWG context data
+            // has produced visible leader geometry, replace the generic unsupported-record warning
+            // with a narrower warning only when content semantics are still lossy.
+            warnings.RemoveAll(warning => warning.Contains("MLEADER", StringComparison.OrdinalIgnoreCase));
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                warnings.Add("DWG native semantic repair: MLEADER leader geometry was recovered, but non-text/block content has no editable UCAD equivalent yet.");
+            }
+        }
+    }
+
     private static void RemoveLeaderFallback(UcadDocument target, IReadOnlyList<CadPoint> leaderPoints, AcadMText annotation, string text)
     {
         var removals = new List<Guid>();
@@ -152,7 +211,7 @@ internal static class CadAcadDwgSemanticRepair
     }
 
     private static string? NormalizeDimensionText(string? value) => string.IsNullOrEmpty(value) || string.Equals(value, "<>", StringComparison.Ordinal) ? null : value;
-    private static string NormalizeMText(string value) => (value ?? string.Empty).Replace("\r\n", "\n", StringComparison.Ordinal).Replace("\r", "\n", StringComparison.Ordinal).Replace("\\P", "\n", StringComparison.OrdinalIgnoreCase);
+    private static string NormalizeMText(string? value) => (value ?? string.Empty).Replace("\r\n", "\n", StringComparison.Ordinal).Replace("\r", "\n", StringComparison.Ordinal).Replace("\\P", "\n", StringComparison.OrdinalIgnoreCase);
 
     private static bool PointsMatch(IReadOnlyList<CadPoint> first, IReadOnlyList<CadPoint> second)
     {
@@ -161,6 +220,12 @@ internal static class CadAcadDwgSemanticRepair
         return true;
     }
 
+    private static void AppendDistinct(List<CadPoint> points, CadPoint point)
+    {
+        if (points.Count == 0 || !PointsNear(points[^1], point)) points.Add(point);
+    }
+
+    private static bool IsFinite(CSMath.XYZ point) => double.IsFinite(point.X) && double.IsFinite(point.Y);
     private static bool PointsNear(CadPoint first, CadPoint second) => Math.Abs(first.X - second.X) <= GeometryTolerance && Math.Abs(first.Y - second.Y) <= GeometryTolerance;
     private static double DistanceSquared(CSMath.XYZ first, CSMath.XYZ second) { var dx = first.X - second.X; var dy = first.Y - second.Y; return dx * dx + dy * dy; }
     private static CadPoint FartherPoint(CadPoint origin, CadPoint first, CadPoint second) => DistanceSquared(origin, first) >= DistanceSquared(origin, second) ? first : second;
