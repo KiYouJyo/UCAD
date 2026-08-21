@@ -83,6 +83,9 @@ public sealed partial class CadViewport
             case RasterImageEntity raster:
                 DrawRasterImageEntity(ds, raster, color, strokeWidth);
                 break;
+            case UnderlayReferenceEntity underlay:
+                DrawUnderlayReferenceEntity(ds, underlay, color, strokeWidth);
+                break;
             case WipeoutEntity wipeout:
                 DrawWipeoutEntity(ds, wipeout);
                 break;
