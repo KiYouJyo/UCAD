@@ -77,8 +77,6 @@ public sealed partial class CadViewport
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or InvalidOperationException or COMException)
         {
-            // Keep the exact insertion/clip reference visible. A corrupt/unsupported external PDF
-            // must never abort the CAD drawing render loop or repeatedly retry every frame.
             _underlayLoadFailures.Add(underlay.Id);
         }
         finally
@@ -93,7 +91,6 @@ public sealed partial class CadViewport
             uint.TryParse(pageToken.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var oneBased) &&
             oneBased >= 1 && oneBased <= pageCount)
             return oneBased - 1;
-
         return 0;
     }
 
@@ -119,19 +116,16 @@ public sealed partial class CadViewport
                 clipLayer = ds.CreateLayer(1f, clipGeometry);
             }
 
-            // Windows.Data.Pdf rasterizes with a top-left pixel origin while AutoCAD places
-            // PDF underlays from the lower-left corner. Anchor at the page's world upper-left
-            // and reverse the local V basis so the page is neither upside-down nor mirrored.
             var lowerLeft = underlay.InsertionPoint;
             var radians = underlay.RotationRadians;
             var cos = Math.Cos(radians);
             var sin = Math.Sin(radians);
             var uWorld = new CadVector(cos * underlay.XScale, sin * underlay.XScale);
             var vWorld = new CadVector(-sin * underlay.YScale, cos * underlay.YScale);
-            var upperLeft = lowerLeft + (vWorld * heightInches);
+            var upperLeft = lowerLeft + new CadVector(vWorld.X * heightInches, vWorld.Y * heightInches);
             var origin = WorldToScreen(upperLeft);
             var uEnd = WorldToScreen(upperLeft + uWorld);
-            var vEnd = WorldToScreen(upperLeft - vWorld);
+            var vEnd = WorldToScreen(upperLeft + new CadVector(-vWorld.X, -vWorld.Y));
             var u = uEnd - origin;
             var v = vEnd - origin;
             var transform = new Matrix3x2(u.X, u.Y, v.X, v.Y, origin.X, origin.Y);
@@ -161,10 +155,10 @@ public sealed partial class CadViewport
         var radians = underlay.RotationRadians;
         var cos = Math.Cos(radians);
         var sin = Math.Sin(radians);
-        var u = new CadVector(cos * underlay.XScale, sin * underlay.XScale) * width;
-        var v = new CadVector(-sin * underlay.YScale, cos * underlay.YScale) * height;
+        var u = new CadVector(cos * underlay.XScale * width, sin * underlay.XScale * width);
+        var v = new CadVector(-sin * underlay.YScale * height, cos * underlay.YScale * height);
         var lowerLeft = underlay.InsertionPoint;
-        return [lowerLeft, lowerLeft + u, lowerLeft + u + v, lowerLeft + v];
+        return [lowerLeft, lowerLeft + u, lowerLeft + new CadVector(u.X + v.X, u.Y + v.Y), lowerLeft + v];
     }
 
     private CanvasGeometry CreateWorldPolygonGeometry(CanvasDrawingSession ds, IReadOnlyList<CadPoint> boundary)
