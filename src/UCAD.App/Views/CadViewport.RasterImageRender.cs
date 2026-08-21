@@ -19,7 +19,7 @@ public sealed partial class CadViewport
     {
         if (image.IsResolved && _rasterImageBitmaps.TryGetValue(image.Id, out var bitmap))
         {
-            DrawResolvedRasterImage(ds, image, bitmap);
+            DrawResolvedRasterImage(ds, image, bitmap, color.A / 255f);
             return;
         }
 
@@ -62,7 +62,7 @@ public sealed partial class CadViewport
         }
     }
 
-    private void DrawResolvedRasterImage(CanvasDrawingSession ds, RasterImageEntity image, CanvasBitmap bitmap)
+    private void DrawResolvedRasterImage(CanvasDrawingSession ds, RasterImageEntity image, CanvasBitmap bitmap, float entityOpacity)
     {
         if (image.ClipBoundary.Count < 3) return;
         using var clip = CreateRasterClipGeometry(ds, image.ClipBoundary);
@@ -83,7 +83,7 @@ public sealed partial class CadViewport
         {
             ds.Transform = transform;
             var destination = new Rect(0, 0, image.PixelWidth, image.PixelHeight);
-            var opacity = Math.Clamp(1f - (image.Fade / 100f), 0f, 1f);
+            var opacity = Math.Clamp((1f - (image.Fade / 100f)) * entityOpacity, 0f, 1f);
             ds.DrawImage(bitmap, destination, bitmap.Bounds, opacity);
         }
         finally
