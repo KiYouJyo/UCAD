@@ -3,6 +3,7 @@ using Microsoft.Graphics.Canvas.Geometry;
 using Microsoft.Graphics.Canvas.Text;
 using System.Globalization;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using UCAD.Core.Entities;
 using UCAD.Core.Geometry;
 using Windows.Data.Pdf;
