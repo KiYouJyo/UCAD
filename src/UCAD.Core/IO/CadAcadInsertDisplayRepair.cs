@@ -26,17 +26,18 @@ internal static class CadAcadInsertDisplayRepair
 
     public static void Apply(AcadDocument source, UcadDocument target, List<string> warnings)
     {
-        foreach (var insert in source.Entities.OfType<AcadInsert>())
+        var sourceEntities = source.Entities.ToArray();
+        for (var sourceOrder = 0; sourceOrder < sourceEntities.Length; sourceOrder++)
         {
-            if (!NeedsDisplayFallback(insert)) continue;
+            if (sourceEntities[sourceOrder] is not AcadInsert insert || !NeedsDisplayFallback(insert)) continue;
             try
             {
                 var recovered = 0;
                 foreach (var instance in EnumerateInstances(insert))
                 {
                     var exploded = Flatten(instance, 0, warnings).ToArray();
-                    if (exploded.Length > 0) recovered += ImportSnapshot(exploded, instance, target, warnings);
-                    recovered += RecoverAttributes(instance, target, warnings);
+                    if (exploded.Length > 0) recovered += ImportSnapshot(exploded, instance, target, warnings, sourceOrder);
+                    recovered += RecoverAttributes(instance, target, warnings, sourceOrder);
                 }
 
                 if (recovered == 0)
@@ -162,7 +163,8 @@ internal static class CadAcadInsertDisplayRepair
         IReadOnlyList<ACadSharp.Entities.Entity> exploded,
         AcadInsert sourceInsert,
         UcadDocument target,
-        List<string> warnings)
+        List<string> warnings,
+        int sourceOrder)
     {
         var snapshot = new AcadDocument();
         foreach (var entity in exploded) snapshot.Entities.Add(entity);
@@ -191,13 +193,13 @@ internal static class CadAcadInsertDisplayRepair
                 ? ResolveInsertLayer(sourceInsert)
                 : properties.LayerName;
             EnsureLayer(target, layerName);
-            additions.Add((entity, properties with { LayerName = layerName }));
+            additions.Add((entity, properties with { LayerName = layerName, SourceOrder = sourceOrder }));
         }
         if (additions.Count > 0) target.AddRange(additions);
         return additions.Count;
     }
 
-    private static int RecoverAttributes(AcadInsert instance, UcadDocument target, List<string> warnings)
+    private static int RecoverAttributes(AcadInsert instance, UcadDocument target, List<string> warnings, int sourceOrder)
     {
         if (instance.Block is null || !instance.Block.AttributeDefinitions.Any()) return 0;
         var values = instance.Attributes
@@ -205,7 +207,7 @@ internal static class CadAcadInsertDisplayRepair
             .GroupBy(attribute => attribute.Tag, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(group => group.Key, group => group.First().Value ?? string.Empty, StringComparer.OrdinalIgnoreCase);
         var transform = instance.GetTransform();
-        var properties = ToInsertProperties(instance, target);
+        var properties = ToInsertProperties(instance, target, sourceOrder);
         var added = 0;
 
         foreach (var definition in instance.Block.AttributeDefinitions)
@@ -242,12 +244,12 @@ internal static class CadAcadInsertDisplayRepair
             if (!target.TryGetDimensionStyle(style.Name, out _)) target.DefineDimensionStyle(style);
     }
 
-    private static CadEntityProperties ToInsertProperties(AcadInsert source, UcadDocument target)
+    private static CadEntityProperties ToInsertProperties(AcadInsert source, UcadDocument target, int sourceOrder)
     {
         var layer = ResolveInsertLayer(source);
         EnsureLayer(target, layer);
         var lineType = string.IsNullOrWhiteSpace(source.LineType?.Name) ? "ByLayer" : source.LineType.Name;
-        return new CadEntityProperties(layer, lineType: lineType);
+        return new CadEntityProperties(layer, lineType: lineType, sourceOrder: sourceOrder);
     }
 
     private static string ResolveInsertLayer(AcadInsert source) =>
