@@ -64,6 +64,7 @@ public static class CadDxfFullInteropCodec
 
         CadDxfDisplayFallbackCodec.Apply(content, imported.Document, warnings);
         CadDxfHatchDisplayFallback.Apply(content, imported.Document, warnings);
+        CadDxfUnderlayDisplayFallback.Apply(content, imported.Document, warnings);
         imported.Document.ResetHistory();
         return new DxfImportResult(imported.Document, warnings);
     }
