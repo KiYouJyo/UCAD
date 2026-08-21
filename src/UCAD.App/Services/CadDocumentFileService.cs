@@ -35,24 +35,37 @@ public sealed class CadDocumentFileService
     public async Task<DxfImportResult> OpenDxfAsync(string filePath, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
-        var bytes = await File.ReadAllBytesAsync(Path.GetFullPath(filePath), cancellationToken);
+        var fullPath = Path.GetFullPath(filePath);
+        var bytes = await File.ReadAllBytesAsync(fullPath, cancellationToken);
         var import = CadAcadPreservingInteropCodec.ImportDxf(bytes, ".dxf");
+        var resourceWarnings = CadExternalReferenceResolver.Resolve(import.Document, fullPath);
         import.Document.ResetHistory();
-        return new DxfImportResult(import.Document, import.Warnings);
+        return new DxfImportResult(
+            import.Document,
+            import.Warnings.Concat(resourceWarnings).Distinct(StringComparer.Ordinal).ToArray());
     }
 
     public async Task<CadAcadImportResult> OpenAutoCadAsync(string filePath, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
-        var descriptor = CadAcadFileFormatRegistry.GetRequiredByPath(filePath);
+        var fullPath = Path.GetFullPath(filePath);
+        var descriptor = CadAcadFileFormatRegistry.GetRequiredByPath(fullPath);
         if (!descriptor.CanOpen || descriptor.Family != CadFileFormatFamily.AutoCadDrawing)
             throw new NotSupportedException($"{descriptor.DisplayName} is recognized but cannot be opened by the current UCAD interoperability layer.");
 
         var extension = descriptor.Extension;
-        var bytes = await File.ReadAllBytesAsync(Path.GetFullPath(filePath), cancellationToken);
-        if (string.Equals(extension, ".dxf", StringComparison.OrdinalIgnoreCase)) return CadAcadPreservingInteropCodec.ImportDxf(bytes, extension);
-        if (string.Equals(extension, ".dxb", StringComparison.OrdinalIgnoreCase)) return CadDxbCodec.Import(bytes);
-        return CadAcadPreservingInteropCodec.ImportDwg(bytes, extension);
+        var bytes = await File.ReadAllBytesAsync(fullPath, cancellationToken);
+        CadAcadImportResult import;
+        if (string.Equals(extension, ".dxf", StringComparison.OrdinalIgnoreCase)) import = CadAcadPreservingInteropCodec.ImportDxf(bytes, extension);
+        else if (string.Equals(extension, ".dxb", StringComparison.OrdinalIgnoreCase)) import = CadDxbCodec.Import(bytes);
+        else import = CadAcadPreservingInteropCodec.ImportDwg(bytes, extension);
+
+        var resourceWarnings = CadExternalReferenceResolver.Resolve(import.Document, fullPath);
+        if (resourceWarnings.Count == 0) return import;
+        return import with
+        {
+            Warnings = import.Warnings.Concat(resourceWarnings).Distinct(StringComparer.Ordinal).ToArray()
+        };
     }
 
     public async Task<DxfExportResult> ExportDxfAsync(string filePath, CadDocument document, bool createBackup, CancellationToken cancellationToken = default)
