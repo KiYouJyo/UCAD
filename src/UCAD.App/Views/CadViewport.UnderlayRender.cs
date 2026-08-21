@@ -27,7 +27,7 @@ public sealed partial class CadViewport
             underlay.IsResolved &&
             _pdfUnderlayPages.TryGetValue(underlay.Id, out var resource))
         {
-            DrawResolvedPdfUnderlay(ds, underlay, resource);
+            DrawResolvedPdfUnderlay(ds, underlay, resource, color.A / 255f);
             return;
         }
 
@@ -97,7 +97,11 @@ public sealed partial class CadViewport
         return 0;
     }
 
-    private void DrawResolvedPdfUnderlay(CanvasDrawingSession ds, UnderlayReferenceEntity underlay, PdfUnderlayPageResource resource)
+    private void DrawResolvedPdfUnderlay(
+        CanvasDrawingSession ds,
+        UnderlayReferenceEntity underlay,
+        PdfUnderlayPageResource resource,
+        float entityOpacity)
     {
         var widthInches = Math.Max(resource.PageSize.Width / 96.0, 1e-9);
         var heightInches = Math.Max(resource.PageSize.Height / 96.0, 1e-9);
@@ -137,7 +141,7 @@ public sealed partial class CadViewport
             {
                 ds.Transform = transform;
                 var destination = new Rect(0, 0, widthInches, heightInches);
-                var opacity = Math.Clamp(1f - (underlay.Fade / 100f), 0f, 1f);
+                var opacity = Math.Clamp((1f - (underlay.Fade / 100f)) * entityOpacity, 0f, 1f);
                 ds.DrawImage(resource.Bitmap, destination, resource.Bitmap.Bounds, opacity);
             }
             finally
