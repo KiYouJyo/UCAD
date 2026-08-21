@@ -158,7 +158,8 @@ internal static class CadAcadDwgSemanticRepair
 
     private static void RestoreMultiLeaders(AcadDocument source, UcadDocument target, List<string> warnings)
     {
-        var sourceMultiLeaders = source.Entities.OfType<AcadMultiLeader>().ToArray();
+        var sourceEntities = source.Entities.ToArray();
+        var sourceMultiLeaders = sourceEntities.OfType<AcadMultiLeader>().ToArray();
         if (sourceMultiLeaders.Length == 0) return;
 
         foreach (var sourceMultiLeader in sourceMultiLeaders)
@@ -168,7 +169,11 @@ internal static class CadAcadDwgSemanticRepair
 
             var text = NormalizeMText(context.TextLabel);
             var textHeight = context.TextHeight > GeometryTolerance ? context.TextHeight : 2.5;
-            var properties = ToEntityProperties(sourceMultiLeader, target);
+            var sourceOrder = Array.IndexOf(sourceEntities, sourceMultiLeader);
+            var properties = ToEntityProperties(sourceMultiLeader, target) with
+            {
+                SourceOrder = sourceOrder >= 0 ? sourceOrder : null
+            };
             var recoveredAny = false;
             var emittedTextLeader = false;
 
