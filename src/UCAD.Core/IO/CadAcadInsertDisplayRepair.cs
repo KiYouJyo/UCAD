@@ -14,7 +14,8 @@ namespace UCAD.Core.IO;
 
 /// <summary>
 /// Display-first recovery for AutoCAD INSERT variants that UCAD's editable block-reference
-/// model cannot represent yet (mirrored/non-uniform scale and MINSERT arrays). ACadSharp owns
+/// model cannot represent losslessly yet: mirrored/non-uniform scale, MINSERT arrays,
+/// nested INSERT content and evaluated anonymous/dynamic block snapshots. ACadSharp owns
 /// the affine explosion so the fallback does not reimplement DWG/DXF block mathematics.
 /// </summary>
 internal static class CadAcadInsertDisplayRepair
@@ -29,8 +30,6 @@ internal static class CadAcadInsertDisplayRepair
             if (!NeedsDisplayFallback(insert)) continue;
             try
             {
-                if (insert.IsMultiple) RemoveSingleArrayPlaceholder(insert, target);
-
                 var recovered = 0;
                 foreach (var instance in EnumerateInstances(insert))
                 {
@@ -41,20 +40,33 @@ internal static class CadAcadInsertDisplayRepair
 
                 if (recovered == 0)
                 {
-                    warnings.Add($"AutoCAD INSERT '{insert.Block?.Name ?? "<unknown>"}' required display fallback but produced no recoverable 2D geometry.");
+                    warnings.Add($"AutoCAD INSERT '{insert.Block?.Name ?? "<unknown>"}' required display fallback but produced no recoverable 2D geometry; the normalized placeholder was retained.");
                     continue;
                 }
 
+                RemovePlaceholder(insert, target);
                 warnings.RemoveAll(warning =>
                     warning.Contains("INSERT", StringComparison.OrdinalIgnoreCase) &&
                     warning.Contains(insert.Block?.Name ?? string.Empty, StringComparison.OrdinalIgnoreCase) &&
                     (warning.Contains("mirrored", StringComparison.OrdinalIgnoreCase) ||
                      warning.Contains("non-uniform", StringComparison.OrdinalIgnoreCase) ||
-                     warning.Contains("positive uniform scale", StringComparison.OrdinalIgnoreCase)));
+                     warning.Contains("positive uniform scale", StringComparison.OrdinalIgnoreCase) ||
+                     warning.Contains("nested INSERT", StringComparison.OrdinalIgnoreCase)));
+
+                if (HasNestedInsert(insert))
+                {
+                    var notice = $"AutoCAD INSERT '{insert.Block?.Name ?? "<unknown>"}' contained nested block references and was expanded for complete display.";
+                    if (!warnings.Contains(notice, StringComparer.Ordinal)) warnings.Add(notice);
+                }
+                else if (IsEvaluatedAnonymousBlock(insert))
+                {
+                    var notice = $"AutoCAD evaluated block '{insert.Block?.Name}' was expanded as its visible geometry snapshot; dynamic editing semantics are deferred.";
+                    if (!warnings.Contains(notice, StringComparer.Ordinal)) warnings.Add(notice);
+                }
             }
             catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or NotSupportedException or IOException)
             {
-                warnings.Add($"AutoCAD INSERT '{insert.Block?.Name ?? "<unknown>"}' display fallback failed: {ex.Message}");
+                warnings.Add($"AutoCAD INSERT '{insert.Block?.Name ?? "<unknown>"}' display fallback failed; normalized placeholder was retained. {ex.Message}");
             }
         }
     }
@@ -62,7 +74,21 @@ internal static class CadAcadInsertDisplayRepair
     private static bool NeedsDisplayFallback(AcadInsert insert)
     {
         var nonUniform = Math.Abs(insert.XScale - insert.YScale) > Math.Max(Tolerance, Math.Max(Math.Abs(insert.XScale), Math.Abs(insert.YScale)) * Tolerance);
-        return insert.XScale <= Tolerance || insert.YScale <= Tolerance || nonUniform || insert.IsMultiple;
+        return insert.XScale <= Tolerance ||
+               insert.YScale <= Tolerance ||
+               nonUniform ||
+               insert.IsMultiple ||
+               HasNestedInsert(insert) ||
+               IsEvaluatedAnonymousBlock(insert);
+    }
+
+    private static bool HasNestedInsert(AcadInsert insert) =>
+        insert.Block?.Entities.OfType<AcadInsert>().Any() == true;
+
+    private static bool IsEvaluatedAnonymousBlock(AcadInsert insert)
+    {
+        var name = insert.Block?.Name;
+        return !string.IsNullOrWhiteSpace(name) && name.StartsWith("*U", StringComparison.OrdinalIgnoreCase);
     }
 
     private static IEnumerable<AcadInsert> EnumerateInstances(AcadInsert source)
@@ -129,9 +155,12 @@ internal static class CadAcadInsertDisplayRepair
         var imported = CadDxfFullInteropCodec.Import(text);
         var localWarnings = imported.Warnings.ToList();
         CadAcadDwgSemanticRepair.Apply(snapshot, imported.Document, localWarnings);
+        CadAcadDimensionDisplayRepair.Apply(snapshot, imported.Document, localWarnings);
+        CadAcadMLineDisplayRepair.Apply(snapshot, imported.Document, localWarnings);
         foreach (var warning in localWarnings)
         {
-            if (!warnings.Contains(warning, StringComparer.Ordinal)) warnings.Add($"INSERT display snapshot: {warning}");
+            var message = $"INSERT display snapshot: {warning}";
+            if (!warnings.Contains(message, StringComparer.Ordinal)) warnings.Add(message);
         }
 
         CopyStyles(imported.Document, target);
@@ -175,15 +204,15 @@ internal static class CadAcadInsertDisplayRepair
         return added;
     }
 
-    private static void RemoveSingleArrayPlaceholder(AcadInsert insert, UcadDocument target)
+    private static void RemovePlaceholder(AcadInsert insert, UcadDocument target)
     {
         var name = insert.Block?.Name;
         if (string.IsNullOrWhiteSpace(name)) return;
         var point = ToCadPoint(insert.InsertPoint);
-        var placeholder = target.Entities.OfType<BlockReferenceEntity>().FirstOrDefault(reference =>
+        var candidate = target.Entities.OfType<BlockReferenceEntity>().FirstOrDefault(reference =>
             string.Equals(reference.DefinitionName, name, StringComparison.OrdinalIgnoreCase) &&
             PointsNear(reference.InsertionPoint, point));
-        if (placeholder is not null) target.Remove(placeholder.Id);
+        if (candidate is not null) target.Remove(candidate.Id);
     }
 
     private static void CopyStyles(UcadDocument source, UcadDocument target)
