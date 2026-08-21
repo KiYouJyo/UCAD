@@ -41,6 +41,7 @@ public static class CadAcadInteropCodec
         CadAcadDwgSemanticRepair.Apply(acadDocument, imported.Document, warnings);
         CadAcadDimensionDisplayRepair.Apply(acadDocument, imported.Document, warnings);
         CadAcadMLineDisplayRepair.Apply(acadDocument, imported.Document, warnings);
+        CadAcadWipeoutDisplayRepair.Apply(acadDocument, imported.Document, warnings);
         CadAcadInsertDisplayRepair.Apply(acadDocument, imported.Document, warnings);
         CadAcadLayoutInterop.Import(acadDocument, imported.Document, warnings);
         imported.Document.ResetHistory();
@@ -81,6 +82,7 @@ public static class CadAcadInteropCodec
             CadAcadDwgSemanticRepair.Apply(acadDocument, imported.Document, warnings);
             CadAcadDimensionDisplayRepair.Apply(acadDocument, imported.Document, warnings);
             CadAcadMLineDisplayRepair.Apply(acadDocument, imported.Document, warnings);
+            CadAcadWipeoutDisplayRepair.Apply(acadDocument, imported.Document, warnings);
             CadAcadInsertDisplayRepair.Apply(acadDocument, imported.Document, warnings);
             CadAcadLayoutInterop.Import(acadDocument, imported.Document, warnings);
         }
