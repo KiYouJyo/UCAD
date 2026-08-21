@@ -46,6 +46,7 @@ public static class CadAcadInteropCodec
         CadAcadInsertDisplayRepair.Apply(acadDocument, imported.Document, warnings);
         CadAcadLayoutInterop.Import(acadDocument, imported.Document, warnings);
         CadDxfSourceOrderRepair.Apply(bridgeText, imported.Document);
+        CadAcadVisualPropertiesRepair.Apply(acadDocument, imported.Document);
         imported.Document.ResetHistory();
         return new CadAcadImportResult(imported.Document, warnings, NormalizeExtension(sourceExtension), acadDocument.Header.Version.ToString());
     }
@@ -91,6 +92,7 @@ public static class CadAcadInteropCodec
         }
 
         CadDxfSourceOrderRepair.Apply(bridgeText, imported.Document);
+        if (acadDocument is not null) CadAcadVisualPropertiesRepair.Apply(acadDocument, imported.Document);
         imported.Document.ResetHistory();
         return new CadAcadImportResult(imported.Document, warnings, NormalizeExtension(sourceExtension), dxfFile.Header.Version.ToString());
     }
