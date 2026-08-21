@@ -25,12 +25,16 @@ internal static class CadAcadMLineDisplayRepair
         ArgumentNullException.ThrowIfNull(target);
         ArgumentNullException.ThrowIfNull(warnings);
 
-        foreach (var mline in source.Entities.OfType<AcadMLine>())
+        var sourceEntities = source.Entities.ToArray();
+        for (var sourceOrder = 0; sourceOrder < sourceEntities.Length; sourceOrder++)
         {
+            if (sourceEntities[sourceOrder] is not AcadMLine mline) continue;
             try
             {
-                var additions = BuildGeometry(mline, target, out var lossyFillOrCaps);
-                if (additions.Count == 0)
+                var additions = BuildGeometry(mline, target, out var lossyFillOrCaps)
+                    .Select(item => (item.Entity, item.Properties with { SourceOrder = sourceOrder }))
+                    .ToArray();
+                if (additions.Length == 0)
                 {
                     warnings.Add("AutoCAD MLINE contained no recoverable 2D element paths and was left to the normalized fallback.");
                     continue;
