@@ -29,7 +29,7 @@ public sealed class AcadDimensionDisplayRepairTests
 
         Assert.Empty(target.Entities.OfType<LinearDimensionEntity>());
         Assert.True(target.Entities.Count >= 3);
-        Assert.Contains(target.Entities, entity => entity is LineEntity or PolylineEntity or MTextEntity or TextEntity);
+        Assert.Contains(target.Entities, entity => entity is LineEntity or PolylineEntity or MTextEntity or UCAD.Core.Entities.TextEntity);
         Assert.Contains(warnings, warning => warning.Contains("DimensionLinear", StringComparison.Ordinal));
     }
 
@@ -53,7 +53,7 @@ public sealed class AcadDimensionDisplayRepairTests
         InvokeDisplayRepair(source, target, warnings);
 
         Assert.NotEmpty(target.Entities);
-        Assert.Contains(target.Entities, entity => entity is LineEntity or PolylineEntity or MTextEntity or TextEntity);
+        Assert.Contains(target.Entities, entity => entity is LineEntity or PolylineEntity or MTextEntity or UCAD.Core.Entities.TextEntity);
         Assert.Contains(warnings, warning => warning.Contains("DimensionOrdinate", StringComparison.Ordinal));
     }
 
