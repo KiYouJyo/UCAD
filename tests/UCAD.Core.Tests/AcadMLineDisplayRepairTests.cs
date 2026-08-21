@@ -39,7 +39,9 @@ public sealed class AcadMLineDisplayRepairTests
     {
         var source = new ACadSharp.CadDocument();
         var style = MLineStyle.Default;
+        style.Name = "UCAD_FILL_TEST";
         style.Flags |= MLineStyleFlags.FillOn;
+        source.MLineStyles.Add(style);
         var mline = new MLine
         {
             Style = style,
