@@ -25,7 +25,8 @@ internal static class CadAcadUnderlayDisplayRepair
         var sourceEntities = source.Entities.ToArray();
         for (var sourceOrder = 0; sourceOrder < sourceEntities.Length; sourceOrder++)
         {
-            if (sourceEntities[sourceOrder] is not PdfUnderlay underlay) continue;
+            if (sourceEntities[sourceOrder] is not PdfUnderlay underlay ||
+                !underlay.Flags.HasFlag(UnderlayDisplayFlags.ShowUnderlay)) continue;
             try
             {
                 var referencePath = underlay.Definition?.File;
@@ -44,7 +45,7 @@ internal static class CadAcadUnderlayDisplayRepair
                     underlay.Fade,
                     underlay.Flags.HasFlag(UnderlayDisplayFlags.Monochrome),
                     underlay.Flags.HasFlag(UnderlayDisplayFlags.AdjustForBackground),
-                    !underlay.Flags.HasFlag(UnderlayDisplayFlags.ClipInsideMode));
+                    underlay.Flags.HasFlag(UnderlayDisplayFlags.ClipInsideMode));
 
                 var layer = string.IsNullOrWhiteSpace(underlay.Layer?.Name) ? CadLayer.DefaultLayerName : underlay.Layer.Name;
                 if (!target.TryGetLayer(layer, out _)) target.CreateLayer(new CadLayer(layer));
