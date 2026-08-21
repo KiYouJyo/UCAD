@@ -13,10 +13,10 @@ using UcadText = UCAD.Core.Entities.TextEntity;
 namespace UCAD.Core.IO;
 
 /// <summary>
-/// Display-first recovery for AutoCAD INSERT variants that UCAD's editable block-reference
+/// Display-first recovery for AutoCAD INSERT-like variants that UCAD's editable block-reference
 /// model cannot represent losslessly yet: mirrored/non-uniform scale, MINSERT arrays,
-/// nested INSERT content and evaluated anonymous/dynamic block snapshots. ACadSharp owns
-/// the affine explosion so the fallback does not reimplement DWG/DXF block mathematics.
+/// nested INSERT content, evaluated anonymous/dynamic block snapshots and TABLE cache blocks.
+/// ACadSharp owns the affine explosion so the fallback does not reimplement DWG/DXF block mathematics.
 /// </summary>
 internal static class CadAcadInsertDisplayRepair
 {
@@ -40,7 +40,7 @@ internal static class CadAcadInsertDisplayRepair
 
                 if (recovered == 0)
                 {
-                    warnings.Add($"AutoCAD INSERT '{insert.Block?.Name ?? "<unknown>"}' required display fallback but produced no recoverable 2D geometry; the normalized placeholder was retained.");
+                    warnings.Add($"AutoCAD INSERT-like entity '{insert.Block?.Name ?? "<unknown>"}' required display fallback but produced no recoverable 2D geometry; the normalized placeholder was retained.");
                     continue;
                 }
 
@@ -52,8 +52,15 @@ internal static class CadAcadInsertDisplayRepair
                      warning.Contains("non-uniform", StringComparison.OrdinalIgnoreCase) ||
                      warning.Contains("positive uniform scale", StringComparison.OrdinalIgnoreCase) ||
                      warning.Contains("nested INSERT", StringComparison.OrdinalIgnoreCase)));
+                if (insert is TableEntity)
+                    warnings.RemoveAll(warning => warning.Contains("TABLE", StringComparison.OrdinalIgnoreCase) && warning.Contains("could not be imported", StringComparison.OrdinalIgnoreCase));
 
-                if (HasNestedInsert(insert))
+                if (insert is TableEntity)
+                {
+                    const string notice = "AutoCAD TABLE cache block was expanded into visible 2D grid/text geometry; editable table semantics are deferred.";
+                    if (!warnings.Contains(notice, StringComparer.Ordinal)) warnings.Add(notice);
+                }
+                else if (HasNestedInsert(insert))
                 {
                     var notice = $"AutoCAD INSERT '{insert.Block?.Name ?? "<unknown>"}' contained nested block references and was expanded for complete display.";
                     if (!warnings.Contains(notice, StringComparer.Ordinal)) warnings.Add(notice);
@@ -66,7 +73,7 @@ internal static class CadAcadInsertDisplayRepair
             }
             catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or NotSupportedException or IOException)
             {
-                warnings.Add($"AutoCAD INSERT '{insert.Block?.Name ?? "<unknown>"}' display fallback failed; normalized placeholder was retained. {ex.Message}");
+                warnings.Add($"AutoCAD INSERT-like entity '{insert.Block?.Name ?? "<unknown>"}' display fallback failed; normalized placeholder was retained. {ex.Message}");
             }
         }
     }
@@ -74,7 +81,8 @@ internal static class CadAcadInsertDisplayRepair
     private static bool NeedsDisplayFallback(AcadInsert insert)
     {
         var nonUniform = Math.Abs(insert.XScale - insert.YScale) > Math.Max(Tolerance, Math.Max(Math.Abs(insert.XScale), Math.Abs(insert.YScale)) * Tolerance);
-        return insert.XScale <= Tolerance ||
+        return insert is TableEntity ||
+               insert.XScale <= Tolerance ||
                insert.YScale <= Tolerance ||
                nonUniform ||
                insert.IsMultiple ||
