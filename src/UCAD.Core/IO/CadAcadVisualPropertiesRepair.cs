@@ -1,0 +1,39 @@
+using AcadDocument = ACadSharp.CadDocument;
+using AcadEntity = ACadSharp.Entities.Entity;
+using UcadDocument = UCAD.Core.CadDocument;
+
+namespace UCAD.Core.IO;
+
+/// <summary>
+/// Re-applies AutoCAD-native visual state after semantic/display fallback expansion.
+/// SourceOrder is the stable join key: one source entity may expand into multiple UCAD
+/// display entities, and all of them must inherit invisibility/transparency consistently.
+/// </summary>
+internal static class CadAcadVisualPropertiesRepair
+{
+    public static void Apply(AcadDocument source, UcadDocument target)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(target);
+
+        var sourceEntities = source.Entities.ToArray();
+        foreach (var entity in target.Entities.ToArray())
+        {
+            var properties = target.GetEntityProperties(entity.Id);
+            if (properties.SourceOrder is not int sourceOrder || sourceOrder < 0 || sourceOrder >= sourceEntities.Length) continue;
+            if (sourceEntities[sourceOrder] is not AcadEntity acadEntity) continue;
+
+            var opacity = ResolveOpacity(acadEntity);
+            if (properties.Opacity == opacity) continue;
+            target.SetEntityProperties([entity.Id], current => current with { Opacity = opacity });
+        }
+    }
+
+    private static double? ResolveOpacity(AcadEntity source)
+    {
+        if (source.IsInvisible) return 0d;
+        var transparency = source.Transparency;
+        if (transparency.IsByLayer || transparency.IsByBlock) return null;
+        return Math.Clamp((100d - transparency.Value) / 100d, 0d, 1d);
+    }
+}
