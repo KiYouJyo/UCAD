@@ -16,40 +16,16 @@ public sealed partial class CadViewport
     {
         if (_extendedDrawingRenderHooksInstalled) return;
         _extendedDrawingRenderHooksInstalled = true;
-        Canvas.Draw += Canvas_ExtendedDrawingRender;
+        // Extended entities are now dispatched inside the single ordered authoring pass.
+        // Keeping a second Canvas.Draw overlay would duplicate strokes and break DWG draw order,
+        // especially around masks, nested blocks and annotations.
         Canvas.Invalidate();
     }
 
     private void Canvas_ExtendedDrawingRender(CanvasControl sender, CanvasDrawEventArgs args)
     {
-        var ds = args.DrawingSession;
-        foreach (var entity in _document.VisibleEntities.Where(CadExtendedEntityGeometry.Supports))
-        {
-            Color color;
-            float strokeWidth;
-            if (_interaction.Selection.Contains(entity.Id))
-            {
-                color = _selectedColor;
-                strokeWidth = 2.0f;
-            }
-            else if (_hoverEntityId == entity.Id)
-            {
-                color = _hoverColor;
-                strokeWidth = 1.6f;
-            }
-            else
-            {
-                var properties = _document.GetEntityProperties(entity.Id);
-                var layer = _document.GetLayer(properties.LayerName);
-                color = ResolveEntityColor(properties.ColorHex, layer.ColorHex);
-                strokeWidth = (float)Math.Clamp((properties.LineWeight ?? layer.LineWeight) * 3.0, 0.8, 4.0);
-            }
-            DrawExtendedEntity(ds, entity, color, strokeWidth, sender.ActualWidth, sender.ActualHeight);
-        }
-
-        DrawExtendedSelectionGrips(ds);
-        DrawExtendedModifyPreview(ds, sender.ActualWidth, sender.ActualHeight);
-        DrawCadCursor(ds, sender.ActualWidth, sender.ActualHeight);
+        // Retained as a compatibility helper for older milestone call sites; intentionally
+        // not subscribed after ordered rendering became authoritative.
     }
 
     private void DrawExtendedEntity(
