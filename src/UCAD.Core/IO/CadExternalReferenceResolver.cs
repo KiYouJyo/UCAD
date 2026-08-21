@@ -29,6 +29,17 @@ public static class CadExternalReferenceResolver
             }
         }
 
+        foreach (var underlay in document.Entities.OfType<UnderlayReferenceEntity>())
+        {
+            var resolved = ResolveExistingPath(underlay.ReferencePath, sourceDirectory);
+            underlay.SetResolvedPath(resolved);
+            if (resolved is null)
+            {
+                var notice = $"AutoCAD {underlay.Kind.ToString().ToUpperInvariant()} underlay resource '{underlay.ReferencePath}' could not be found relative to '{sourceDirectory}'; placement/page/clipping metadata remain available.";
+                if (!warnings.Contains(notice, StringComparer.Ordinal)) warnings.Add(notice);
+            }
+        }
+
         return warnings;
     }
 
