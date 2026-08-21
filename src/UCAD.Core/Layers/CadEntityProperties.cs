@@ -1,7 +1,7 @@
 namespace UCAD.Core.Layers;
 
 /// <summary>
-/// Per-entity display properties. Null color/lineweight mean ByLayer.
+/// Per-entity display properties. Null color/lineweight/opacity mean ByLayer/default.
 /// LineType defaults to ByLayer so later DXF mapping can distinguish inheritance.
 /// SourceOrder/SourceHandle are import-only display metadata used to preserve AutoCAD
 /// entity ordering across semantic/fallback repair passes; authored UCAD entities leave them null.
@@ -14,7 +14,8 @@ public sealed record CadEntityProperties
         double? lineWeight = null,
         string lineType = "ByLayer",
         int? sourceOrder = null,
-        string? sourceHandle = null)
+        string? sourceHandle = null,
+        double? opacity = null)
     {
         if (string.IsNullOrWhiteSpace(layerName))
         {
@@ -36,6 +37,10 @@ public sealed record CadEntityProperties
         {
             throw new ArgumentOutOfRangeException(nameof(sourceOrder));
         }
+        if (opacity is not null && (!double.IsFinite(opacity.Value) || opacity.Value < 0 || opacity.Value > 1))
+        {
+            throw new ArgumentOutOfRangeException(nameof(opacity), "Opacity must be between 0 and 1.");
+        }
 
         LayerName = layerName.Trim();
         ColorHex = colorHex?.ToUpperInvariant();
@@ -43,6 +48,7 @@ public sealed record CadEntityProperties
         LineType = lineType.Trim();
         SourceOrder = sourceOrder;
         SourceHandle = string.IsNullOrWhiteSpace(sourceHandle) ? null : sourceHandle.Trim();
+        Opacity = opacity;
     }
 
     public string LayerName { get; init; }
@@ -51,4 +57,5 @@ public sealed record CadEntityProperties
     public string LineType { get; init; }
     public int? SourceOrder { get; init; }
     public string? SourceHandle { get; init; }
+    public double? Opacity { get; init; }
 }
