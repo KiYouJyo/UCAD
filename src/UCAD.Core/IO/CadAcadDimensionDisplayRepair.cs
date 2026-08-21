@@ -27,9 +27,10 @@ internal static class CadAcadDimensionDisplayRepair
         ArgumentNullException.ThrowIfNull(target);
         ArgumentNullException.ThrowIfNull(warnings);
 
-        foreach (var dimension in source.Entities.OfType<AcadDimension>())
+        var sourceEntities = source.Entities.ToArray();
+        for (var sourceOrder = 0; sourceOrder < sourceEntities.Length; sourceOrder++)
         {
-            if (!NeedsDisplayFallback(dimension)) continue;
+            if (sourceEntities[sourceOrder] is not AcadDimension dimension || !NeedsDisplayFallback(dimension)) continue;
 
             try
             {
@@ -53,7 +54,7 @@ internal static class CadAcadDimensionDisplayRepair
                         ? ownerLayer
                         : properties.LayerName;
                     EnsureLayer(target, layerName);
-                    additions.Add((entity, properties with { LayerName = layerName }));
+                    additions.Add((entity, properties with { LayerName = layerName, SourceOrder = sourceOrder }));
                 }
 
                 if (additions.Count == 0)
