@@ -21,15 +21,15 @@ internal static class CadAcadToleranceDisplayRepair
 
     public static void Apply(AcadDocument source, UcadDocument target, List<string> warnings)
     {
-        foreach (var tolerance in source.Entities.OfType<AcadTolerance>())
+        var sourceEntities = source.Entities.ToArray();
+        for (var sourceOrder = 0; sourceOrder < sourceEntities.Length; sourceOrder++)
         {
-            if (string.IsNullOrWhiteSpace(tolerance.Text)) continue;
+            if (sourceEntities[sourceOrder] is not AcadTolerance tolerance || string.IsNullOrWhiteSpace(tolerance.Text)) continue;
             try
             {
                 var height = tolerance.Style?.TextHeight ?? 2.5;
                 if (!double.IsFinite(height) || height <= Epsilon) height = 2.5;
-                var styleName = tolerance.Style?.TextStyle?.Name;
-                if (string.IsNullOrWhiteSpace(styleName)) styleName = CadTextStyle.DefaultName;
+                var styleName = CadTextStyle.DefaultName;
                 if (!target.TryGetTextStyle(styleName, out _)) target.DefineTextStyle(new CadTextStyle(styleName));
 
                 var dx = tolerance.Direction.X;
@@ -47,7 +47,7 @@ internal static class CadAcadToleranceDisplayRepair
                 var layer = string.IsNullOrWhiteSpace(tolerance.Layer?.Name) ? CadLayer.DefaultLayerName : tolerance.Layer.Name;
                 if (!target.TryGetLayer(layer, out _)) target.CreateLayer(new CadLayer(layer));
                 var lineType = string.IsNullOrWhiteSpace(tolerance.LineType?.Name) ? "ByLayer" : tolerance.LineType.Name;
-                target.Add(entity, new CadEntityProperties(layer, lineType: lineType));
+                target.Add(entity, new CadEntityProperties(layer, lineType: lineType, sourceOrder: sourceOrder));
 
                 warnings.RemoveAll(warning =>
                     warning.Contains("TOLERANCE", StringComparison.OrdinalIgnoreCase) &&
