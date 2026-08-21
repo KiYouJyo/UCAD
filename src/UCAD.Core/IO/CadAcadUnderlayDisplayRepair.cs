@@ -44,7 +44,7 @@ internal static class CadAcadUnderlayDisplayRepair
                     underlay.Fade,
                     underlay.Flags.HasFlag(UnderlayDisplayFlags.Monochrome),
                     underlay.Flags.HasFlag(UnderlayDisplayFlags.AdjustForBackground),
-                    !underlay.Flags.HasFlag(UnderlayDisplayFlags.ClipIsInsideMode));
+                    !underlay.Flags.HasFlag(UnderlayDisplayFlags.ClipInsideMode));
 
                 var layer = string.IsNullOrWhiteSpace(underlay.Layer?.Name) ? CadLayer.DefaultLayerName : underlay.Layer.Name;
                 if (!target.TryGetLayer(layer, out _)) target.CreateLayer(new CadLayer(layer));
@@ -66,7 +66,7 @@ internal static class CadAcadUnderlayDisplayRepair
 
     private static IReadOnlyList<CadPoint> ConvertClipBoundary(PdfUnderlay source)
     {
-        if (!source.Flags.HasFlag(UnderlayDisplayFlags.ClippingIsActive) || source.ClipBoundaryVertices.Count < 2)
+        if (!source.Flags.HasFlag(UnderlayDisplayFlags.ClippingOn) || source.ClipBoundaryVertices.Count < 2)
             return [];
 
         var local = new List<CSMath.XY>();
