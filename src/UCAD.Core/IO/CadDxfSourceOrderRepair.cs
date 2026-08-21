@@ -6,9 +6,9 @@ namespace UCAD.Core.IO;
 
 /// <summary>
 /// Re-attaches original DXF ENTITIES ordering to the display entities created by the
-/// baseline and display-fallback passes. The import architecture intentionally performs
-/// semantic repair in several passes; without this metadata a later-created WIPEOUT or
-/// annotation could be painted at the wrong z-position even though its geometry is correct.
+/// baseline, advanced and display-fallback passes. The import architecture intentionally
+/// performs semantic repair in several passes; without this metadata a later-created
+/// WIPEOUT or annotation could be painted at the wrong z-position even though its geometry is correct.
 /// </summary>
 internal static class CadDxfSourceOrderRepair
 {
@@ -33,6 +33,7 @@ internal static class CadDxfSourceOrderRepair
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         AssignBaselineRecords(records, document, linkedAnnotationHandles);
+        AssignAdvancedRecords(records, document);
         AssignPolylineFallbacks(records, document);
         AssignFaceFallbacks(records, document);
         AssignHatchFallbacks(records, document);
@@ -51,6 +52,63 @@ internal static class CadDxfSourceOrderRepair
             if (match < 0) continue;
             SetOrder(document, document.Entities[match], record);
             searchStart = match + 1;
+        }
+    }
+
+    private static void AssignAdvancedRecords(IReadOnlyList<DxfRecord> records, CadDocument document)
+    {
+        foreach (var record in records.Where(record => EqualsToken(record.Type, "DIMENSION")))
+        {
+            var rawType = GetInt(record.Data, 70, 0) & 0x0F;
+            Type? targetType = rawType switch
+            {
+                0 or 1 => typeof(LinearDimensionEntity),
+                2 or 5 => typeof(AngularDimensionEntity),
+                3 or 4 => typeof(RadialDimensionEntity),
+                _ => null
+            };
+            if (targetType is null) continue;
+            var match = FindNextUnordered(document, targetType, 0);
+            if (match >= 0) SetOrder(document, document.Entities[match], record);
+        }
+
+        foreach (var record in records.Where(record => EqualsToken(record.Type, "LEADER")))
+        {
+            var layer = GetString(record.Data, 8, CadLayer.DefaultLayerName);
+            var leader = document.Entities
+                .OfType<LeaderEntity>()
+                .FirstOrDefault(entity =>
+                    document.GetEntityProperties(entity.Id).SourceOrder is null &&
+                    string.Equals(document.GetEntityProperties(entity.Id).LayerName, layer, StringComparison.OrdinalIgnoreCase));
+            if (leader is not null)
+            {
+                SetOrder(document, leader, record);
+                continue;
+            }
+
+            // Annotation-less LEADER is intentionally downgraded to an open polyline.
+            var polyline = document.Entities
+                .OfType<PolylineEntity>()
+                .FirstOrDefault(entity =>
+                    !entity.Closed &&
+                    document.GetEntityProperties(entity.Id).SourceOrder is null &&
+                    string.Equals(document.GetEntityProperties(entity.Id).LayerName, layer, StringComparison.OrdinalIgnoreCase));
+            if (polyline is not null) SetOrder(document, polyline, record);
+        }
+
+        foreach (var record in records.Where(record => EqualsToken(record.Type, "INSERT")))
+        {
+            var name = GetString(record.Data, 2, string.Empty);
+            var hasPoint = TryGetPoint(record.Data, 10, 20, out var insertion);
+            var reference = document.Entities
+                .OfType<BlockReferenceEntity>()
+                .Where(entity => document.GetEntityProperties(entity.Id).SourceOrder is null)
+                .Where(entity => string.IsNullOrWhiteSpace(name) || string.Equals(entity.DefinitionName, name, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(entity => hasPoint
+                    ? DistanceSquared(entity.InsertionPoint.X, entity.InsertionPoint.Y, insertion.X, insertion.Y)
+                    : 0.0)
+                .FirstOrDefault();
+            if (reference is not null) SetOrder(document, reference, record);
         }
     }
 
@@ -233,6 +291,9 @@ internal static class CadDxfSourceOrderRepair
 
     private static string GetString(IReadOnlyList<DxfPair> record, int code, string fallback) =>
         record.FirstOrDefault(pair => pair.Code == code).Value is { Length: > 0 } value ? value : fallback;
+
+    private static int GetInt(IReadOnlyList<DxfPair> record, int code, int fallback) =>
+        int.TryParse(GetString(record, code, string.Empty), NumberStyles.Integer, Invariant, out var parsed) ? parsed : fallback;
 
     private static bool TryGetPoint(IReadOnlyList<DxfPair> record, int xCode, int yCode, out (double X, double Y) point)
     {
