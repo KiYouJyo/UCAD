@@ -8,10 +8,9 @@ using UcadDocument = UCAD.Core.CadDocument;
 namespace UCAD.Core.IO;
 
 /// <summary>
-/// Display-first recovery for AutoCAD WIPEOUT and the shared image-like visual resource
-/// stage. Source-order metadata keeps recovered opaque masks at their original ENTITIES
-/// position; raster-image placement recovery runs from the same stage because both use
-/// AutoCAD's image basis/clipping model.
+/// Display-first recovery for AutoCAD WIPEOUT and the shared external visual-resource
+/// stage. Source-order metadata keeps recovered masks and references at their original
+/// ENTITIES position; raster images and underlays reuse this stage for placement/clipping.
 /// </summary>
 internal static class CadAcadWipeoutDisplayRepair
 {
@@ -45,6 +44,7 @@ internal static class CadAcadWipeoutDisplayRepair
         }
 
         CadAcadRasterImageDisplayRepair.Apply(source, target, warnings);
+        CadAcadUnderlayDisplayRepair.Apply(source, target, warnings);
     }
 
     private static IReadOnlyList<CadPoint> GetWorldBoundary(Wipeout source)
@@ -90,8 +90,6 @@ internal static class CadAcadWipeoutDisplayRepair
 
     private static CadPoint ToWorld(Wipeout source, CSMath.XY local)
     {
-        // IMAGE/WIPEOUT clip coordinates use pixel-edge coordinates whose default lower
-        // corner is (-0.5,-0.5). Shift by +0.5 before applying the per-pixel U/V vectors.
         var u = local.X + 0.5;
         var v = local.Y + 0.5;
         return new CadPoint(
