@@ -156,8 +156,6 @@ public static class CadShxCodec
                         DrawBulge(state, instruction.Args[i], instruction.Args[i + 1], instruction.Args[i + 2]);
                     break;
                 case 14:
-                    // UCAD's 2D CAD viewport uses horizontal text/shape orientation. Code 14
-                    // means the following complete command is vertical-only.
                     index++;
                     break;
                 default:
@@ -288,7 +286,7 @@ public static class CadShxCodec
         var first = reader.ReadUInt16();
         var last = reader.ReadUInt16();
         var count = reader.ReadUInt16();
-        if (count == 0 || count > 65535) throw new InvalidDataException("SHX shape index is empty or invalid.");
+        if (count == 0) throw new InvalidDataException("SHX shape index is empty or invalid.");
         var index = new List<(int Number, int Length)>(count);
         for (var i = 0; i < count; i++) index.Add((reader.ReadUInt16(), reader.ReadUInt16()));
         if (index[0].Number != first || index[^1].Number != last) throw new InvalidDataException("SHX shape index range is inconsistent.");
@@ -304,7 +302,7 @@ public static class CadShxCodec
             symbols[entry.Number] = new CadShxSymbol(entry.Number, name, instructions);
         }
         var header = Encoding.ASCII.GetString(data, 0, Math.Min(0x17, data.Length)).TrimEnd('\0', '\r', '\n', ' ');
-        return new CadShxFile(header, isUnicode: false, isShapeFile: true, above: 0, below: 0, symbols);
+        return new CadShxFile(header, IsUnicode: false, IsShapeFile: true, Above: 0, Below: 0, symbols);
     }
 
     private static CadShxFile ReadUniFont(byte[] data)
@@ -315,10 +313,10 @@ public static class CadShxCodec
         var name = reader.ReadNullTerminatedLatin1();
         var above = reader.ReadByte();
         var below = reader.ReadByte();
-        _ = reader.ReadByte(); // mode
-        _ = reader.ReadByte(); // encoding
-        _ = reader.ReadByte(); // embedding
-        if (reader.Remaining > 0) reader.Skip(1); // definition terminator
+        _ = reader.ReadByte();
+        _ = reader.ReadByte();
+        _ = reader.ReadByte();
+        if (reader.Remaining > 0) reader.Skip(1);
 
         var symbols = new Dictionary<int, CadShxSymbol>();
         while (reader.Remaining >= 4)
@@ -334,7 +332,7 @@ public static class CadShxCodec
             symbols[number] = new CadShxSymbol(number, symbolName, instructions);
         }
         if (symbols.Count == 0) throw new InvalidDataException("SHX unifont contains no readable glyph records.");
-        return new CadShxFile(string.IsNullOrWhiteSpace(name) ? UniFont10 : name, isUnicode: true, isShapeFile: false, above, below, symbols);
+        return new CadShxFile(string.IsNullOrWhiteSpace(name) ? UniFont10 : name, IsUnicode: true, IsShapeFile: false, above, below, symbols);
     }
 
     private static CadShxFile ReadAsciiShp(byte[] data)
@@ -373,7 +371,7 @@ public static class CadShxCodec
                 isShape = false;
                 unicode = headerParts[0].Equals("*UNIFONT", StringComparison.OrdinalIgnoreCase);
                 fileName = headerParts.Length > 2 ? headerParts[2] : "SHP font";
-                var definitionTokens = record.Lines.SelectMany(ParseAsciiTokens).ToArray();
+                var definitionTokens = record.Lines.SelectMany(ParseAsciiIntegers).ToArray();
                 if (definitionTokens.Length >= 2)
                 {
                     above = Math.Abs(definitionTokens[0]);
@@ -387,26 +385,86 @@ public static class CadShxCodec
                 ? int.Parse(numberToken, NumberStyles.HexNumber, CultureInfo.InvariantCulture)
                 : int.Parse(numberToken, NumberStyles.Integer, CultureInfo.InvariantCulture);
             var name = headerParts.Length > 2 ? headerParts[2].Trim() : number.ToString(CultureInfo.InvariantCulture);
-            var bytes = record.Lines.SelectMany(ParseAsciiTokens).ToArray();
-            symbols[number] = new CadShxSymbol(number, name, ParseInstructions(bytes, unicode));
+            var values = record.Lines.SelectMany(ParseAsciiIntegers).ToArray();
+            symbols[number] = new CadShxSymbol(number, name, ParseAsciiInstructions(values, unicode));
         }
         if (symbols.Count == 0) throw new InvalidDataException("SHP source contains no drawable shapes.");
         return new CadShxFile(fileName, unicode, isShape, above, below, symbols);
     }
 
-    private static IEnumerable<byte> ParseAsciiTokens(string line)
+    private static IEnumerable<int> ParseAsciiIntegers(string line)
     {
         foreach (var raw in line.Replace("(", string.Empty, StringComparison.Ordinal).Replace(")", string.Empty, StringComparison.Ordinal).Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
         {
             var token = raw.Trim();
-            int value;
             if (token.StartsWith("-0", StringComparison.Ordinal) && token.Length > 2)
-                value = -Convert.ToInt32(token[2..], 16);
+                yield return -Convert.ToInt32(token[2..], 16);
             else if (token.StartsWith('0') && token.Length > 1)
-                value = Convert.ToInt32(token, 16);
-            else value = int.Parse(token, CultureInfo.InvariantCulture);
-            yield return unchecked((byte)(sbyte)Math.Clamp(value, -128, 255));
+                yield return Convert.ToInt32(token, 16);
+            else yield return int.Parse(token, CultureInfo.InvariantCulture);
         }
+    }
+
+    private static IReadOnlyList<CadShxInstruction> ParseAsciiInstructions(IReadOnlyList<int> values, bool unicodeSubshape)
+    {
+        var instructions = new List<CadShxInstruction>();
+        var i = 0;
+        while (i < values.Count && instructions.Count < MaxInstructionsPerShape)
+        {
+            var code = values[i++];
+            if (code == 0) break;
+            switch (code)
+            {
+                case 1 or 2 or 5 or 6 or 14:
+                    instructions.Add(new CadShxInstruction(code, []));
+                    break;
+                case 3 or 4:
+                    Ensure(values, i, 1); instructions.Add(new CadShxInstruction(code, [values[i++]])); break;
+                case 7:
+                    Ensure(values, i, 1); instructions.Add(new CadShxInstruction(code, [values[i++]])); break;
+                case 8:
+                    Ensure(values, i, 2); instructions.Add(new CadShxInstruction(code, [values[i++], values[i++]])); break;
+                case 9:
+                {
+                    var args = new List<int>();
+                    while (true)
+                    {
+                        Ensure(values, i, 2);
+                        var x = values[i++]; var y = values[i++];
+                        if (x == 0 && y == 0) break;
+                        args.Add(x); args.Add(y);
+                    }
+                    instructions.Add(new CadShxInstruction(code, args));
+                    break;
+                }
+                case 10:
+                    Ensure(values, i, 2); instructions.Add(new CadShxInstruction(code, [values[i++], values[i++]])); break;
+                case 11:
+                    Ensure(values, i, 5); instructions.Add(new CadShxInstruction(code, [values[i++], values[i++], values[i++], values[i++], values[i++]])); break;
+                case 12:
+                    Ensure(values, i, 3); instructions.Add(new CadShxInstruction(code, [values[i++], values[i++], values[i++]])); break;
+                case 13:
+                {
+                    var args = new List<int>();
+                    while (true)
+                    {
+                        Ensure(values, i, 2);
+                        var x = values[i++]; var y = values[i++];
+                        if (x == 0 && y == 0) break;
+                        Ensure(values, i, 1);
+                        args.Add(x); args.Add(y); args.Add(values[i++]);
+                    }
+                    instructions.Add(new CadShxInstruction(code, args));
+                    break;
+                }
+                default:
+                    if (code < 0 || code > 255) throw new InvalidDataException($"SHP instruction {code} is outside byte range.");
+                    instructions.Add(new CadShxInstruction(code, []));
+                    break;
+            }
+        }
+        if (instructions.Count >= MaxInstructionsPerShape) throw new InvalidDataException("SHP instruction limit exceeded.");
+        return instructions;
     }
 
     private static IReadOnlyList<CadShxInstruction> ParseInstructions(ReadOnlySpan<byte> bytes, bool unicodeSubshape)
@@ -501,6 +559,11 @@ public static class CadShxCodec
     private static void Ensure(ReadOnlySpan<byte> bytes, int offset, int count)
     {
         if (offset < 0 || count < 0 || offset + count > bytes.Length) throw new EndOfStreamException("SHX shape instruction is truncated.");
+    }
+
+    private static void Ensure(IReadOnlyList<int> values, int offset, int count)
+    {
+        if (offset < 0 || count < 0 || offset + count > values.Count) throw new EndOfStreamException("SHP shape instruction is truncated.");
     }
 
     private static int ToSigned(byte value) => value > 127 ? value - 256 : value;
