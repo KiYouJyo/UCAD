@@ -16,10 +16,9 @@ public sealed partial class CadViewport
     private bool _authoringRenderHooksInstalled;
 
     /// <summary>
-    /// v0.6/v0.7 final render pass. It deliberately runs after the original v0.4/v0.5
-    /// renderer, clears that pass, and redraws from document layer state. This lets the
-    /// milestone add real layer visibility/properties and new entity types without
-    /// creating a second viewport or disturbing the accepted input pipeline.
+    /// Final ordered document render pass. All supported 2D entity families are routed
+    /// through this single document-order traversal so block children render exactly like
+    /// top-level entities and later helper passes cannot reorder annotation/extended geometry.
     /// </summary>
     public void EnsureAuthoringRenderHooks()
     {
@@ -58,6 +57,8 @@ public sealed partial class CadViewport
         }
 
         DrawSelectionGrips(ds);
+        DrawExtendedSelectionGrips(ds);
+        DrawCompletedAnnotationGrips(ds);
         DrawTransientGeometry(ds);
         DrawSelectionWindow(ds);
         DrawSnapMarker(ds);
@@ -79,11 +80,17 @@ public sealed partial class CadViewport
             case TextEntity text:
                 DrawTextEntity(ds, text, color);
                 break;
+            case MTextEntity or AngularDimensionEntity or RadialDimensionEntity or LeaderEntity:
+                DrawCompletedAnnotation(ds, entity, color, strokeWidth);
+                break;
             case LinearDimensionEntity dimension:
                 DrawDimensionEntity(ds, dimension, color, strokeWidth);
                 break;
             case HatchEntity hatch:
                 DrawHatchEntity(ds, hatch, color, strokeWidth);
+                break;
+            case PointEntity or EllipseEntity or SplineEntity or RayEntity or XLineEntity:
+                DrawExtendedEntity(ds, entity, color, strokeWidth, Canvas.ActualWidth, Canvas.ActualHeight);
                 break;
             case BlockReferenceEntity block:
                 foreach (var child in block.Contents) DrawAuthoringEntity(ds, child, color, strokeWidth);
@@ -97,9 +104,11 @@ public sealed partial class CadViewport
     private void DrawTextEntity(CanvasDrawingSession ds, TextEntity text, Color color)
     {
         var screen = WorldToScreen(text.Position);
+        var style = ResolveTextStyle(text.StyleName);
         var size = (float)Math.Max(6, text.Height * _zoom);
         using var format = new CanvasTextFormat
         {
+            FontFamily = style.FontFamily,
             FontSize = size,
             WordWrapping = CanvasWordWrapping.NoWrap
         };
@@ -124,8 +133,9 @@ public sealed partial class CadViewport
         ds.DrawLine(da.X - tick, da.Y - tick, da.X + tick, da.Y + tick, color, strokeWidth);
         ds.DrawLine(db.X - tick, db.Y - tick, db.X + tick, db.Y + tick, color, strokeWidth);
         var midpoint = (da + db) / 2f;
-        var label = dimension.TextOverride ?? dimension.Measurement.ToString("0.##");
-        using var format = new CanvasTextFormat { FontSize = 10, WordWrapping = CanvasWordWrapping.NoWrap };
+        var style = ResolveDimensionStyle(dimension.StyleName);
+        var label = dimension.TextOverride ?? style.Format(dimension.Measurement);
+        using var format = new CanvasTextFormat { FontSize = (float)Math.Max(7, style.TextHeight * _zoom), WordWrapping = CanvasWordWrapping.NoWrap };
         ds.DrawText(label, midpoint + new Vector2(4, -14), color, format);
     }
 
