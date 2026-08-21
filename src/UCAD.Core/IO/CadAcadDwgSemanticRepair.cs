@@ -32,46 +32,75 @@ internal static class CadAcadDwgSemanticRepair
         var sourceDimensions = source.Entities.OfType<AcadDimension>().ToArray();
         if (sourceDimensions.Length == 0) return;
 
-        var existingDimensionIds = target.Entities
-            .Where(entity => entity is LinearDimensionEntity or AngularDimensionEntity or RadialDimensionEntity)
-            .Select(entity => entity.Id).ToArray();
-        if (existingDimensionIds.Length > 0) target.RemoveRange(existingDimensionIds);
+        // Treat native dimension replacement as an atomic enhancement. The normalized DXF
+        // bridge may already have produced a usable visual representation, so a malformed,
+        // degenerate, or not-yet-modeled native DIMENSION must never make the whole import fail
+        // or cause other dimensions to disappear.
+        var replacements = new List<(ICadEntity Entity, CadEntityProperties Properties)>(sourceDimensions.Length);
+        var conversionWarnings = new List<string>();
 
         foreach (var sourceDimension in sourceDimensions)
         {
-            var styleName = EnsureDimensionStyle(target, sourceDimension.Style?.Name);
-            var textOverride = NormalizeDimensionText(sourceDimension.Text);
-            ICadEntity? converted = sourceDimension switch
+            try
             {
-                DimensionAligned aligned => new LinearDimensionEntity(
-                    ToCadPoint(aligned.FirstPoint), ToCadPoint(aligned.SecondPoint), ToCadPoint(aligned.DefinitionPoint), textOverride, styleName),
-                DimensionAngular3Pt angular3 => new AngularDimensionEntity(
-                    ToCadPoint(angular3.AngleVertex), ToCadPoint(angular3.FirstPoint), ToCadPoint(angular3.SecondPoint), ToCadPoint(angular3.DefinitionPoint), textOverride, styleName),
-                DimensionAngular2Line angular2 => ConvertAngular2Line(angular2, textOverride, styleName, warnings),
-                DimensionRadius radius => new RadialDimensionEntity(
-                    ToCadPoint(radius.DefinitionPoint),
-                    ToCadPoint(radius.AngleVertex),
-                    ToCadPoint(radius.TextMiddlePoint),
-                    false,
-                    textOverride,
-                    styleName),
-                DimensionDiameter diameter => new RadialDimensionEntity(
-                    ToCadPoint(diameter.Center),
-                    ToCadPoint(diameter.AngleVertex),
-                    ToCadPoint(diameter.TextMiddlePoint),
-                    true,
-                    textOverride,
-                    styleName),
-                _ => null
-            };
+                var styleName = EnsureDimensionStyle(target, sourceDimension.Style?.Name);
+                var textOverride = NormalizeDimensionText(sourceDimension.Text);
+                ICadEntity? converted = sourceDimension switch
+                {
+                    DimensionAligned aligned => new LinearDimensionEntity(
+                        ToCadPoint(aligned.FirstPoint), ToCadPoint(aligned.SecondPoint), ToCadPoint(aligned.DefinitionPoint), textOverride, styleName),
+                    DimensionAngular3Pt angular3 => new AngularDimensionEntity(
+                        ToCadPoint(angular3.AngleVertex), ToCadPoint(angular3.FirstPoint), ToCadPoint(angular3.SecondPoint), ToCadPoint(angular3.DefinitionPoint), textOverride, styleName),
+                    DimensionAngular2Line angular2 => ConvertAngular2Line(angular2, textOverride, styleName, conversionWarnings),
+                    DimensionRadius radius => new RadialDimensionEntity(
+                        ToCadPoint(radius.DefinitionPoint),
+                        ToCadPoint(radius.AngleVertex),
+                        ToCadPoint(radius.TextMiddlePoint),
+                        false,
+                        textOverride,
+                        styleName),
+                    DimensionDiameter diameter => new RadialDimensionEntity(
+                        ToCadPoint(diameter.Center),
+                        ToCadPoint(diameter.AngleVertex),
+                        ToCadPoint(diameter.TextMiddlePoint),
+                        true,
+                        textOverride,
+                        styleName),
+                    _ => null
+                };
 
-            if (converted is null)
-            {
-                warnings.Add($"DWG native semantic repair: dimension type {sourceDimension.GetType().Name} is recognized but has no matching UCAD 2D dimension entity yet.");
-                continue;
+                if (converted is null)
+                {
+                    conversionWarnings.Add($"AutoCAD native semantic repair: dimension type {sourceDimension.GetType().Name} has no lossless UCAD 2D semantic equivalent yet.");
+                    AppendDimensionFallbackWarnings(warnings, conversionWarnings);
+                    return;
+                }
+
+                replacements.Add((converted, ToEntityProperties(sourceDimension, target)));
             }
-            target.Add(converted, ToEntityProperties(sourceDimension, target));
+            catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or FormatException or OverflowException)
+            {
+                conversionWarnings.Add($"AutoCAD native semantic repair: dimension type {sourceDimension.GetType().Name} could not be upgraded safely: {ex.Message}");
+                AppendDimensionFallbackWarnings(warnings, conversionWarnings);
+                return;
+            }
         }
+
+        var existingDimensionIds = target.Entities
+            .Where(entity => entity is LinearDimensionEntity or AngularDimensionEntity or RadialDimensionEntity)
+            .Select(entity => entity.Id)
+            .ToArray();
+        if (existingDimensionIds.Length > 0) target.RemoveRange(existingDimensionIds);
+        if (replacements.Count > 0) target.AddRange(replacements);
+    }
+
+    private static void AppendDimensionFallbackWarnings(List<string> warnings, IEnumerable<string> conversionWarnings)
+    {
+        foreach (var warning in conversionWarnings)
+            if (!warnings.Contains(warning, StringComparer.Ordinal)) warnings.Add(warning);
+
+        const string fallback = "AutoCAD native semantic repair: native DIMENSION replacement was skipped atomically; the normalized DXF display fallback was retained.";
+        if (!warnings.Contains(fallback, StringComparer.Ordinal)) warnings.Add(fallback);
     }
 
     private static AngularDimensionEntity? ConvertAngular2Line(DimensionAngular2Line source, string? textOverride, string styleName, List<string> warnings)
@@ -79,7 +108,7 @@ internal static class CadAcadDwgSemanticRepair
         var center = source.Center;
         if (!double.IsFinite(center.X) || !double.IsFinite(center.Y))
         {
-            warnings.Add("DWG native semantic repair: two-line angular dimension has no finite line intersection and was skipped.");
+            warnings.Add("AutoCAD native semantic repair: two-line angular dimension has no finite line intersection and was skipped.");
             return null;
         }
         var vertex = ToCadPoint(center);
