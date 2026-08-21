@@ -1,3 +1,4 @@
+using System.Reflection;
 using ACadSharp.Entities;
 using ACadSharp.IO;
 using ACadSharp.Tables;
@@ -115,8 +116,47 @@ public sealed class AcadInsertDisplayRepairTests
         Assert.Empty(result.Document.Entities.OfType<BlockReferenceEntity>());
         var line = Assert.Single(result.Document.Entities.OfType<LineEntity>());
         Assert.Equal(25, line.Start.X, 8);
-        Assert.Equal(31, line.EndXOrFallback(), 8);
+        Assert.Equal(31, line.End.X, 8);
         Assert.Contains(result.Warnings, warning => warning.Contains("evaluated block", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void TableCacheBlockIsExpandedIntoVisibleGeometry()
+    {
+        var cache = new BlockRecord("*T1");
+        cache.Entities.Add(new Line(new XYZ(0, 0, 0), new XYZ(20, 0, 0)));
+        cache.Entities.Add(new Line(new XYZ(0, 5, 0), new XYZ(20, 5, 0)));
+        cache.Entities.Add(new TextEntity
+        {
+            InsertPoint = new XYZ(2, 2, 0),
+            Height = 2.5,
+            Value = "TABLE"
+        });
+        var table = new TableEntity(cache)
+        {
+            InsertPoint = new XYZ(50, 40, 0),
+            XScale = 1,
+            YScale = 1
+        };
+        var source = new ACadSharp.CadDocument();
+        source.Entities.Add(table);
+
+        var target = new UCAD.Core.CadDocument();
+        var warnings = new List<string> { "DXF entity 'TABLE' could not be imported." };
+        InvokeInsertRepair(source, target, warnings);
+
+        Assert.Equal(2, target.Entities.OfType<LineEntity>().Count());
+        Assert.Contains(target.Entities.OfType<UCAD.Core.Entities.TextEntity>(), text => text.Text == "TABLE");
+        Assert.DoesNotContain(warnings, warning => warning.Contains("TABLE", StringComparison.OrdinalIgnoreCase) && warning.Contains("could not be imported", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(warnings, warning => warning.Contains("TABLE cache block", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static void InvokeInsertRepair(ACadSharp.CadDocument source, UCAD.Core.CadDocument target, List<string> warnings)
+    {
+        var repairType = typeof(CadAcadInteropCodec).Assembly.GetType("UCAD.Core.IO.CadAcadInsertDisplayRepair", throwOnError: true)!;
+        var apply = repairType.GetMethod("Apply", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+        Assert.NotNull(apply);
+        apply!.Invoke(null, [source, target, warnings]);
     }
 
     private static byte[] WriteTextDxf(ACadSharp.CadDocument document)
@@ -125,9 +165,4 @@ public sealed class AcadInsertDisplayRepairTests
         using (var writer = new DxfWriter(stream, document, binary: false)) writer.Write();
         return stream.ToArray();
     }
-}
-
-internal static class AcadInsertDisplayRepairTestExtensions
-{
-    public static double EndXOrFallback(this LineEntity line) => line.End.X;
 }
