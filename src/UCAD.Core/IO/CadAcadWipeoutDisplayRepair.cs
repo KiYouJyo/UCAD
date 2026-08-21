@@ -8,10 +8,9 @@ using UcadDocument = UCAD.Core.CadDocument;
 namespace UCAD.Core.IO;
 
 /// <summary>
-/// Display-first recovery for AutoCAD WIPEOUT. A tail-position wipeout can be restored
-/// as a real background mask without changing source draw order. When later source
-/// entities still exist, the exact boundary is retained as an outline until the full
-/// draw-order metadata path can place the mask between those entities safely.
+/// Display-first recovery for AutoCAD WIPEOUT. Source-order metadata keeps the recovered
+/// opaque mask at its original ENTITIES position, so later source geometry remains visible
+/// while earlier geometry is correctly obscured.
 /// </summary>
 internal static class CadAcadWipeoutDisplayRepair
 {
@@ -31,20 +30,12 @@ internal static class CadAcadWipeoutDisplayRepair
             {
                 var boundary = GetWorldBoundary(wipeout);
                 if (boundary.Count < 3) continue;
-                var properties = ToProperties(wipeout, target);
-                var safeTailMask = !sourceEntities.Skip(index + 1).Any(entity => entity is not Wipeout);
-
-                if (safeTailMask)
-                {
-                    target.Add(new WipeoutEntity(boundary), properties);
-                    warnings.RemoveAll(warning => warning.Contains("WIPEOUT", StringComparison.OrdinalIgnoreCase) && warning.Contains("could not be imported", StringComparison.OrdinalIgnoreCase));
-                }
-                else
-                {
-                    target.Add(new PolylineEntity(boundary, closed: true), properties);
-                    const string warning = "AutoCAD WIPEOUT boundary was recovered, but the mask occurs before later source entities; only its exact boundary is shown until source draw-order metadata can place the opaque mask safely.";
-                    if (!warnings.Contains(warning, StringComparer.Ordinal)) warnings.Add(warning);
-                }
+                var properties = ToProperties(wipeout, target, index);
+                target.Add(new WipeoutEntity(boundary), properties);
+                warnings.RemoveAll(warning =>
+                    warning.Contains("WIPEOUT", StringComparison.OrdinalIgnoreCase) &&
+                    (warning.Contains("could not be imported", StringComparison.OrdinalIgnoreCase) ||
+                     warning.Contains("only its exact boundary", StringComparison.OrdinalIgnoreCase)));
             }
             catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or OverflowException)
             {
@@ -105,12 +96,12 @@ internal static class CadAcadWipeoutDisplayRepair
             source.InsertPoint.Y + source.UVector.Y * u + source.VVector.Y * v);
     }
 
-    private static CadEntityProperties ToProperties(ACadSharp.Entities.Entity source, UcadDocument target)
+    private static CadEntityProperties ToProperties(ACadSharp.Entities.Entity source, UcadDocument target, int sourceOrder)
     {
         var layer = string.IsNullOrWhiteSpace(source.Layer?.Name) ? CadLayer.DefaultLayerName : source.Layer.Name;
         if (!target.TryGetLayer(layer, out _)) target.CreateLayer(new CadLayer(layer));
         var lineType = string.IsNullOrWhiteSpace(source.LineType?.Name) ? "ByLayer" : source.LineType.Name;
-        return new CadEntityProperties(layer, lineType: lineType);
+        return new CadEntityProperties(layer, lineType: lineType, sourceOrder: sourceOrder);
     }
 
     private static bool PointsNear(CadPoint first, CadPoint second) =>
