@@ -10,6 +10,8 @@ public static class CadEntityGeometry
     public static CadRect GetBounds(ICadEntity entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
+        if (CadAnnotationEntityGeometry.TryGetBounds(entity, out var annotationBounds)) return annotationBounds;
+        if (CadExtendedEntityGeometry.TryGetBounds(entity, out var extendedBounds)) return extendedBounds;
         return entity switch
         {
             LineEntity line => BoundsOfPoints([line.Start, line.End]),
@@ -27,6 +29,8 @@ public static class CadEntityGeometry
     public static double DistanceTo(ICadEntity entity, CadPoint point)
     {
         ArgumentNullException.ThrowIfNull(entity);
+        if (CadAnnotationEntityGeometry.Supports(entity)) return CadAnnotationEntityGeometry.DistanceTo(entity, point);
+        if (CadExtendedEntityGeometry.Supports(entity)) return CadExtendedEntityGeometry.DistanceTo(entity, point);
         return entity switch
         {
             LineEntity line => DistancePointToSegment(point, line.Start, line.End),
@@ -41,12 +45,18 @@ public static class CadEntityGeometry
         };
     }
 
-    public static bool IsContainedBy(ICadEntity entity, CadRect rectangle, double tolerance = 0) =>
-        rectangle.Contains(GetBounds(entity), tolerance);
+    public static bool IsContainedBy(ICadEntity entity, CadRect rectangle, double tolerance = 0)
+    {
+        if (CadAnnotationEntityGeometry.Supports(entity)) return CadAnnotationEntityGeometry.IsContainedBy(entity, rectangle, tolerance);
+        if (CadExtendedEntityGeometry.Supports(entity)) return CadExtendedEntityGeometry.IsContainedBy(entity, rectangle, tolerance);
+        return rectangle.Contains(GetBounds(entity), tolerance);
+    }
 
     public static bool IntersectsRectangle(ICadEntity entity, CadRect rectangle, double tolerance = 0)
     {
         ArgumentNullException.ThrowIfNull(entity);
+        if (CadAnnotationEntityGeometry.Supports(entity)) return CadAnnotationEntityGeometry.IntersectsRectangle(entity, rectangle, tolerance);
+        if (CadExtendedEntityGeometry.Supports(entity)) return CadExtendedEntityGeometry.IntersectsRectangle(entity, rectangle, tolerance);
         if (!GetBounds(entity).Intersects(rectangle, tolerance)) return false;
 
         return entity switch

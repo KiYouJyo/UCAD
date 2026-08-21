@@ -1,4 +1,5 @@
 using UCAD.Core.Geometry;
+using UCAD.Core.Styles;
 
 namespace UCAD.Core.Entities;
 
@@ -13,9 +14,15 @@ public sealed record LinearDimensionEntity : ICadEntity
         CadPoint secondExtensionPoint,
         CadPoint dimensionLinePoint,
         string? textOverride = null)
-        : this(firstExtensionPoint, secondExtensionPoint, dimensionLinePoint, textOverride, Guid.NewGuid())
-    {
-    }
+        : this(firstExtensionPoint, secondExtensionPoint, dimensionLinePoint, textOverride, CadDimensionStyle.DefaultName, Guid.NewGuid()) { }
+
+    public LinearDimensionEntity(
+        CadPoint firstExtensionPoint,
+        CadPoint secondExtensionPoint,
+        CadPoint dimensionLinePoint,
+        string? textOverride,
+        string styleName)
+        : this(firstExtensionPoint, secondExtensionPoint, dimensionLinePoint, textOverride, styleName, Guid.NewGuid()) { }
 
     internal LinearDimensionEntity(
         CadPoint firstExtensionPoint,
@@ -23,13 +30,24 @@ public sealed record LinearDimensionEntity : ICadEntity
         CadPoint dimensionLinePoint,
         string? textOverride,
         Guid id)
+        : this(firstExtensionPoint, secondExtensionPoint, dimensionLinePoint, textOverride, CadDimensionStyle.DefaultName, id) { }
+
+    internal LinearDimensionEntity(
+        CadPoint firstExtensionPoint,
+        CadPoint secondExtensionPoint,
+        CadPoint dimensionLinePoint,
+        string? textOverride,
+        string styleName,
+        Guid id)
     {
         if ((secondExtensionPoint - firstExtensionPoint).Length <= 1e-9)
             throw new ArgumentException("Dimension extension points must be distinct.", nameof(secondExtensionPoint));
+        if (string.IsNullOrWhiteSpace(styleName)) throw new ArgumentException("Dimension style cannot be empty.", nameof(styleName));
         FirstExtensionPoint = firstExtensionPoint;
         SecondExtensionPoint = secondExtensionPoint;
         DimensionLinePoint = dimensionLinePoint;
         TextOverride = string.IsNullOrWhiteSpace(textOverride) ? null : textOverride;
+        StyleName = styleName.Trim();
         Id = id;
     }
 
@@ -38,6 +56,7 @@ public sealed record LinearDimensionEntity : ICadEntity
     public CadPoint SecondExtensionPoint { get; }
     public CadPoint DimensionLinePoint { get; }
     public string? TextOverride { get; }
+    public string StyleName { get; }
     public double Measurement => (SecondExtensionPoint - FirstExtensionPoint).Length;
 
     public (CadPoint First, CadPoint Second) GetDimensionLineEndpoints()

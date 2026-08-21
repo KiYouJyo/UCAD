@@ -4,6 +4,8 @@ using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using System.Numerics;
 using UCAD.Core.Entities;
+using UCAD.Core.Geometry;
+using UCAD.Core.Hatching;
 using UCAD.Core.Interaction;
 using Windows.UI;
 
@@ -130,14 +132,55 @@ public sealed partial class CadViewport
     private void DrawHatchEntity(CanvasDrawingSession ds, HatchEntity hatch, Color color, float strokeWidth)
     {
         if (hatch.Boundary.Count < 3) return;
+
+        if (string.Equals(hatch.Pattern, "ANSI31", StringComparison.OrdinalIgnoreCase))
+        {
+            var pattern = CadHatchPatternGenerator.Generate(hatch);
+            foreach (var segment in pattern.Segments)
+                ds.DrawLine(WorldToScreen(segment.Start), WorldToScreen(segment.End), color, strokeWidth);
+            return;
+        }
+
+        if (!string.Equals(hatch.Pattern, "Solid", StringComparison.OrdinalIgnoreCase))
+        {
+            DrawHatchLoop(ds, hatch.Boundary, color, strokeWidth);
+            foreach (var island in hatch.EffectiveIslandLoops) DrawHatchLoop(ds, island, color, strokeWidth);
+            return;
+        }
+
         using var builder = new CanvasPathBuilder(ds.Device);
-        builder.BeginFigure(WorldToScreen(hatch.Boundary[0]));
-        for (var i = 1; i < hatch.Boundary.Count; i++) builder.AddLine(WorldToScreen(hatch.Boundary[i]));
-        builder.EndFigure(CanvasFigureLoop.Closed);
+        builder.SetFilledRegionDetermination(CanvasFilledRegionDetermination.Alternate);
+        AddHatchLoop(builder, hatch.Boundary);
+        foreach (var island in hatch.EffectiveIslandLoops) AddHatchLoop(builder, island);
         using var geometry = CanvasGeometry.CreatePath(builder);
         var fill = Color.FromArgb((byte)Math.Min(110, (int)color.A), color.R, color.G, color.B);
         ds.FillGeometry(geometry, fill);
         ds.DrawGeometry(geometry, color, strokeWidth);
+    }
+
+    private void AddHatchLoop(CanvasPathBuilder builder, IReadOnlyList<CadPoint> loop)
+    {
+        if (loop.Count < 3) return;
+        builder.BeginFigure(WorldToScreen(loop[0]));
+        for (var index = 1; index < loop.Count; index++) builder.AddLine(WorldToScreen(loop[index]));
+        builder.EndFigure(CanvasFigureLoop.Closed);
+    }
+
+    private void DrawHatchLoop(
+        CanvasDrawingSession ds,
+        IReadOnlyList<CadPoint> loop,
+        Color color,
+        float strokeWidth)
+    {
+        if (loop.Count < 2) return;
+        var previous = WorldToScreen(loop[0]);
+        for (var index = 1; index < loop.Count; index++)
+        {
+            var current = WorldToScreen(loop[index]);
+            ds.DrawLine(previous, current, color, strokeWidth);
+            previous = current;
+        }
+        ds.DrawLine(previous, WorldToScreen(loop[0]), color, strokeWidth);
     }
 
     private void DrawAuthoringModifyPreview(CanvasDrawingSession ds)

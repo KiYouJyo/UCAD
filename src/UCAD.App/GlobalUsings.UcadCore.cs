@@ -1,0 +1,1 @@
+global using UCAD.Core;

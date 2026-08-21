@@ -18,7 +18,10 @@ public enum ObjectSnapKind
     Endpoint,
     Midpoint,
     Intersection,
-    Center
+    Center,
+    Grid,
+    Polar,
+    Tracking
 }
 
 public sealed record ObjectSnapResult(
@@ -37,14 +40,8 @@ public static class ObjectSnapResolver
         ObjectSnapMode modes)
     {
         ArgumentNullException.ThrowIfNull(entities);
-        if (!double.IsFinite(aperture) || aperture < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(aperture));
-        }
-        if (modes == ObjectSnapMode.None)
-        {
-            return null;
-        }
+        if (!double.IsFinite(aperture) || aperture < 0) throw new ArgumentOutOfRangeException(nameof(aperture));
+        if (modes == ObjectSnapMode.None) return null;
 
         var snapshot = entities.ToArray();
         ObjectSnapResult? best = null;
@@ -53,43 +50,25 @@ public static class ObjectSnapResolver
         {
             if (modes.HasFlag(ObjectSnapMode.Endpoint))
             {
-                foreach (var point in CadEntityGeometry.GetEndpoints(entity))
-                {
+                foreach (var point in GetEndpoints(entity))
                     best = Choose(best, Candidate(point, ObjectSnapKind.Endpoint, entity.Id, null, cursor), aperture);
-                }
             }
 
             if (modes.HasFlag(ObjectSnapMode.Midpoint))
             {
-                foreach (var point in CadEntityGeometry.GetMidpoints(entity))
-                {
+                foreach (var point in GetMidpoints(entity))
                     best = Choose(best, Candidate(point, ObjectSnapKind.Midpoint, entity.Id, null, cursor), aperture);
-                }
             }
 
-            if (modes.HasFlag(ObjectSnapMode.Center))
-            {
-                var center = entity switch
-                {
-                    CircleEntity circle => circle.Center,
-                    ArcEntity arc => arc.Center,
-                    _ => (CadPoint?)null
-                };
-                if (center is CadPoint point)
-                {
-                    best = Choose(best, Candidate(point, ObjectSnapKind.Center, entity.Id, null, cursor), aperture);
-                }
-            }
+            if (modes.HasFlag(ObjectSnapMode.Center) && GetCenter(entity) is CadPoint center)
+                best = Choose(best, Candidate(center, ObjectSnapKind.Center, entity.Id, null, cursor), aperture);
         }
 
         if (modes.HasFlag(ObjectSnapMode.Intersection) && snapshot.Length > 1)
         {
-            var apertureRect = new CadRect(
-                cursor.X - aperture,
-                cursor.Y - aperture,
-                cursor.X + aperture,
-                cursor.Y + aperture);
+            var apertureRect = new CadRect(cursor.X - aperture, cursor.Y - aperture, cursor.X + aperture, cursor.Y + aperture);
             var nearby = snapshot
+                .Where(entity => !CadExtendedEntityGeometry.Supports(entity) && !CadAnnotationEntityGeometry.Supports(entity))
                 .Where(entity => CadEntityGeometry.GetBounds(entity).Intersects(apertureRect))
                 .ToArray();
 
@@ -99,16 +78,37 @@ public static class ObjectSnapResolver
                 var first = nearby[firstIndex];
                 var second = nearby[secondIndex];
                 foreach (var point in CadEntityGeometry.Intersections(first, second))
-                {
-                    best = Choose(
-                        best,
-                        Candidate(point, ObjectSnapKind.Intersection, first.Id, second.Id, cursor),
-                        aperture);
-                }
+                    best = Choose(best, Candidate(point, ObjectSnapKind.Intersection, first.Id, second.Id, cursor), aperture);
             }
         }
 
         return best;
+    }
+
+    private static IReadOnlyList<CadPoint> GetEndpoints(ICadEntity entity)
+    {
+        if (CadExtendedEntityGeometry.Supports(entity)) return CadExtendedEntityGeometry.GetEndpoints(entity);
+        if (CadAnnotationEntityGeometry.Supports(entity)) return CadAnnotationEntityGeometry.GetEndpoints(entity);
+        return CadEntityGeometry.GetEndpoints(entity);
+    }
+
+    private static IReadOnlyList<CadPoint> GetMidpoints(ICadEntity entity)
+    {
+        if (CadExtendedEntityGeometry.Supports(entity)) return CadExtendedEntityGeometry.GetMidpoints(entity);
+        if (CadAnnotationEntityGeometry.Supports(entity)) return CadAnnotationEntityGeometry.GetMidpoints(entity);
+        return CadEntityGeometry.GetMidpoints(entity);
+    }
+
+    private static CadPoint? GetCenter(ICadEntity entity)
+    {
+        if (CadExtendedEntityGeometry.Supports(entity)) return CadExtendedEntityGeometry.GetCenter(entity);
+        if (CadAnnotationEntityGeometry.Supports(entity)) return CadAnnotationEntityGeometry.GetCenter(entity);
+        return entity switch
+        {
+            CircleEntity circle => circle.Center,
+            ArcEntity arc => arc.Center,
+            _ => null
+        };
     }
 
     private static ObjectSnapResult Candidate(
@@ -119,23 +119,11 @@ public static class ObjectSnapResolver
         CadPoint cursor) =>
         new(point, kind, primary, secondary, (point - cursor).Length);
 
-    private static ObjectSnapResult? Choose(
-        ObjectSnapResult? current,
-        ObjectSnapResult candidate,
-        double aperture)
+    private static ObjectSnapResult? Choose(ObjectSnapResult? current, ObjectSnapResult candidate, double aperture)
     {
-        if (candidate.Distance > aperture)
-        {
-            return current;
-        }
-        if (current is null || candidate.Distance < current.Distance - 1e-9)
-        {
-            return candidate;
-        }
-        if (Math.Abs(candidate.Distance - current.Distance) <= 1e-9 && Priority(candidate.Kind) < Priority(current.Kind))
-        {
-            return candidate;
-        }
+        if (candidate.Distance > aperture) return current;
+        if (current is null || candidate.Distance < current.Distance - 1e-9) return candidate;
+        if (Math.Abs(candidate.Distance - current.Distance) <= 1e-9 && Priority(candidate.Kind) < Priority(current.Kind)) return candidate;
         return current;
     }
 

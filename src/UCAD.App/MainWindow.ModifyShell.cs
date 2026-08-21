@@ -3,6 +3,8 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using UCAD.Workspace;
 
+using UCAD.Services;
+
 namespace UCAD;
 
 public sealed partial class MainWindow
@@ -74,6 +76,7 @@ public sealed partial class MainWindow
                 Spacing = 1,
                 Children =
                 {
+                    CadToolIconService.Create(command),
                     new TextBlock
                     {
                         Text = command,

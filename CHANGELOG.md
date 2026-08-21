@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.0 — 2026-08-18
+
+### Document & Exchange Foundation
+- Froze the post-v0.7 branch into one acceptance candidate covering native document I/O, DXF, plotting/PDF, extended drawing/modify/annotation, layouts, architecture/planning helpers, GIS exchange, autosave/recovery, and spatial-index foundations.
+- Fixed block-reference refresh, extended-entity spatial indexing, PDF outline fallback, GeoJSON hatch islands, native-codec JSON/nullability, and DBF analyzer regressions found by branch validation.
+
+### Validation
+- Core tests, WinUI x64 Release build, UI/release contracts, release-certificate signing, one-click package validation and SHA-256 manifest are required before the v0.8.0 candidate is committed.
+
 ## 0.5.0 — 2026-08-16
 
 ### Modify Foundation

@@ -123,14 +123,25 @@ UCAD aims to become a lightweight Windows-native 2D CAD focused on architecture 
 
 **Combined acceptance gate:** the v0.7.0 candidate intentionally carries v0.5, v0.6, and v0.7 together so Modify, Layers/Properties, annotation, hatch, and blocks can be accepted as one coherent CAD authoring loop before release.
 
-## v0.8–v1.0
+## v0.8 — Document & Exchange Foundation
 
-- DXF-first import/export
-- print/PDF workflow
-- architectural helpers
-- planning parcels and indicators
-- GIS exchange workflows
-- performance and large-drawing regression suite
+- [x] native `.ucad` document open/save foundation
+- [x] recent files, file activation, autosave and recovery foundation
+- [x] DXF-first import/export foundation
+- [x] extended 2D entities and Modify/Annotation completion foundation
+- [x] layouts, page setup, multiple viewports and plot preview
+- [x] vector PDF export foundation
+- [x] architecture and planning helper foundation
+- [x] GeoJSON / CSV Point / Shapefile / DBF / PRJ / CRS exchange foundation
+- [x] spatial index and larger-drawing query foundation
+- [x] release-signed acceptance package gate
+
+## v0.9–v1.0
+
+- advanced interoperability and round-trip fidelity
+- performance profiling and large-drawing regression suite
+- professional architecture/planning workflow refinement
+- UI/interaction polish against the Figma visual SSOT
 
 ## Explicitly out of scope for 1.x
 
