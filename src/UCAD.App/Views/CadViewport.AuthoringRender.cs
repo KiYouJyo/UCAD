@@ -19,6 +19,8 @@ public sealed partial class CadViewport
     /// Final ordered document render pass. All supported 2D entity families are routed
     /// through this single document-order traversal so block children render exactly like
     /// top-level entities and later helper passes cannot reorder annotation/extended geometry.
+    /// Imported AutoCAD entities additionally use retained source order so display-repair
+    /// objects (WIPEOUT, TABLE snapshots, dimensions, etc.) return to their original stack.
     /// </summary>
     public void EnsureAuthoringRenderHooks()
     {
@@ -35,7 +37,8 @@ public sealed partial class CadViewport
         ds.Clear(_canvasBackground);
         if (_showGrid) DrawGrid(ds, sender.ActualWidth, sender.ActualHeight);
 
-        foreach (var entity in _document.VisibleEntities)
+        foreach (var entity in _document.VisibleEntities
+                     .OrderBy(entity => _document.GetEntityProperties(entity.Id).SourceOrder ?? int.MaxValue))
         {
             if (_interaction.Selection.Contains(entity.Id))
             {
@@ -109,10 +112,11 @@ public sealed partial class CadViewport
         if (wipeout.Boundary.Count < 3) return;
         using var builder = new CanvasPathBuilder(ds.Device);
         builder.BeginFigure(WorldToScreen(wipeout.Boundary[0]));
-        for (var index = 1; index < wipeout.Boundary.Count; index++) builder.AddLine(WorldToScreen(wipeout.Boundary[index]));
+        for (var i = 1; i < wipeout.Boundary.Count; i++) builder.AddLine(WorldToScreen(wipeout.Boundary[i]));
         builder.EndFigure(CanvasFigureLoop.Closed);
         using var geometry = CanvasGeometry.CreatePath(builder);
-        ds.FillGeometry(geometry, _canvasBackground);
+        if (wipeout.MaskEnabled) ds.FillGeometry(geometry, _canvasBackground);
+        if (wipeout.FrameVisible) ds.DrawGeometry(geometry, _geometryColor, 1.0f);
     }
 
     private void DrawTextEntity(CanvasDrawingSession ds, TextEntity text, Color color)
