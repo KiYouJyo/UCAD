@@ -15,7 +15,8 @@ namespace UCAD.Core.IO;
 /// <summary>
 /// Display-first recovery for AutoCAD INSERT-like variants that UCAD's editable block-reference
 /// model cannot represent losslessly yet: mirrored/non-uniform scale, MINSERT arrays,
-/// nested INSERT content, evaluated anonymous/dynamic block snapshots and TABLE cache blocks.
+/// nested INSERT content, evaluated anonymous/dynamic block snapshots, TABLE cache blocks,
+/// and ordinary blocks whose contents include advanced display-only AutoCAD entities.
 /// ACadSharp owns the affine explosion so the fallback does not reimplement DWG/DXF block mathematics.
 /// </summary>
 internal static class CadAcadInsertDisplayRepair
@@ -70,6 +71,11 @@ internal static class CadAcadInsertDisplayRepair
                     var notice = $"AutoCAD evaluated block '{insert.Block?.Name}' was expanded as its visible geometry snapshot; dynamic editing semantics are deferred.";
                     if (!warnings.Contains(notice, StringComparer.Ordinal)) warnings.Add(notice);
                 }
+                else if (BlockRequiresNativeDisplaySnapshot(insert))
+                {
+                    var notice = $"AutoCAD INSERT '{insert.Block?.Name ?? "<unknown>"}' contained advanced entities not representable by UCAD's editable block snapshot and was expanded for complete display.";
+                    if (!warnings.Contains(notice, StringComparer.Ordinal)) warnings.Add(notice);
+                }
             }
             catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or NotSupportedException or IOException)
             {
@@ -87,11 +93,15 @@ internal static class CadAcadInsertDisplayRepair
                nonUniform ||
                insert.IsMultiple ||
                HasNestedInsert(insert) ||
-               IsEvaluatedAnonymousBlock(insert);
+               IsEvaluatedAnonymousBlock(insert) ||
+               BlockRequiresNativeDisplaySnapshot(insert);
     }
 
     private static bool HasNestedInsert(AcadInsert insert) =>
         insert.Block?.Entities.OfType<AcadInsert>().Any() == true;
+
+    private static bool BlockRequiresNativeDisplaySnapshot(AcadInsert insert) =>
+        insert.Block?.Entities.Any(entity => entity is Wipeout or MLine or Dimension or Leader or MultiLeader) == true;
 
     private static bool IsEvaluatedAnonymousBlock(AcadInsert insert)
     {
@@ -165,6 +175,7 @@ internal static class CadAcadInsertDisplayRepair
         CadAcadDwgSemanticRepair.Apply(snapshot, imported.Document, localWarnings);
         CadAcadDimensionDisplayRepair.Apply(snapshot, imported.Document, localWarnings);
         CadAcadMLineDisplayRepair.Apply(snapshot, imported.Document, localWarnings);
+        CadAcadWipeoutDisplayRepair.Apply(snapshot, imported.Document, localWarnings);
         foreach (var warning in localWarnings)
         {
             var message = $"INSERT display snapshot: {warning}";
