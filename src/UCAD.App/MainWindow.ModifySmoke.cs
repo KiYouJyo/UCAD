@@ -1,7 +1,11 @@
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using UCAD.Core.Commands;
 using UCAD.Core.Entities;
 using UCAD.Core.Geometry;
 using UCAD.Workspace;
+using Windows.System;
 
 namespace UCAD;
 
@@ -13,11 +17,80 @@ public sealed partial class MainWindow
         var session = ActiveSession ?? throw new InvalidOperationException("Modify smoke could not create a Drawing workspace.");
         EnsureSessionInteractionSubscribed(session);
 
+        var eraseButton = ModifyToolShelf.Children
+            .OfType<Button>()
+            .FirstOrDefault(button => string.Equals(button.Tag as string, "ERASE", StringComparison.Ordinal));
+        if (eraseButton is null || !eraseButton.IsHitTestVisible || !eraseButton.IsEnabled || eraseButton.Opacity < 0.99)
+        {
+            throw new InvalidOperationException("Modify smoke visible ERASE control is not available.");
+        }
+
+        var deleteAccelerator = RootLayout.KeyboardAccelerators
+            .FirstOrDefault(accelerator => accelerator.Key == VirtualKey.Delete);
+        if (deleteAccelerator is null)
+        {
+            throw new InvalidOperationException("Modify smoke physical Delete KeyboardAccelerator is not registered on the window root.");
+        }
+
         var line = new LineEntity(new CadPoint(0, 0), new CadPoint(10, 0));
         var circle = new CircleEntity(new CadPoint(20, 0), 5);
         session.Document.Add(line);
         session.Document.Add(circle);
         session.Interaction.Selection.Replace(line.Id);
+
+        // CommandInput is the foreground CAD keyboard owner. Verify both initial focus
+        // and the same production helper used by window-reactivation focus recovery.
+        eraseButton.Focus(FocusState.Programmatic);
+        if (!TryFocusActiveCommandInput() || RootLayout.XamlRoot is null ||
+            !ReferenceEquals(FocusManager.GetFocusedElement(RootLayout.XamlRoot), CommandInput))
+        {
+            throw new InvalidOperationException("Modify smoke command input focus restoration failed.");
+        }
+
+        CommandInput.Text = string.Empty;
+        if (!TryExecuteDeleteShortcut() ||
+            session.Document.Entities.Count != 1 ||
+            session.Document.Entities.Any(entity => entity.Id == line.Id))
+        {
+            throw new InvalidOperationException("Modify smoke physical Delete failed while the auto-focused command line owned focus.");
+        }
+        if (!session.Document.Undo() || session.Document.Entities.Count != 2)
+        {
+            throw new InvalidOperationException("Modify smoke physical Delete accelerator Undo failed.");
+        }
+        session.Interaction.Selection.Replace(line.Id);
+
+        // PR #19 acceptance rule: even a non-empty/selected command line reserves Delete
+        // for CAD ERASE. The typed command text itself must remain untouched.
+        CommandInput.Text = "ER";
+        CommandInput.SelectionStart = 0;
+        CommandInput.SelectionLength = CommandInput.Text.Length;
+        CommandInput.Focus(FocusState.Programmatic);
+        var typedText = CommandInput.Text;
+        if (!TryExecuteDeleteShortcut() ||
+            session.Document.Entities.Count != 1 ||
+            session.Document.Entities.Any(entity => entity.Id == line.Id) ||
+            !string.Equals(CommandInput.Text, typedText, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("Modify smoke typed command-line Delete did not execute ERASE without mutating command text.");
+        }
+        if (!session.Document.Undo() || session.Document.Entities.Count != 2)
+        {
+            throw new InvalidOperationException("Modify smoke typed command-line Delete Undo failed.");
+        }
+        session.Interaction.Selection.Replace(line.Id);
+        CommandInput.Text = string.Empty;
+
+        // Unrelated text editors keep normal Delete semantics; the global accelerator must
+        // not steal Delete from search/settings/dialog text entry.
+        CommandSearch.Text = "MOVE";
+        CommandSearch.Focus(FocusState.Programmatic);
+        if (TryExecuteDeleteShortcut() || session.Document.Entities.Count != 2)
+        {
+            throw new InvalidOperationException("Modify smoke Delete stole input from a non-CAD text editor.");
+        }
+        CommandSearch.Text = string.Empty;
+        TryFocusActiveCommandInput();
 
         StartModifySmokeCommand(session, "MOVE");
         OnModifyPointAccepted(session, new CadPoint(0, 0));
@@ -95,7 +168,8 @@ public sealed partial class MainWindow
         var extended = RequireLine(session, extendTarget.Id);
         AssertModifyClose(new CadPoint(10, 20), extended.End, "EXTEND end");
 
-        App.WriteStartupEvent("Modify smoke: MOVE + COPY + ROTATE + SCALE + MIRROR + OFFSET + TRIM + EXTEND initialized");
+        App.WriteStartupEvent("Modify smoke: physical Delete accelerator + ERASE + MOVE + COPY + ROTATE + SCALE + MIRROR + OFFSET + TRIM + EXTEND initialized");
+        App.WriteStartupEvent("Modify smoke: restored command focus + typed command-line Delete ERASE + unrelated text-editor guard initialized");
     }
 
     private void StartModifySmokeCommand(CadWorkspaceSession session, string token)

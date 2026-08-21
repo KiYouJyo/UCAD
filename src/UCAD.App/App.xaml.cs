@@ -32,6 +32,28 @@ public partial class App : Application
             mainWindow.RefreshLocalization();
             mainWindow.EnsureInteractionUiInitialized();
             mainWindow.EnsureAuthoringUiInitialized();
+            mainWindow.EnsureExtendedDrawingUiInitialized();
+            mainWindow.EnsureDraftingAidUiInitialized();
+            mainWindow.EnsureModifyCompletionUiInitialized();
+            mainWindow.EnsureAnnotationCompletionUiInitialized();
+            mainWindow.EnsureAdvancedAuthoringUiInitialized();
+            mainWindow.EnsureAdvancedAuthoringToolbarBridgeInitialized();
+            mainWindow.EnsureLayoutPlotUiInitialized();
+            mainWindow.EnsureViewportManagerUiInitialized();
+            mainWindow.EnsureLayoutPersistenceBridgeInitialized();
+            mainWindow.EnsureFileUiInitialized();
+            mainWindow.EnsureRecentFilesInitialized();
+            mainWindow.EnsureFileCloseIntegration();
+            mainWindow.EnsureAutoSaveInitialized();
+            mainWindow.EnsureCommandEntryExperienceInitialized();
+            mainWindow.EnsurePr19AcceptanceUiInitialized();
+
+            // Several v0.5-v0.9 tool surfaces are created in code after InitializeComponent.
+            // Run one final localization pass only after every surface exists so a non-English
+            // startup never exposes the English construction-time command labels.
+            mainWindow.RefreshLocalization();
+
+            mainWindow.HandleInitialFileActivation();
             mainWindow.ScheduleLocalizationSmoke();
             mainWindow.ScheduleInteractionSmoke();
             mainWindow.ScheduleAuthoringSmoke();

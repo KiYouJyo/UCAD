@@ -111,6 +111,11 @@ public sealed partial class MainWindow : Window
             }
 
             App.WriteStartupEvent("Initial page created");
+            if (_settingsService.Settings.AutoCheckUpdates &&
+                !string.Equals(Environment.GetEnvironmentVariable("UCAD_STARTUP_SMOKE"), "1", StringComparison.Ordinal))
+            {
+                _ = CheckForUpdatesAsync(showUpToDate: false);
+            }
         }
         catch (Exception ex)
         {
@@ -271,7 +276,7 @@ public sealed partial class MainWindow : Window
         }
 
         _settingsPage = new UcadSettingsPage();
-        _settingsPage.CheckUpdatesRequested += async (_, _) => await ShowFeatureUnavailableAsync("Feature_Updates_Title", "Feature_Updates_Message");
+        _settingsPage.CheckUpdatesRequested += async (_, _) => await CheckForUpdatesAsync(showUpToDate: true);
         _settingsPage.LanguageChanged += (_, _) => App.WriteStartupEvent("Display language preference changed; applies on next launch");
 
         _settingsTab = CreatePageTab(GetString("Settings_TabTitle"), WorkspacePageKind.Settings);

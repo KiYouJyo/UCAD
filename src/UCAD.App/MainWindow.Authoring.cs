@@ -8,6 +8,8 @@ using UCAD.Core.Geometry;
 using UCAD.Core.Layers;
 using UCAD.Workspace;
 
+using UCAD.Services;
+
 namespace UCAD;
 
 public sealed partial class MainWindow
@@ -487,6 +489,7 @@ public sealed partial class MainWindow
             Style = (Style)Application.Current.Resources["UcadToolShelfButtonStyle"]
         };
         var panel = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, Spacing = 1 };
+        panel.Children.Add(CadToolIconService.Create(command));
         panel.Children.Add(new TextBlock { Text = command, FontSize = 10, FontWeight = Microsoft.UI.Text.FontWeights.Medium, HorizontalAlignment = HorizontalAlignment.Center });
         panel.Children.Add(new TextBlock { Text = alias, FontSize = 8, Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["UcadTextSecondaryBrush"], HorizontalAlignment = HorizontalAlignment.Center });
         button.Content = panel;

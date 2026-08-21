@@ -20,7 +20,7 @@ public static class CadSelectionQuery
         var bestDistance = tolerance;
         foreach (var entity in entities.Reverse())
         {
-            var distance = CadEntityGeometry.DistanceTo(entity, point);
+            var distance = DistanceTo(entity, point);
             if (distance <= bestDistance)
             {
                 best = entity;
@@ -38,9 +38,30 @@ public static class CadSelectionQuery
         ArgumentNullException.ThrowIfNull(entities);
         return entities
             .Where(entity => crossing
-                ? CadEntityGeometry.IntersectsRectangle(entity, rectangle)
-                : CadEntityGeometry.IsContainedBy(entity, rectangle))
+                ? IntersectsRectangle(entity, rectangle)
+                : IsContainedBy(entity, rectangle))
             .Select(entity => entity.Id)
             .ToArray();
+    }
+
+    private static double DistanceTo(ICadEntity entity, CadPoint point)
+    {
+        if (CadExtendedEntityGeometry.Supports(entity)) return CadExtendedEntityGeometry.DistanceTo(entity, point);
+        if (CadAnnotationEntityGeometry.Supports(entity)) return CadAnnotationEntityGeometry.DistanceTo(entity, point);
+        return CadEntityGeometry.DistanceTo(entity, point);
+    }
+
+    private static bool IntersectsRectangle(ICadEntity entity, CadRect rectangle)
+    {
+        if (CadExtendedEntityGeometry.Supports(entity)) return CadExtendedEntityGeometry.IntersectsRectangle(entity, rectangle);
+        if (CadAnnotationEntityGeometry.Supports(entity)) return CadAnnotationEntityGeometry.IntersectsRectangle(entity, rectangle);
+        return CadEntityGeometry.IntersectsRectangle(entity, rectangle);
+    }
+
+    private static bool IsContainedBy(ICadEntity entity, CadRect rectangle)
+    {
+        if (CadExtendedEntityGeometry.Supports(entity)) return CadExtendedEntityGeometry.IsContainedBy(entity, rectangle);
+        if (CadAnnotationEntityGeometry.Supports(entity)) return CadAnnotationEntityGeometry.IsContainedBy(entity, rectangle);
+        return CadEntityGeometry.IsContainedBy(entity, rectangle);
     }
 }

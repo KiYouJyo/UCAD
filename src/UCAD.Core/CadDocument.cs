@@ -1,10 +1,11 @@
 using UCAD.Core.Blocks;
 using UCAD.Core.Entities;
 using UCAD.Core.Layers;
+using UCAD.Core.Styles;
 
 namespace UCAD.Core;
 
-public sealed class CadDocument
+public sealed partial class CadDocument
 {
     private readonly List<ICadEntity> _entities = [];
     private readonly List<CadLayer> _layers = [CadLayer.CreateDefault()];
@@ -175,6 +176,52 @@ public sealed class CadDocument
         return matched;
     }
 
+    public bool ApplyCompoundEdit(
+        IEnumerable<ICadEntity>? replacements = null,
+        IEnumerable<Guid>? removals = null,
+        IEnumerable<(ICadEntity Entity, CadEntityProperties Properties)>? additions = null)
+    {
+        var replacementSnapshot = replacements?.ToArray() ?? [];
+        var removalSet = removals?.ToHashSet() ?? [];
+        var additionSnapshot = additions?.ToArray() ?? [];
+        if (replacementSnapshot.Length == 0 && removalSet.Count == 0 && additionSnapshot.Length == 0) return false;
+        if (replacementSnapshot.Any(entity => entity is null)) throw new ArgumentException("Replacement collection cannot contain null values.", nameof(replacements));
+        if (additionSnapshot.Any(item => item.Entity is null || item.Properties is null)) throw new ArgumentException("Addition collection cannot contain null values.", nameof(additions));
+
+        var existingIds = _entities.Select(entity => entity.Id).ToHashSet();
+        var replacementIds = replacementSnapshot.Select(entity => entity.Id).ToArray();
+        if (replacementIds.Distinct().Count() != replacementIds.Length) throw new ArgumentException("Replacement identities must be unique.", nameof(replacements));
+        if (replacementIds.Any(id => !existingIds.Contains(id))) throw new ArgumentException("Every replacement must match an existing entity Id.", nameof(replacements));
+        if (replacementIds.Any(removalSet.Contains)) throw new ArgumentException("An entity cannot be both replaced and removed in one compound edit.");
+        if (removalSet.Any(id => !existingIds.Contains(id))) throw new ArgumentException("Every removal must match an existing entity Id.", nameof(removals));
+
+        foreach (var addition in additionSnapshot) EnsureLayerExists(addition.Properties.LayerName);
+        var additionIds = additionSnapshot.Select(item => item.Entity.Id).ToArray();
+        if (additionIds.Distinct().Count() != additionIds.Length) throw new ArgumentException("Addition identities must be unique.", nameof(additions));
+        var survivingIds = existingIds.Where(id => !removalSet.Contains(id)).ToHashSet();
+        if (additionIds.Any(survivingIds.Contains)) throw new InvalidOperationException("A compound edit addition duplicates an existing entity identity.");
+
+        var replacementById = replacementSnapshot.ToDictionary(entity => entity.Id);
+        RecordMutation();
+        for (var i = 0; i < _entities.Count; i++)
+            if (replacementById.TryGetValue(_entities[i].Id, out var replacement)) _entities[i] = replacement;
+
+        if (removalSet.Count > 0)
+        {
+            _entities.RemoveAll(entity => removalSet.Contains(entity.Id));
+            foreach (var id in removalSet) _entityProperties.Remove(id);
+        }
+
+        foreach (var addition in additionSnapshot)
+        {
+            _entities.Add(addition.Entity);
+            _entityProperties[addition.Entity.Id] = addition.Properties;
+        }
+
+        RaiseChanged(CadDocumentChangeKind.CompoundEdit);
+        return true;
+    }
+
     public void Clear()
     {
         if (_entities.Count == 0) return;
@@ -328,6 +375,12 @@ public sealed class CadDocument
         return true;
     }
 
+    public void ResetHistory()
+    {
+        _undo.Clear();
+        _redo.Clear();
+    }
+
     private void RecordMutation()
     {
         _undo.Push(Capture());
@@ -339,7 +392,11 @@ public sealed class CadDocument
         _layers.ToArray(),
         _blocks.ToArray(),
         _entityProperties.ToDictionary(pair => pair.Key, pair => pair.Value),
-        _currentLayerName);
+        _currentLayerName,
+        _textStyles.ToArray(),
+        _dimensionStyles.ToArray(),
+        _currentTextStyleName,
+        _currentDimensionStyleName);
 
     private void Restore(DocumentSnapshot snapshot)
     {
@@ -352,6 +409,12 @@ public sealed class CadDocument
         _entityProperties.Clear();
         foreach (var pair in snapshot.EntityProperties) _entityProperties[pair.Key] = pair.Value;
         _currentLayerName = snapshot.CurrentLayerName;
+        _textStyles.Clear();
+        _textStyles.AddRange(snapshot.TextStyles);
+        _dimensionStyles.Clear();
+        _dimensionStyles.AddRange(snapshot.DimensionStyles);
+        _currentTextStyleName = snapshot.CurrentTextStyleName;
+        _currentDimensionStyleName = snapshot.CurrentDimensionStyleName;
     }
 
     private void EnsureLayerExists(string name)
@@ -379,5 +442,9 @@ public sealed class CadDocument
         CadLayer[] Layers,
         CadBlockDefinition[] Blocks,
         Dictionary<Guid, CadEntityProperties> EntityProperties,
-        string CurrentLayerName);
+        string CurrentLayerName,
+        CadTextStyle[] TextStyles,
+        CadDimensionStyle[] DimensionStyles,
+        string CurrentTextStyleName,
+        string CurrentDimensionStyleName);
 }

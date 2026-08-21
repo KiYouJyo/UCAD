@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="CheckTitle" xml:space="preserve"><value>更新を確認</value></data>
+  <data name="Checking" xml:space="preserve"><value>最新の GitHub Release を確認しています…</value></data>
+  <data name="UpToDateTitle" xml:space="preserve"><value>UCAD は最新です</value></data>
+  <data name="UpToDateMessage" xml:space="preserve"><value>現在 UCAD v{0} を実行しています。より新しい安定版 GitHub Release はありません。</value></data>
+  <data name="AvailableTitle" xml:space="preserve"><value>UCAD v{0} を利用できます</value></data>
+  <data name="AvailableMessage" xml:space="preserve"><value>新しい安定版があります。UCAD は署名済み x64 MSIX バンドルをダウンロードし、SHA256SUMS.txt で検証した後、Windows App Installer を開きます。</value></data>
+  <data name="DownloadInstall" xml:space="preserve"><value>ダウンロードしてインストール</value></data>
+  <data name="ViewRelease" xml:space="preserve"><value>Release を表示</value></data>
+  <data name="Cancel" xml:space="preserve"><value>キャンセル</value></data>
+  <data name="Close" xml:space="preserve"><value>閉じる</value></data>
+  <data name="DownloadingTitle" xml:space="preserve"><value>UCAD v{0} をダウンロード中</value></data>
+  <data name="Downloading" xml:space="preserve"><value>署名済み更新をダウンロードしています…</value></data>
+  <data name="DownloadingPercent" xml:space="preserve"><value>{0:0.0}% · {1:0.0} MB / {2:0.0} MB</value></data>
+  <data name="DownloadingBytes" xml:space="preserve"><value>{0:0.0} MB をダウンロード済み</value></data>
+  <data name="Verifying" xml:space="preserve"><value>SHA-256 を検証しています…</value></data>
+  <data name="Launching" xml:space="preserve"><value>Windows App Installer を開いています…</value></data>
+  <data name="InstallerLaunchFailed" xml:space="preserve"><value>ダウンロードしたパッケージを Windows App Installer で開けませんでした。GitHub Release から手動でインストールできます。</value></data>
+  <data name="ErrorTitle" xml:space="preserve"><value>更新に失敗しました</value></data>
+  <data name="ErrorMessage" xml:space="preserve"><value>UCAD は更新の確認またはダウンロードを完了できませんでした。インストール済みファイルは変更されていません。</value></data>
+  <data name="ErrorDetails" xml:space="preserve"><value>詳細: {0}</value></data>
+</root>

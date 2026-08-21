@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="Title" xml:space="preserve"><value>开始使用 UCAD</value></data>
+  <data name="Subtitle" xml:space="preserve"><value>新建或打开图纸，继续最近的工作，或从模板开始。</value></data>
+  <data name="NewDrawingTitle" xml:space="preserve"><value>新建图纸</value></data>
+  <data name="NewDrawingDescription" xml:space="preserve"><value>创建一个空白二维 CAD 图纸</value></data>
+  <data name="OpenDrawingTitle" xml:space="preserve"><value>打开图纸</value></data>
+  <data name="OpenDrawingDescription" xml:space="preserve"><value>从文件打开现有图纸</value></data>
+  <data name="RecentTitle" xml:space="preserve"><value>最近使用</value></data>
+  <data name="RecentShowAll" xml:space="preserve"><value>显示全部</value></data>
+  <data name="RecentEmptyTitle" xml:space="preserve"><value>还没有最近使用的图纸</value></data>
+  <data name="RecentEmptyDescription" xml:space="preserve"><value>打开或保存图纸后，它们会显示在这里。</value></data>
+  <data name="TemplatesTitle" xml:space="preserve"><value>模板</value></data>
+  <data name="BlankTitle" xml:space="preserve"><value>空白</value></data>
+  <data name="BlankDescription" xml:space="preserve"><value>标准空白图纸</value></data>
+  <data name="ArchitectureTitle" xml:space="preserve"><value>建筑设计</value></data>
+  <data name="ArchitectureDescription" xml:space="preserve"><value>建筑绘图预设</value></data>
+  <data name="UrbanTitle" xml:space="preserve"><value>城市规划</value></data>
+  <data name="UrbanDescription" xml:space="preserve"><value>规划绘图预设</value></data>
+  <data name="ComingSoon" xml:space="preserve"><value>即将推出</value></data>
+  <data name="LearnTitle" xml:space="preserve"><value>学习 UCAD</value></data>
+  <data name="Shortcuts" xml:space="preserve"><value>快捷键</value></data>
+  <data name="BasicDrawing" xml:space="preserve"><value>基本绘图</value></data>
+  <data name="Commands" xml:space="preserve"><value>命令与别名</value></data>
+  <data name="Docs" xml:space="preserve"><value>查看文档</value></data>
+</root>

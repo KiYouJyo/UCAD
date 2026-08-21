@@ -8,7 +8,7 @@
   <Identity
     Name="F1BD5F25-4ED6-4037-B9FE-BB7D4B326E25"
     Publisher="CN=AppPublisher"
-    Version="0.7.0.0" />
+    Version="0.9.4.0" />
 
   <Properties>
     <DisplayName>ms-resource:AppDisplayName</DisplayName>
@@ -35,10 +35,32 @@
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">
       </uap:VisualElements>
+      <Extensions>
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="ucad">
+            <uap:SupportedFileTypes>
+              <uap:FileType>.ucad</uap:FileType>
+            </uap:SupportedFileTypes>
+          </uap:FileTypeAssociation>
+        </uap:Extension>
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="ucad.autocad.drawing">
+            <uap:SupportedFileTypes>
+              <uap:FileType>.dwg</uap:FileType>
+              <uap:FileType>.dxf</uap:FileType>
+              <uap:FileType>.dxb</uap:FileType>
+              <uap:FileType>.dwt</uap:FileType>
+              <uap:FileType>.dws</uap:FileType>
+              <uap:FileType>.sv$</uap:FileType>
+            </uap:SupportedFileTypes>
+          </uap:FileTypeAssociation>
+        </uap:Extension>
+      </Extensions>
     </Application>
   </Applications>
 
   <Capabilities>
+    <Capability Name="internetClient" />
     <rescap:Capability Name="runFullTrust" />
   </Capabilities>
 </Package>

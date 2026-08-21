@@ -1,0 +1,61 @@
+name: Branch Fast Validation
+
+on:
+  push:
+    branches:
+      - 'codex/**'
+      - 'agent/**'
+
+permissions:
+  contents: read
+  statuses: write
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.302'
+      - name: Fetch pinned AutoCAD fixtures
+        shell: pwsh
+        run: ./.github/scripts/Get-AutoCadFixtures.ps1
+      - name: Core tests
+        shell: pwsh
+        run: |
+          dotnet restore tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj
+          if ($LASTEXITCODE -ne 0) { throw "Core restore failed: $LASTEXITCODE" }
+          dotnet test tests/UCAD.Core.Tests/UCAD.Core.Tests.csproj -c Release --no-restore
+          if ($LASTEXITCODE -ne 0) { throw "Core tests failed: $LASTEXITCODE" }
+      - name: WinUI app build
+        shell: pwsh
+        run: |
+          dotnet restore src/UCAD.App/UCAD.App.csproj -p:Platform=x64 -r win-x64
+          if ($LASTEXITCODE -ne 0) { throw "App restore failed: $LASTEXITCODE" }
+          dotnet build src/UCAD.App/UCAD.App.csproj -c Release --no-restore -p:Platform=x64 -r win-x64
+          if ($LASTEXITCODE -ne 0) { throw "App build failed: $LASTEXITCODE" }
+      - name: UI and release contract validation
+        shell: pwsh
+        run: ./.github/scripts/Validate-UcadUi.ps1
+
+  report:
+    if: always()
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish queryable commit status
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULT: ${{ needs.validate.result }}
+          REPOSITORY: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ "$RESULT" = "success" ]; then STATE=success; DESCRIPTION='Core tests, WinUI build and contracts passed'; else STATE=failure; DESCRIPTION="Branch validation: $RESULT"; fi
+          gh api --method POST "repos/$REPOSITORY/statuses/$SHA" \
+            -f state="$STATE" \
+            -f context='ucad/branch-fast-validation' \
+            -f description="$DESCRIPTION" \
+            -f target_url="$RUN_URL"

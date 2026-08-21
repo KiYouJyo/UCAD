@@ -13,4 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\UCAD.Core\UCAD.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="Fixtures\AutoCad\manifest.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

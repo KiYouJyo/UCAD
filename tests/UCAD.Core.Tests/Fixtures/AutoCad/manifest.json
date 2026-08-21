@@ -1,0 +1,111 @@
+{
+  "schema": "ucad-autocad-fixtures-v1",
+  "source": {
+    "repository": "DomCR/ACadSharp",
+    "commit": "d7dc111023477d8a9fffc2153139459c95b4f345",
+    "license": "MIT",
+    "notes": "Fixtures are downloaded from the pinned upstream commit during interoperability validation. Git blob SHA-1 and byte length are verified before tests run."
+  },
+  "fixtures": [
+    {
+      "id": "dwg-r14-ac1014",
+      "kind": "dwg",
+      "fileName": "sample_AC1014.dwg",
+      "acadVersion": "AC1014",
+      "generation": "AutoCAD R14",
+      "size": 1312281,
+      "gitBlobSha1": "fb7be2478004b7d31d598c4911386589a12b875d",
+      "url": "https://raw.githubusercontent.com/DomCR/ACadSharp/d7dc111023477d8a9fffc2153139459c95b4f345/samples/sample_AC1014.dwg"
+    },
+    {
+      "id": "dwg-2000-ac1015",
+      "kind": "dwg",
+      "fileName": "sample_AC1015.dwg",
+      "acadVersion": "AC1015",
+      "generation": "AutoCAD 2000/2002",
+      "size": 1297511,
+      "gitBlobSha1": "24768ce675970ab1cf9ae4f3b84f6bf12b999c2e",
+      "url": "https://raw.githubusercontent.com/DomCR/ACadSharp/d7dc111023477d8a9fffc2153139459c95b4f345/samples/sample_AC1015.dwg"
+    },
+    {
+      "id": "dwg-2004-ac1018",
+      "kind": "dwg",
+      "fileName": "sample_AC1018.dwg",
+      "acadVersion": "AC1018",
+      "generation": "AutoCAD 2004/2005/2006",
+      "size": 1097214,
+      "gitBlobSha1": "7ccac9ce2ccc49a9de05ea22b849b91f1d25fb4b",
+      "url": "https://raw.githubusercontent.com/DomCR/ACadSharp/d7dc111023477d8a9fffc2153139459c95b4f345/samples/sample_AC1018.dwg"
+    },
+    {
+      "id": "dwg-2007-ac1021",
+      "kind": "dwg",
+      "fileName": "sample_AC1021.dwg",
+      "acadVersion": "AC1021",
+      "generation": "AutoCAD 2007/2008/2009",
+      "size": 1063168,
+      "gitBlobSha1": "c8486e0cd158ac60e4a25cda499dc29ed1021a7c",
+      "url": "https://raw.githubusercontent.com/DomCR/ACadSharp/d7dc111023477d8a9fffc2153139459c95b4f345/samples/sample_AC1021.dwg"
+    },
+    {
+      "id": "dwg-2010-ac1024",
+      "kind": "dwg",
+      "fileName": "sample_AC1024.dwg",
+      "acadVersion": "AC1024",
+      "generation": "AutoCAD 2010/2011/2012",
+      "size": 1122389,
+      "gitBlobSha1": "3346e2b2063215eb475a6a4ab918c939472e38d0",
+      "url": "https://raw.githubusercontent.com/DomCR/ACadSharp/d7dc111023477d8a9fffc2153139459c95b4f345/samples/sample_AC1024.dwg"
+    },
+    {
+      "id": "dwg-2013-ac1027",
+      "kind": "dwg",
+      "fileName": "sample_AC1027.dwg",
+      "acadVersion": "AC1027",
+      "generation": "AutoCAD 2013-2017",
+      "size": 1091959,
+      "gitBlobSha1": "9da27a51b0cbe743bf67b0f2ba61f1a4ea79d594",
+      "url": "https://raw.githubusercontent.com/DomCR/ACadSharp/d7dc111023477d8a9fffc2153139459c95b4f345/samples/sample_AC1027.dwg"
+    },
+    {
+      "id": "dwg-2018-ac1032",
+      "kind": "dwg",
+      "fileName": "sample_AC1032.dwg",
+      "acadVersion": "AC1032",
+      "generation": "AutoCAD 2018+",
+      "size": 1081979,
+      "gitBlobSha1": "4cfa790d6719acf3aad9818bacbd693ac3ab71b8",
+      "url": "https://raw.githubusercontent.com/DomCR/ACadSharp/d7dc111023477d8a9fffc2153139459c95b4f345/samples/sample_AC1032.dwg"
+    },
+    {
+      "id": "dxf-r12-ac1009-ascii",
+      "kind": "dxf",
+      "fileName": "sample_AC1009_ascii.dxf",
+      "acadVersion": "AC1009",
+      "generation": "AutoCAD R12 ASCII DXF",
+      "size": 596016,
+      "gitBlobSha1": "6bb05d6d8b14f6df64a7dfb2e46d1257e0d1337b",
+      "url": "https://raw.githubusercontent.com/DomCR/ACadSharp/d7dc111023477d8a9fffc2153139459c95b4f345/samples/sample_AC1009_ascii.dxf"
+    },
+    {
+      "id": "dxf-2000-ac1015-binary",
+      "kind": "dxf",
+      "fileName": "sample_AC1015_binary.dxf",
+      "acadVersion": "AC1015",
+      "generation": "AutoCAD 2000 Binary DXF",
+      "size": 1422751,
+      "gitBlobSha1": "3bd73edfd7f315412a2d9100768aa7fc8255684c",
+      "url": "https://raw.githubusercontent.com/DomCR/ACadSharp/d7dc111023477d8a9fffc2153139459c95b4f345/samples/sample_AC1015_binary.dxf"
+    },
+    {
+      "id": "dxf-2018-ac1032-binary",
+      "kind": "dxf",
+      "fileName": "sample_AC1032_binary.dxf",
+      "acadVersion": "AC1032",
+      "generation": "AutoCAD 2018 Binary DXF",
+      "size": 1348777,
+      "gitBlobSha1": "50010d8754f86ed8de1a87e0d154bec822146918",
+      "url": "https://raw.githubusercontent.com/DomCR/ACadSharp/d7dc111023477d8a9fffc2153139459c95b4f345/samples/sample_AC1032_binary.dxf"
+    }
+  ]
+}
