@@ -77,6 +77,9 @@ public sealed partial class CadViewport
     {
         switch (entity)
         {
+            case WipeoutEntity wipeout:
+                DrawWipeoutEntity(ds, wipeout);
+                break;
             case TextEntity text:
                 DrawTextEntity(ds, text, color);
                 break;
@@ -99,6 +102,17 @@ public sealed partial class CadViewport
                 DrawEntity(ds, entity, color, strokeWidth);
                 break;
         }
+    }
+
+    private void DrawWipeoutEntity(CanvasDrawingSession ds, WipeoutEntity wipeout)
+    {
+        if (wipeout.Boundary.Count < 3) return;
+        using var builder = new CanvasPathBuilder(ds.Device);
+        builder.BeginFigure(WorldToScreen(wipeout.Boundary[0]));
+        for (var index = 1; index < wipeout.Boundary.Count; index++) builder.AddLine(WorldToScreen(wipeout.Boundary[index]));
+        builder.EndFigure(CanvasFigureLoop.Closed);
+        using var geometry = CanvasGeometry.CreatePath(builder);
+        ds.FillGeometry(geometry, _canvasBackground);
     }
 
     private void DrawTextEntity(CanvasDrawingSession ds, TextEntity text, Color color)
