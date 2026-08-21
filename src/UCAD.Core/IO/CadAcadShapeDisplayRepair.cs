@@ -10,10 +10,13 @@ namespace UCAD.Core.IO;
 /// <summary>
 /// Retains AutoCAD SHAPE entities as resolvable display references. The external-reference
 /// resolver later locates the associated SHX/SHP file and replaces each reference with
-/// decoded world-coordinate vector strokes.
+/// decoded world-coordinate vector strokes. A tiny source-ordered diamond remains visible
+/// when the external resource is unavailable, so SHAPE records never disappear silently.
 /// </summary>
 internal static class CadAcadShapeDisplayRepair
 {
+    internal const string MarkerHandlePrefix = "$UCAD-SHAPE-MARKER:";
+
     public static void Apply(AcadDocument source, UcadDocument target, List<string> warnings)
     {
         ArgumentNullException.ThrowIfNull(source);
@@ -41,16 +44,14 @@ internal static class CadAcadShapeDisplayRepair
                 }
 
                 var shapeName = shape.ShapeStyle?.Name;
-                // ACadSharp resolves group 2 through the shape style; the style name is therefore
-                // the best native name hint. For DXF bridge cases the fallback list lets the SHX
-                // resolver search all shape-file styles and match the actual symbol name.
                 if (string.IsNullOrWhiteSpace(shapeName)) shapeName = "<shape>";
-
+                var insertion = new CadPoint(shape.InsertionPoint.X, shape.InsertionPoint.Y);
+                var size = Math.Max(Math.Abs(shape.Size), 1e-9);
                 var entity = new ShapeReferenceEntity(
                     shapeName,
                     candidates,
-                    new CadPoint(shape.InsertionPoint.X, shape.InsertionPoint.Y),
-                    Math.Max(Math.Abs(shape.Size), 1e-9),
+                    insertion,
+                    size,
                     Math.Abs(shape.RelativeXScale) <= 1e-12 ? 1 : shape.RelativeXScale,
                     shape.Rotation,
                     shape.ObliqueAngle);
@@ -58,7 +59,19 @@ internal static class CadAcadShapeDisplayRepair
                 var layer = string.IsNullOrWhiteSpace(shape.Layer?.Name) ? CadLayer.DefaultLayerName : shape.Layer.Name;
                 if (!target.TryGetLayer(layer, out _)) target.CreateLayer(new CadLayer(layer));
                 var lineType = string.IsNullOrWhiteSpace(shape.LineType?.Name) ? "ByLayer" : shape.LineType.Name;
-                target.Add(entity, new CadEntityProperties(layer, lineType: lineType, sourceOrder: sourceOrder));
+                var properties = new CadEntityProperties(layer, lineType: lineType, sourceOrder: sourceOrder);
+                target.Add(entity, properties);
+
+                var markerRadius = Math.Max(size * 0.18, 0.2);
+                var marker = new PolylineEntity(
+                    [
+                        new CadPoint(insertion.X, insertion.Y + markerRadius),
+                        new CadPoint(insertion.X + markerRadius, insertion.Y),
+                        new CadPoint(insertion.X, insertion.Y - markerRadius),
+                        new CadPoint(insertion.X - markerRadius, insertion.Y)
+                    ],
+                    closed: true);
+                target.Add(marker, properties with { SourceHandle = MarkerHandlePrefix + entity.Id.ToString("N") });
 
                 warnings.RemoveAll(warning => warning.Contains("SHAPE", StringComparison.OrdinalIgnoreCase) &&
                     (warning.Contains("not supported", StringComparison.OrdinalIgnoreCase) || warning.Contains("skipped", StringComparison.OrdinalIgnoreCase)));
