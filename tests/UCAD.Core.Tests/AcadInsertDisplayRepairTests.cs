@@ -126,7 +126,7 @@ public sealed class AcadInsertDisplayRepairTests
         var cache = new BlockRecord("*T1");
         cache.Entities.Add(new Line(new XYZ(0, 0, 0), new XYZ(20, 0, 0)));
         cache.Entities.Add(new Line(new XYZ(0, 5, 0), new XYZ(20, 5, 0)));
-        cache.Entities.Add(new TextEntity
+        cache.Entities.Add(new ACadSharp.Entities.TextEntity
         {
             InsertPoint = new XYZ(2, 2, 0),
             Height = 2.5,
