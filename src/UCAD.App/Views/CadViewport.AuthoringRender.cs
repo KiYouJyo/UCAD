@@ -52,7 +52,7 @@ public sealed partial class CadViewport
             {
                 var properties = _document.GetEntityProperties(entity.Id);
                 var layer = _document.GetLayer(properties.LayerName);
-                var color = ResolveEntityColor(properties.ColorHex, layer.ColorHex);
+                var color = ResolveEntityColor(properties.ColorHex, layer.ColorHex, properties.Opacity);
                 var lineWeight = properties.LineWeight ?? layer.LineWeight;
                 var strokeWidth = (float)Math.Clamp(lineWeight * 3.0, 0.8, 4.0);
                 DrawAuthoringEntity(ds, entity, color, strokeWidth);
@@ -70,10 +70,14 @@ public sealed partial class CadViewport
         DrawCadCursor(ds, sender.ActualWidth, sender.ActualHeight);
     }
 
-    private Color ResolveEntityColor(string? entityColor, string layerColor)
+    private Color ResolveEntityColor(string? entityColor, string layerColor, double? opacity = null)
     {
-        if (entityColor is not null && TryParseColor(entityColor, out var explicitColor)) return explicitColor;
-        return TryParseColor(layerColor, out var inheritedColor) ? inheritedColor : _geometryColor;
+        var color = entityColor is not null && TryParseColor(entityColor, out var explicitColor)
+            ? explicitColor
+            : TryParseColor(layerColor, out var inheritedColor) ? inheritedColor : _geometryColor;
+        if (opacity is not double value) return color;
+        var alpha = (byte)Math.Clamp((int)Math.Round(color.A * Math.Clamp(value, 0d, 1d)), 0, 255);
+        return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 
     private void DrawAuthoringEntity(CanvasDrawingSession ds, ICadEntity entity, Color color, float strokeWidth)
