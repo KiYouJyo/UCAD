@@ -8,6 +8,7 @@ namespace UCAD.Core.IO;
 /// Re-applies AutoCAD-native visual state after semantic/display fallback expansion.
 /// SourceOrder is the stable join key: one source entity may expand into multiple UCAD
 /// display entities, and all of them must inherit invisibility/transparency consistently.
+/// Proxy graphics are consumed here only after normal semantic recovery has had first refusal.
 /// </summary>
 internal static class CadAcadVisualPropertiesRepair
 {
@@ -15,6 +16,10 @@ internal static class CadAcadVisualPropertiesRepair
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(target);
+
+        // At this stage SourceOrder has already been repaired. Fill only true visual gaps with
+        // decoded AutoCAD proxy graphics, then apply native opacity to both normal and proxy output.
+        CadAcadProxyGraphicsDisplayRepair.Apply(source, target, []);
 
         var sourceEntities = source.Entities.ToArray();
         foreach (var entity in target.Entities.ToArray())
