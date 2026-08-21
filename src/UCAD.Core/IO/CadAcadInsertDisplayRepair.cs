@@ -102,7 +102,7 @@ internal static class CadAcadInsertDisplayRepair
         insert.Block?.Entities.OfType<AcadInsert>().Any() == true;
 
     private static bool BlockRequiresNativeDisplaySnapshot(AcadInsert insert) =>
-        insert.Block?.Entities.Any(entity => entity is Wipeout or MLine or Dimension or Leader or MultiLeader) == true;
+        insert.Block?.Entities.Any(entity => entity is Wipeout or RasterImage or MLine or Dimension or Leader or MultiLeader) == true;
 
     private static bool IsEvaluatedAnonymousBlock(AcadInsert insert)
     {
